@@ -170,9 +170,41 @@ while True:
         for x in odd_endings:
             next_odd = next_odd.union(begin_even_dict.get(x, set()))
     possible_next_words = next_even.intersection(next_odd)
+    
+    # input the next word
+    print(possible_next_words)
     next_word = input().strip().upper()
+    
     this_all_words.append(next_word)
-    # how do I get the even words and odd words?
     
+    # Now find the next even and odd words
+    all_string = ''.join(this_all_words)
+    even_string = ''.join(even_words)
+    odd_string = ''.join(odd_words)
+    next_start = all_string[(len(even_string) + len(odd_string)):]
+    if start_even:
+        all_evens, all_odds = next_start[::2], next_start[1::2]
+    else:
+        all_evens, all_odds = next_start[1::2], next_start[::2]
+    # options for the next even word
+    next_even_exists = True
+    even_len = len(even_start)
+    all_evens = next_start[::2]
+    possible_next_evens = set([x for x in good_words if x.startswith(even_start) and all_evens.startswith(x[:len(all_evens)])])
+
+    # options for the next odd word
+    next_odd_exists = True
+    odd_len = len(odd_start)
+    all_odds = next_start[1::2]
+    possible_next_odds = set([x for x in good_words if x.startswith(odd_start) and all_odds.startswith(x[:len(all_odds)])])
+
+    # Input the next even and odd
+    print(possible_next_evens)
+    next_even = input().strip().upper()
+    print(possible_next_odds)
+    next_odd = input().strip().upper()
     
+    even_words.append(next_even)
+    odd_words.append(next_odd)
+    # Find the next values for the loop
     
