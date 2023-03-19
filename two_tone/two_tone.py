@@ -80,7 +80,7 @@ with open(WORDLIST, 'r') as fid:
             
             odd_even[word] = {'odd': odd, 'even': even}
             
-#%%
+#%% Make word partitions
 # for each word we need to take all partitions of the odd and even
 # and we need to see which "beginnings" they can end
 # and of course we need to ensure that their "endings" are valid "beginnings"
@@ -150,10 +150,24 @@ for word in all_words:
 this_all_words = ['SPEEDO', 'ANNULMENT']
 even_words = ['PEON']
 odd_words = ['SEDAN']
-odd_start = 'LET'
-even_start = 'UMN'
-start_even = True
+
 while True:
+    # print the current state
+    print(this_all_words)
+    print(even_words)
+    print(odd_words)
+    
+    # Find the next starters
+    all_string = ''.join(this_all_words)
+    even_string = ''.join(even_words)
+    odd_string = ''.join(odd_words)
+    
+    odd_start = all_string[::2][len(odd_string):]
+    even_start = all_string[1::2][len(even_string):]
+    
+    # `start_even` is True if the next letter in "all" words continues `even_start`
+    start_even = len(all_string) % 2 == 1
+    
     # find a new "all" word that ends both the words
     even_endings = begin_end_dict[even_start]
     odd_endings = begin_end_dict[odd_start]
@@ -206,5 +220,6 @@ while True:
     
     even_words.append(next_even)
     odd_words.append(next_odd)
-    # Find the next values for the loop
+    
+    
     
