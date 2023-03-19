@@ -8,7 +8,7 @@ Helper lookup for making "two-tone" puzzles
 """
 
 import itertools
-import json
+import os
 from collections import defaultdict
 
 # The smallest length for words in the puzzle
@@ -18,7 +18,9 @@ MIN_OVERLAP = 1
 # Minimum score of word list entries
 MIN_SCORE = 50
 # The word list to use
-WORDLIST = 'spreadthewordlist.dict'
+WORDLIST_DIR = r'C:\Users\boisv\Documents\word_lists'
+word_list = 'spreadthewordlist.dict'
+WORDLIST = os.path.join(WORDLIST_DIR, word_list)
 
 #%% Helper functions
 
