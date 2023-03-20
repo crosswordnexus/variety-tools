@@ -18,7 +18,7 @@ MIN_SCORE = 90
 MIN_WORD_LENGTH = 4
 
 # The "distance" around the mean length we look at
-LEN_DISTANCE = 4
+LEN_DISTANCE = 3
 
 ###################
 # Add the directory to the wordlist
@@ -169,6 +169,12 @@ def create_acrostic2(quote, source, excluded_words=[], included_words=[], wordli
 
     # Make sure we are only including actual words
     included_words = [x for x in included_words if x]
+    
+    # Ensure the "source" is in the quote
+    s1 = alpha_only(source)
+    s2 = alpha_only(quote)
+    assert is_substring(s1, s2)
+    
 
     if included_words:
         # Take the letters from the words we're including
@@ -220,6 +226,11 @@ def create_acrostic(quote, source, excluded_words=[], wordlist=WORDLIST, min_sco
     # Normalize the inputs
     source_alpha = alpha_only(source.strip())
     quote_alpha = alpha_only(quote)
+    
+    # Keep track of the non-first letters
+    non_first_letters = quote_alpha
+    for let in source_alpha:
+        non_first_letters = non_first_letters.replace(let, '', 1)
 
 
     # Set up our letter constraint targets
@@ -253,21 +264,22 @@ def create_acrostic(quote, source, excluded_words=[], wordlist=WORDLIST, min_sco
             if int(score) >= min_score and len(word) >= MIN_WORD_LENGTH \
                 and len(word) >= min_length \
                 and len(word) <= max_length \
-                and word[0] in source_letters and is_substring(word, quote_alpha) \
+                and word[0] in source_letters and is_substring(word[1:], non_first_letters) \
                 and word not in excluded_words_set:
                 # Create a variable from this word
                 words_var.append(m.add_var(name=word, var_type=mip.BINARY))
                 words.append(word)
 
     NUM_WORDS = len(words)
+    logging.info(f'Proceeding with {NUM_WORDS} words')
 
     # Set up our constraints
     # First: the constraint on the letter count
     logging.info('Setting up constraints')
-    for letter in string.ascii_lowercase:
+    for letter in quote_counter.keys():
         m += mip.xsum(letter_count(words[i], letter) * words_var[i] for i in range(NUM_WORDS)) == b[letter]
     # Second: constraint on the first letters
-    for letter in string.ascii_lowercase:
+    for letter in source_counter.keys():
         m += mip.xsum(int(words[i].startswith(letter)) * words_var[i] for i in range(NUM_WORDS)) == b[f'_{letter}']
 
     # Optional objective: all words approximately the same length
@@ -275,7 +287,8 @@ def create_acrostic(quote, source, excluded_words=[], wordlist=WORDLIST, min_sco
 
     # Run the optimization.  This is the potential bottleneck.
     logging.info('Optimizing')
-    m.optimize()
+    #m.max_solutions = 1
+    m.optimize(max_solutions=1)
 
     #logging.info(m.num_solutions)
 

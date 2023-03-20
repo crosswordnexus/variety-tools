@@ -5,7 +5,7 @@ function reverseString(str) {
 
 function new_word_options(forward_words, backward_words) {
   // The maximum number of words to return
-  MAX_RET_WORDS = 15;
+  MAX_RET_WORDS = 20;
   // Find the words we've already used
   var used_words = new Set(forward_words.concat(backward_words));
   // Get the last word
@@ -27,7 +27,9 @@ function new_word_options(forward_words, backward_words) {
   // Get our initial return words
   var ret = this_dict[this_str];
   // Sort this by score descending
-  ret.sort(function(x, y) {return y['score'] - x['score'];})
+  //ret.sort(function(x, y) {return y['score'] - x['score'];})
+  // On second thought, sort by length descending
+  ret.sort(function(x, y) {return y["words"][0].length - x["words"][0].length;});
   var ret2 = [];
   // Remove anything that's already been used
   ret.forEach(function (r) {

@@ -15,7 +15,7 @@ MIN_WORD_LENGTH = 4
 # The minimum overlap of words
 MIN_OVERLAP = 1
 # Minimum score of word list entries
-MIN_SCORE = 75
+MIN_SCORE = 50
 
 #%% Helper functions
 
@@ -52,9 +52,10 @@ beginnings = set()
 ends = set()
 all_word_dict = dict()
 
-with open(r'xwordlist.dict', 'r') as fid:
+with open(r'stwl.txt', 'r') as fid:
     for line in fid:
         word, score = line.split(';')
+        word = word.upper()
         score = int(score)
         if score >= MIN_SCORE and len(word) >= MIN_WORD_LENGTH:
             all_words.add(word)
@@ -116,7 +117,7 @@ print(len(good_words))
 #%% Make one global dictionary from this and serialize into JSON format
 
 # The default word score (mostly for missing words)
-DEF_WORD_SCORE = 70
+DEF_WORD_SCORE = 35
 
 helper_dict = dict()
 items = {'begin': begin_dict, 'end': end_dict}
