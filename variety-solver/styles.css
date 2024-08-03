@@ -10,6 +10,7 @@ body {
     display: flex;
     height: 100vh;
     overflow: hidden;
+    font-size: 1.4em;
 }
 
 #puzzle-container {
@@ -32,14 +33,20 @@ body {
     flex: 1; /* Allow it to take up available space */
 }
 
+.puzzle-image-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+}
+
 #puzzle-image {
     display: block;
 }
 
 #canvas {
+    display: block;
     position: absolute;
-    top: 0;
-    left: 0;
 }
 
 /** Metadata display **/
@@ -53,39 +60,47 @@ body {
 h2.clues-title {
   padding: 0;
   margin: 0px 0px 5px 0px;
+  font-size: 1.5rem;
+  flex-shrink: 0;
 }
 
 #clue-panels {
     display: flex;
     flex-direction: column;
-    width: 300px;
+    width: 475px;
     height: 100%; /* Take up the full height of the container */
     margin-left: 20px;
 }
 
 .clue-panel {
-    flex: 1; /* Each panel will take up an equal portion of the height */
-    overflow-y: scroll;
+    /*flex: 1; /* Each panel will take up an equal portion of the height */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
     border: 1px solid #ccc;
-    padding: 10px;
+    padding: 5px;
     background: #f9f9f9;
     box-sizing: border-box;
 }
 
 /* no bullets on clue lists */
-ul.clue-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+.clue-list {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    overflow-y: auto;
 }
 
 /* Space between clues */
-li.clue-item {
+.clue-item {
     margin-bottom: 5px;
     cursor: pointer;
+    display: flex;
+    list-style: none;
 }
 
-li.clue-item:hover {
+.clue-item:hover {
     background-color: lightgray; /* Change background on hover */
 }
 
@@ -99,11 +114,15 @@ li.clue-item:hover {
 /* Bold the clue numbers */
 .clue-number {
   font-weight: 600;
-  margin-right: 5px;
+  margin-right: 0.7rem;
+  text-align: right;
 }
 
 /* Placeholder for clue text */
 .clue-text {
+    flex: 1 1 auto;
+    word-wrap: break-word;
+    margin-right: 0.2rem;
 }
 
 /* Clue explanations */
@@ -143,6 +162,7 @@ li.clue-item:hover {
 }
 .info-button {
     padding: 10px 20px;
+    margin-top: 10px;
     font-size: 16px;
     background-color: #007bff;
     color: white;
