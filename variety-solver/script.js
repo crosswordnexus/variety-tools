@@ -12,9 +12,6 @@ function loadPuzzle(data) {
   const canvas = document.getElementById('canvas'); // Get the canvas element
   const ctx = canvas.getContext('2d'); // Get the 2D drawing context for the canvas
 
-  // Initialize the "letters" array
-  var letters;
-
   // Default variables
   const fontSize = 20; // font size -- should we make this configurable?
   const saveTime = 10000; // how long to keep the localStorage
@@ -36,9 +33,13 @@ function loadPuzzle(data) {
   }
 
   /** Replace the HTML with data from the file **/
-
-  // Puzzle image
   data = readVpuz(data);
+
+  // Read clue notes and letters
+  var letters = lscache.get(data.letters_save) || [];
+  var clue_notes = lscache.get(data.clue_notes_save) || [];
+
+  // Load the image
   img.src = data['puzzle-image'];
 
   // Set the page title
@@ -57,7 +58,7 @@ function loadPuzzle(data) {
   sheet.insertRule(rule, sheet.cssRules.length);
 
   // Loop through clues and add to DOM
-  var clueHTML = '';
+  var clueHTML = '', clueBoxId = 0;
   for (var i = 0; i < data['improved-clues'].length; i++) {
     // Add a clue panel
     clueHTML += `<div id="clues-${i}" class="clue-panel">\n`;
@@ -72,10 +73,11 @@ function loadPuzzle(data) {
           <li class="clue-item">
             <span class="clue-number">${obj.number}</span>
             <span class="clue-text">${obj.text}
-            <input class="input-box note-style" type="text">
+            <input class="input-box note-style" id="clue-box-${clueBoxId}" type="text">
             </span>`
       if (obj.explanation) thisHTML += `<span class="clue-explanation">${obj.explanation}</span>\n`;
       thisHTML += "</li>\n";
+      clueBoxId += 1;
     });
     clueHTML += thisHTML;
     // Close all the tags
@@ -83,6 +85,16 @@ function loadPuzzle(data) {
   }
   // Add this HTML to the DOM
   document.getElementById("clue-panels").innerHTML = clueHTML;
+
+  // Load clue notes if applicable
+  for (var cnix = 0; cnix < clue_notes.length; cnix++) {
+    var thisNote = clue_notes[cnix];
+    if (thisNote) {
+      var thisBox = document.getElementById(`clue-box-${cnix}`);
+      thisBox.value = thisNote;
+      thisBox.style.display = 'block';
+    }
+  }
 
   /** Now for the puzzle functionality **/
   // Create and style the overlay and circle elements
@@ -99,7 +111,7 @@ function loadPuzzle(data) {
   circle.style.height = circleDiameter + 'px';
 
   let clickX, clickY; // Variables to store click coordinates
-  letters = lscache.get(data.savefile) || []; // Array to store letters and their positions
+  //letters = lscache.get(data.letters_save) || []; // Array to store letters and their positions
 
   // Event listener for canvas clicks
   document.getElementById('canvas').addEventListener('click', function(event) {
@@ -163,7 +175,7 @@ function loadPuzzle(data) {
         width: textWidth,
         height: textHeight
       });
-      lscache.set(data.savefile, letters, saveTime);
+      lscache.set(data.letters_save, letters, saveTime);
     }
 
     // Confetti if needed
@@ -181,7 +193,7 @@ function loadPuzzle(data) {
     if (index !== -1) {
       // Remove the letter from the array
       letters.splice(index, 1);
-      lscache.set(data.savefile, letters, saveTime);
+      lscache.set(data.letters_save, letters, saveTime);
 
       // Clear the canvas and redraw all remaining letters
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -195,6 +207,13 @@ function loadPuzzle(data) {
   // Select all .clue-item elements
   const items = document.querySelectorAll('.clue-item');
 
+  // Function to save input-box text to localStorage
+  function saveInputBoxText(inputBox) {
+    var thisNum = parseInt(inputBox.id.split('-').at(-1))
+    clue_notes[thisNum] = inputBox.value;
+    lscache.set(data.clue_notes_save, clue_notes, saveTime);
+  }
+
   // Function to check input box value and hide/show accordingly
   function checkInputBox(inputBox) {
     if (inputBox.value.trim() === '') {
@@ -205,7 +224,6 @@ function loadPuzzle(data) {
   }
 
   // Loop through each item and add event listeners
-  // Loop through each item and add event listeners
   items.forEach(item => {
     // Find the input box within the clicked item
     let inputBox = item.querySelector('.input-box');
@@ -214,6 +232,7 @@ function loadPuzzle(data) {
     item.addEventListener('input', function(event) {
       if (event.target.classList.contains('input-box')) {
         checkInputBox(event.target);
+        saveInputBoxText(event.target);
       }
     });
 
@@ -221,6 +240,7 @@ function loadPuzzle(data) {
     item.addEventListener('focusout', function(event) {
       if (event.target.classList.contains('input-box')) {
         checkInputBox(event.target);
+        saveInputBoxText(event.target);
       }
     });
 
@@ -278,8 +298,12 @@ document.getElementById('infoModal').addEventListener('click', function(event) {
 /** vPuz parsing **/
 function readVpuz(data) {
 
+  // Get a hash of the data
+  const dataHash = hashCode(JSON.stringify(data));
+
   // Get the hash of the data
-  data['savefile'] = 'cnvs_' + hashCode(JSON.stringify(data));
+  data['letters_save'] = `cnvs_letters_${dataHash}`;
+  data['clue_notes_save'] = `cnvs_notes_${dataHash}`;
 
   // If there's a "solution-string", add a sorted version
   if (data['solution-string']) {
