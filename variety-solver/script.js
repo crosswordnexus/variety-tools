@@ -12,9 +12,6 @@ function loadPuzzle(data) {
   const canvas = document.getElementById('canvas'); // Get the canvas element
   const ctx = canvas.getContext('2d'); // Get the 2D drawing context for the canvas
 
-  // Initialize the "letters" array
-  var letters;
-
   // Default variables
   const fontSize = 20; // font size -- should we make this configurable?
   const saveTime = 10000; // how long to keep the localStorage
@@ -36,13 +33,14 @@ function loadPuzzle(data) {
   }
 
   /** Replace the HTML with data from the file **/
-
-  // Puzzle image
   data = readVpuz(data);
-  img.src = data['puzzle-image'];
 
-  // Read clue notes
+  // Read clue notes and letters
+  var letters = lscache.get(data.letters_save) || [];
   var clue_notes = lscache.get(data.clue_notes_save) || [];
+
+  // Load the image
+  img.src = data['puzzle-image'];
 
   // Set the page title
   if (data.title) {
@@ -113,7 +111,7 @@ function loadPuzzle(data) {
   circle.style.height = circleDiameter + 'px';
 
   let clickX, clickY; // Variables to store click coordinates
-  letters = lscache.get(data.letters_save) || []; // Array to store letters and their positions
+  //letters = lscache.get(data.letters_save) || []; // Array to store letters and their positions
 
   // Event listener for canvas clicks
   document.getElementById('canvas').addEventListener('click', function(event) {
