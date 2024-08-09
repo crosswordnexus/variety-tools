@@ -19,6 +19,8 @@ MIT License - https://opensource.org/license/MIT
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <!-- Load JS-YAML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Load compromise for dupe checking -->
+    <script src="https://unpkg.com/compromise"></script>
 </head>
 <body>
     <div class="container">
@@ -65,6 +67,7 @@ MIT License - https://opensource.org/license/MIT
         </div>
 
         <div class="textareas">
+          <button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>
           <button class="button-primary" type="submit" id="export-button" value="Export as .rg">Export as .rg</button>
         </div>
 
@@ -84,7 +87,8 @@ MIT License - https://opensource.org/license/MIT
 
         // Fetch the word list and process
         var WORDS = {};
-        fetch("spreadthewordlist.dict.zip")
+        var WORDNINJA = {};
+        fetch("rgdata.json.zip")
         .then(function (response) {
           if (response.status === 200 || response.status === 0) {
             return Promise.resolve(response.arrayBuffer())
@@ -94,22 +98,22 @@ MIT License - https://opensource.org/license/MIT
           })
         .then(JSZip.loadAsync)
         .then(function (zip) {
-          return zip.file("spreadthewordlist.dict").async("string");
+          return zip.file("rgdata.json").async("string");
         })
         .then(function success(data) {
           // populate dictionary
-          var list = data.split('\n');
-          for (var i=0; i<list.length; i++) {
-            if (list[i].indexOf(';') !== -1) {
-              var thisArr = list[i].split(';')
-              var thisWord = thisArr[0];
-              if (parseInt(thisArr[1]) >= 50 && thisWord.length >= 6) {
-                if (!WORDS[thisWord.length]) WORDS[thisWord.length] = new Set();
-                WORDS[thisWord.length].add(thisWord);
-              }
-            }
-          }
+          data = JSON.parse(data);
+          // get the word list
+          Object.keys(data['WORDS']).forEach(k => {
+            WORDS[k] = new Set(data['WORDS'][k]);
+          });
+
+          // get the wordninja data
+          WORDNINJA = data['WORDNINJA'];
+
+          // make these available generally
           window.WORDS = WORDS;
+          window.WORDNINJA = WORDNINJA;
 
           // Show the button once words have been loaded
           buttonActive(beginButton);
