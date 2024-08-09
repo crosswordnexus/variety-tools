@@ -474,7 +474,7 @@ function downloadStringAsFile(content, fileName, mimeType) {
 function lemmatize(phrase) {
   var doc = nlp(phrase);
   //compute all roots
-  doc.compute('root')
+  doc.compute('root');
   // retrieve them from .json() response
   var p2 = doc.json()[0].terms.map(t=>t.root || t.normal);
   return p2;
