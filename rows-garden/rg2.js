@@ -482,8 +482,6 @@ function lemmatize(phrase) {
 
 // infer spaces in a string like "INFERSPACESINASTRINGLIKE"
 // ported from https://stackoverflow.com/a/11642687
-const wordcost = { 'a': 1, 'b': 2 };
-
 function inferSpaces(s, maxword = 15) {
   // Find the best match for the i first characters, assuming cost has
   // been built for the i-1 first characters.
