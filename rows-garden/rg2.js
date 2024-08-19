@@ -8,6 +8,9 @@
 // uppercase letters for reference
 const UPPERCASE_LETTERS = new Set('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
+// placeholder row for filling row B first
+const PLACEHOLDER_ROW = 'XXXXXXXXX';
+
 // The Begin Button
 const BEGIN_BUTTON = document.getElementById('begin-button');
 
@@ -37,6 +40,11 @@ function bloomMatches(_input) {
   // Set up our output variable
   let output = new Set();
 
+  // if there's only one "." in _input, we can use the next routine
+  if (_input.split(".").length == 2) {
+    return bloomMatchesOneDot(_input);
+  }
+
   // find words in WORDS[6] that match this
   bloomPatterns(_input.toLowerCase()).forEach(pat => {
     var re = createMatcher(pat);
@@ -45,6 +53,16 @@ function bloomMatches(_input) {
     });
   });
   return output;
+}
+
+// Given a pattern with one ".", find bloom entries
+function bloomMatchesOneDot(_input) {
+  let ret = new Set()
+  UPPERCASE_LETTERS.forEach(letter => {
+    let i2 = _input.replace('.', letter.toLowerCase());
+    ret = ret.union(bloomPatterns(i2));
+  });
+  return setIntersection(ret, WORDS[6]);
 }
 
 // Function to match simple regexes without the overhead of regex
@@ -223,7 +241,8 @@ function fillRow(rowAbove, rowNumber) {
           } else {
             pat = k2Start + k1EndReversed + '...';
           }
-          if (!bloomPatterns(pat)) {
+          // TODO: maybe we don't need this bit? Think about it
+          if (!bloomMatches(pat)) {
             return;
           }
         } // end if numEndLetters
@@ -242,7 +261,75 @@ function fillRow(rowAbove, rowNumber) {
   } // end for myLen
 
   return output;
+}
 
+// Helper function to transform e.g. `jumpscare` into `___jum___psc___are___`
+function makeRowZeroString(s) {
+  // only do this if s.length == 9
+  if (s.length != 9) return;
+  let ret = '___';
+  while (s.length) {
+    s1 = s.substr(0, 3);
+    s = s.substr(3);
+    ret += s1 + '___';
+  }
+  return ret;
+}
+
+// Function to fill rows A and B given a non-9 seed entry
+// NOTE: for now, this also can't be length 10
+function fillFromSeed(seedEntry) {
+  const myLen = seedEntry.length;
+  // check the length
+  const goodLengths = new Set([6, 7, 8, 10, 11, 12, 13, 14, 15]);
+  if (!goodLengths.has(myLen)) {
+    alert('Seed entry length must be between 6 and 15 (not 10)');
+    return null;
+  }
+
+  // Try to fill the "A" row
+  let pattern = '';
+  while (seedEntry.length) {
+    let tmp = seedEntry.substr(3, 3);
+    seedEntry = seedEntry.substr(6);
+    if (tmp.length) tmp = tmp.padEnd(3, '.');
+    pattern += tmp;
+  }
+
+  pattern = pattern.padEnd(9, '_');
+  // get row matches
+  let rm1 = rowMatches(pattern);
+
+  // next, try to fill the rest of row B from these
+  const ret = {};
+  Object.entries(rm1).forEach(([k1, v1]) => {
+    let s0 = makeRowZeroString(k1);
+    s0 = s0.substr(myLen);
+    // Take care of the 11-letter seed case
+    if (myLen == 11) {
+      // get rotations of the bloom in question
+      const bp = Array.from(bloomPatterns(v1[1]));
+      // take the middle string of k1
+      const ss1 = k1.substr(3, 3);
+      // take the end of the seed entry
+      const ss2 = seedEntry.substr(myLen - 2);
+      // find the rotation that fits what we want
+      var replacementLetter = s0.at(0);
+      for (var i=0; i<bp.length; i++) {
+        if (bp[i].startsWith(reverseString(ss1) + ss2)) {
+          replacementLetter = bp[i].at(5).toUpperCase();
+          break;
+        }
+      }
+      s0 = replacementLetter + s0.substr(1);
+    }
+    let rm2 = rowMatches(s0, myLen);
+    Object.entries(rm2).forEach(([k2, v2]) => {
+      ret[JSON.stringify([k1, k2])] = v1.concat(v2);
+    });
+  });
+
+  return ret;
 }
 
 // helper function to find the first unfilled row
@@ -289,16 +376,29 @@ function handleClick(bloomEntries=null) {
   // Run all this asynchronously
   setTimeout(() => {
     // grab the data from the text box
-    const rowWords = document.getElementById('rows-text').value;
+    let rowWords = document.getElementById('rows-text').value;
+    // Create an array from this
+    const rowWordsArr = rowWords.split('\n');
 
-    // create the puzzle data
-    const rgData = makeRowsGardenPuzzle(text=rowWords);
+    var dataObj, rgData;
 
-    // visualize the rows garden puzzle
-    createCrossword(rgData);
+    if (rowWordsArr.length == 1 && rowWordsArr[0].length != 9) {
+      // do the "seed entry" logic
+      dataObj = fillFromSeed(rowWordsArr[0]);
+      rowWords = PLACEHOLDER_ROW + '\n' + rowWords;
+      rgData = makeRowsGardenPuzzle(text=rowWords);
+      createCrossword(rgData);
+    } else {
+      // create the puzzle data
+      rgData = makeRowsGardenPuzzle(text=rowWords);
 
-    // create options for the next row
-    var dataObj = nextRowOptions(rgData);
+      // visualize the rows garden puzzle
+      createCrossword(rgData);
+
+      // create options for the next row
+      dataObj = nextRowOptions(rgData);
+    }
+
 
     // Convert to array
     if (dataObj) {
@@ -367,14 +467,25 @@ function handleClick(bloomEntries=null) {
 
 /** Define what happens when we click on a row in the table **/
 $('#datatables-table tbody').on('click', 'tr', function() {
+    // Get the rows text
+    const rowsText = document.getElementById('rows-text').value;
+    const rowWordsArr = rowsText.split('\n');
     // Grab the data
-    var data = table.row(this).data();
-    // get the next row to add
-    var nextRow = data.slice(0, 2).join('/');
-    // if there's only one word, no need for the slash
-    if (!data[1]) nextRow = data[0];
-    // Add this to the text box
-    document.getElementById('rows-text').value += '\n' + nextRow;
+    const data = table.row(this).data();
+
+    if (rowWordsArr.length == 1 && rowWordsArr[0].length != 9) {
+      // populate from table
+      let newRowsText = data[0] + '\n';
+      newRowsText += rowsText + '/' + data[1];
+      document.getElementById('rows-text').value = newRowsText.toUpperCase();
+    } else {
+      // get the next row to add
+      var nextRow = data.slice(0, 2).join('/');
+      // if there's only one word, no need for the slash
+      if (!data[1]) nextRow = data[0];
+      // Add this to the text box
+      document.getElementById('rows-text').value += '\n' + nextRow;
+    }
     // Click the button
     handleClick(data[2].split(' '));
 });
