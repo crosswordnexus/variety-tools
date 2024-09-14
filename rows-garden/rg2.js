@@ -630,6 +630,7 @@ function checkForDupes(_) {
   // Grab the words from the text boxes
   const boxNames = ['rows'].concat(COLORS);
   const words = {};
+  const bloomWords = new Set();
   boxNames.forEach(box => {
     let wordsArr = document.getElementById(`${box}-text`).value.split('\n');
     wordsArr.forEach(w => {
@@ -641,10 +642,30 @@ function checkForDupes(_) {
         w3.forEach(w4 => {
           if (!words[w4]) words[w4] = new Set();
           words[w4].add(w2);
+          // Save lemmatized words from "colors" for later dupe checking
+          if (COLORS.indexOf(box) !== -1 && w4.length >= 4) {
+            bloomWords.add(w4);
+          }
         });
       });
     });
   });
+
+  // Loop through bloom words and see if a row word contains it
+  let rowWords = document.getElementById('rows-text').value.split('\n');
+  bloomWords.forEach(bw => {
+    rowWords.forEach(rw => {
+      if (!rw) return;
+      let w1 = rw.split('/');
+      w1.forEach(w2 => {
+        if (w2.toLowerCase().includes(bw)) {
+          words[bw].add(w2);
+        }
+      });
+    });
+  });
+
+  console.log(words);
 
   // Prepare text for an alert
   var alertText = '';
