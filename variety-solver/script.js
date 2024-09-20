@@ -271,7 +271,23 @@ function loadPuzzle(data) {
     if (data.notes) bodyHTML += `<p id="modal-notes">${data.notes}</p>`;
     // Show the modal
     showModal(title, bodyHTML);
+  }); // end info
+
+  // Create PDF when the print button is clicked
+  document.getElementById('printButton').addEventListener('click', function() {
+    const vpuzObj = data;
+    // add the image to options
+    options_obj = {'image': data['puzzle-image']};
+    // add some fake iPuz data
+    vpuzObj['kind'] = ["http://ipuz.org/crossword#1"];
+    vpuzObj["dimensions"] = {"height": 3, "width": 3};
+    vpuzObj["puzzle"] = [ ["#", "#", "#"], ["#", "#", "#"], ["#", "#", "#"] ];
+
+    const xw_constructor = new JSCrossword();
+    const xw = xw_constructor.fromData(vpuzObj);
+    jscrossword_to_pdf(xw, options=options_obj);
   });
+
 } // end loadPuzzle
 
 /** Generic modal functionality **/
