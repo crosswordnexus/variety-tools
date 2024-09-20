@@ -13,6 +13,11 @@
     <!-- Load lscache -->
     <script src="lscache.min.js"></script>
 
+    <!-- PDF stuff -->
+    <script src="jspdf-2_5_1.min.js"></script>
+    <script src="jscrossword_combined.js"></script>
+    <script src="xw_pdf.js"></script>
+
 </head>
 <body>
     <!-- Overlay for opening puzzles -->
@@ -36,7 +41,8 @@
               <img id="puzzle-image" alt="Puzzle Image">
               <canvas id="canvas"></canvas>
               <div class="button-container">
-                  <button class="info-button" id="infoButton">Show Puzzle Info</button>
+                  <button class="info-button" id="infoButton">Puzzle Info</button>
+                  <button class="info-button" id="printButton">Print</button>
               </div>
             </div>
           </div>
