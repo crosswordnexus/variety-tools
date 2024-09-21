@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Sep 16 2024
+
+@author: Alex Boisvert
+"""
+
 import networkx as nx
 
 # Parameters
@@ -11,7 +18,7 @@ def is_black_hex(row, col):
         return (col - black_pattern_offset[row % 3]) % 3 == 0
     else:
         return (col - black_pattern_offset[::-1][row % 3]) % 3 == 0
-    
+
 # Function to find the coordinates of the upper-right neighbor
 def get_ur_neighbor(row, col):
     if row == 0:
@@ -27,7 +34,7 @@ def get_ur_neighbor(row, col):
         return None
     else:
         return (r1, c1)
- 
+
 # Function to find the coordinates of the upper-left neighbor
 def get_ul_neighbor(row, col):
     if row == 0:
@@ -43,7 +50,7 @@ def get_ul_neighbor(row, col):
         return None
     else:
         return (r1, c1)
-    
+
 # Node location to node ID
 def loc_to_id(row, col):
     pass
@@ -63,7 +70,7 @@ def create_hex_graph():
             if not is_black_hex(row, col):  # Only add white hexagons as nodes
                 hex_positions[node_id] = (col, row)  # Storing position for drawing
                 G.add_node(node_id)
-                
+
                 # Add edges to neighboring hexagons (if they exist)
                 if col > 0 and not is_black_hex(row, col - 1):  # Left neighbor
                     G.add_edge(node_id, (row, col-1))

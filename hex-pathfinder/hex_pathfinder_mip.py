@@ -2,7 +2,7 @@
 """
 Created on Mon Sep 16 21:18:05 2024
 
-@author: boisv
+@author: Alex Boisvert
 """
 
 from mip import Model, xsum, BINARY
@@ -56,7 +56,7 @@ x = [m.add_var(var_type=BINARY) for _ in P]
 # Add constraints: each tuple should appear in exactly two selected paths
 for t in T:
     m += xsum(x[i] for i, path in enumerate(P) if t in path) == 2
-    
+
 # Add constraints for paths of specific lengths
 # Example: two paths of length 11
 #m += xsum(x[i] for i in range(len(P)) if path_lengths[i] == 11) >= 2
@@ -65,14 +65,13 @@ for t in T:
 #m += xsum(x[i] for i in range(len(P)) if path_lengths[i] == 10) == 1
 
 # Add constraints on the number of paths
-m += xsum(x) >= 35
-m += xsum(x) <= 40
+m += xsum(x) >= 32
+m += xsum(x) <= 35
 
 # (Optional) Set an objective function, e.g., minimize the number of selected paths
 #m.objective = xsum(x)
 # Maximize the spread in path lengths
 #m.objective = -xsum(((path_lengths[i] - 9) ** 2) * x[i] for i in range(len(P)))
-
 
 # Run the optimization
 m.optimize()
@@ -114,85 +113,13 @@ print(qxd)
 
 #%% Paste the results of Qxw here
 qxw_out = '''
-W0 SEADOO
-# seadoo
-W1 ESTEE
-# estee
-W2 SALADOIL
-# saladoil
-W3 CHEETO
-# cheeto
-W4 THEME
-# theme
-W5 OUTLAST
-# outlast
-W6 METROPOLITAN
-# metropolitan
-W7 TRENCH
-# trench
-W8 TRUTH
-# truth
-W9 STREEP
-# streep
-W10 SEPTA
-# septa
-W11 OPENSEASON
-# openseason
-W12 AIMEE
-# aimee
-W13 EVENTENOR
-# eventenor
-W14 LAMARR
-# lamarr
-W15 EYEPATCH
-# eyepatch
-W16 NATURAL
-# natural
-W17 INGEST
-# ingest
-W18 EVALARUE
-# evalarue
-W19 ALTAR
-# altar
-W20 RATTAN
-# rattan
-W21 EYING
-# eying
-W22 PERSON
-# person
-W23 EREMITE
-# eremite
-W24 TRASH
-# trash
-W25 CURABLE
-# curable
-W26 CARNE
-# carne
-W27 NATCH
-# natch
-W28 STRUM
-# strum
-W29 BARREL
-# barrel
-W30 HEATHBAR
-# heathbar
-W31 BREATH
-# breath
-W32 BARRON
-# barron
-W33 IMSET
-# imset
-W34 TTEST
-# ttest
-W35 TIMBRE
-# timbre
 '''
 
 reg_vpuz = mhv.make_vpuz(qxw_out, selected_paths, harder=False)
 harder_vpuz = mhv.make_vpuz(qxw_out, selected_paths, harder=True)
 
-with open('C:/Users/boisv/Desktop/reg.vpuz', 'w') as fid:
+with open('reg.vpuz', 'w') as fid:
     json.dump(reg_vpuz, fid, indent=2)
-    
-with open('C:/Users/boisv/Desktop/harder.vpuz', 'w') as fid:
+
+with open('harder.vpuz', 'w') as fid:
     json.dump(harder_vpuz, fid, indent=2)
