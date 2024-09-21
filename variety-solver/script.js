@@ -278,13 +278,17 @@ function loadPuzzle(data) {
     const vpuzObj = data;
     // add the image to options
     options_obj = {'image': data['puzzle-image']};
+
+    if (data['notes']) {
+      options_obj['show_notepad'] = true;
+    }
     // add some fake iPuz data
     vpuzObj['kind'] = ["http://ipuz.org/crossword#1"];
     vpuzObj["dimensions"] = {"height": 3, "width": 3};
     vpuzObj["puzzle"] = [ ["#", "#", "#"], ["#", "#", "#"], ["#", "#", "#"] ];
 
     const xw_constructor = new JSCrossword();
-    const xw = xw_constructor.fromData(vpuzObj);
+    const xw = xw_constructor.fromIpuz(vpuzObj);
     jscrossword_to_pdf(xw, options=options_obj);
   });
 
