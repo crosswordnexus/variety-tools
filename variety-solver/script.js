@@ -144,7 +144,7 @@ function loadPuzzle(data) {
       const letter = event.key; // Get the pressed key
       if (letter === 'Backspace' || letter === 'Delete') {
         removeLetter(clickX, clickY); // Remove letter if Backspace or Delete is pressed
-      } else if (letter.length === 1 && letter.match(/[a-z]/i)) {
+      } else if (letter.length === 1 && letter.match(/[a-z\.\=\+]/i)) {
         drawLetter(clickX, clickY, letter); // Draw the letter on the canvas
       }
       overlay.style.display = 'none'; // Hide the overlay
@@ -159,6 +159,9 @@ function loadPuzzle(data) {
     ctx.fillStyle = 'black'; // Set text color
 
     letter = letter.toUpperCase(); // I don't see a reason to allow lowercase
+
+    // make a "+" if the user entered "./=/+"
+    if (letter.match(/[\.\=\+]/)) letter = '+';
 
     const textWidth = ctx.measureText(letter).width; // Measure text width
     const textHeight = parseInt(ctx.font, 10); // Approximate text height
@@ -391,15 +394,18 @@ function checkIfSolved(data, letters) {
   // Grab the solution string
   const solutionString = data['solution-string-sorted'];
 
+  // Clean up letters user has typed
+  const userLetters = letters.map(item => item.letter);
+  const userLettersString = userLetters.join('');
+  const cleanedStr = userLettersString.replace(/[^A-Za-z]/g, "");
+
   // We don't need to go on if the letter counts are mismatched
-  if (!solutionString || solutionString.length !== letters.length) {
+  if (!solutionString || solutionString.length !== cleanedStr.length) {
     return;
   }
 
   // Sort the letters the user has typed
-  const userLetters = letters.map(item => item.letter);
-  const userLettersString = userLetters.join('');
-  const userLettersSorted = sortString(userLettersString);
+  const userLettersSorted = sortString(cleanedStr);
 
   // If they match, make some confetti
   if (solutionString == userLettersSorted) {
