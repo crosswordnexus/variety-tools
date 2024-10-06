@@ -77,7 +77,7 @@ function processTextAreas() {
       thisEntry += ' / ' + nw['words'][1];
     }
     var thisLeftOver = nw['leftover'];
-    tableData.push([thisEntry, thisLeftOver]);
+    tableData.push([thisEntry, thisLeftOver, nw['words'][0].length]);
   });
 
   // Fill the table
@@ -85,6 +85,10 @@ function processTextAreas() {
   table.clear().rows.add(tableData).draw();
   // Clear the search bar
   table.search('').draw();
+
+  // change the headers
+  changeHeaders();
+
   return false;
 }
 
@@ -104,11 +108,18 @@ $(document).on('click', '#datatables-table tbody tr', function() {
   // Repeat the process
   processTextAreas();
 
-  // Change the inward and outward headers
-  var inwardLength = fb_words[0].join('').length;
-  document.getElementById('inwardHeader').innerHTML = `Loop 1 (${inwardLength})`;
-  var outwardLength = fb_words[1].join('').length;
-  document.getElementById('outwardHeader').innerHTML = `Loop 2 (${outwardLength})`;
+  // change the headers
+  changeHeaders();
 
   return true;
 });
+
+// Change the inward and outward headers
+function changeHeaders() {
+  var loop1 = document.getElementById('inwardWords').value.split('\n');
+  var loop2 = document.getElementById('outwardWords').value.split('\n');
+  var inwardLength = loop1.join('').length;
+  document.getElementById('inwardHeader').innerHTML = `Loop 1 (${inwardLength})`;
+  var outwardLength = loop2.join('').length;
+  document.getElementById('outwardHeader').innerHTML = `Loop 2 (${outwardLength})`;
+}
