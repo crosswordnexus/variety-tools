@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marching Bands Construction</title>
+
+    <!-- jQuery and DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
+    <!-- JSZip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, button {
+            margin-top: 5px;
+            padding: 5px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+  <div id="main">
+    <h1>Marching Bands Puzzle</h1>
+    <label for="F1_START">First letters of first forward word:</label>
+    <input type="text" id="F1_START" />
+
+    <label for="F2_END">Last letters of second forward word:</label>
+    <input type="text" id="F2_END" />
+
+    <label for="R1_START">First letters of first backward word:</label>
+    <input type="text" id="R1_START" />
+
+    <label for="R2_END">Last letters of second backward word:</label>
+    <input type="text" id="R2_END" />
+
+    <!--
+    <label for="MIN_SCORE">Minimum score for entries from the word list (default: 50):</label>
+    <input type="number" id="MIN_SCORE" value="50" />
+    -->
+
+    <label for="GRID_SIZE">Width of the marching bands puzzle (default: 11):</label>
+    <input type="number" id="GRID_SIZE" value="11" />
+
+    <button id="submit">Submit</button>
+
+    <div id="results"></div>
+      <div id="datatables-table-div">
+        <table id="datatables-table" class="display">
+            <thead>
+                <tr>
+                    <th>Forward 1</th>
+                    <th>Forward 2</th>
+                    <th>Backward 1</th>
+                    <th>Backward 2</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+  </div>
+  <div id="loading">Loading ...</div>
+
+    <script>
+      const processPuzzle = (F1_START, F2_END, R1_START, R2_END, MIN_SCORE = 50, GRID_SIZE = 11) => {
+
+        document.getElementById('results').innerHTML = "<h2>Processing...</h2>"; // Display a loading message
+
+        // table stuff
+        const tableData = [];
+        const table = $('#datatables-table').DataTable();
+        table.clear().rows.add([]).draw();
+
+        // Run all this asynchronously
+        setTimeout(() => {
+          const W2 = GRID_SIZE - F1_START.length - F2_END.length;
+
+          // word list
+          const words = window.words;
+
+          var we1 = [];
+          Object.keys(words).forEach(word => {
+            const score = words[word];
+            we1.push({"word": word.toUpperCase(), "score": score});
+          });
+          const wordEntries = we1.filter(entry => entry.score >= MIN_SCORE && entry.word.length > 3 && entry.word.length <= GRID_SIZE - 2);
+
+          const wordsHash = Object.fromEntries(wordEntries.map(entry => [entry.word, true]));
+
+          const regexFromPattern = (pattern) => new RegExp('^' + pattern.replace(/\./g, '.') + '.*$');
+
+          // Make an array of all words starting with F1_START
+          const f1_words = wordEntries.filter(({ word }) => regexFromPattern(F1_START).test(word));
+
+          let result = '';
+          for (const { word: f1 } of f1_words) {
+              const f1_end = f1.slice(F1_START.length).split('').reverse().join('');
+
+              // Find words ending in f1_end + R2_END
+              const r2_words = wordEntries.filter(({ word: r2 }) =>
+                  new RegExp('.' + f1_end + R2_END + '$').test(r2) && (r2.length - R2_END.length < W2)
+              );
+
+              for (const { word: r2 } of r2_words) {
+                  const r2_start_length = r2.length - R2_END.length - f1_end.length;
+                  const r2_start = r2.slice(0, r2_start_length).split('').reverse().join('');
+
+                  // Find words that start with r2_start and have length = GRID_SIZE - f1.length
+                  const f2_words = wordEntries.filter(({ word: f2 }) =>
+                      new RegExp('^' + r2_start + '.+' + F2_END + '$').test(f2) && f2.length === (GRID_SIZE - f1.length)
+                  );
+
+                  for (const { word: f2 } of f2_words) {
+                      const f2_middle_string = f2.slice(r2_start.length, -F2_END.length).split('').reverse().join('');
+                      if (wordsHash[R1_START + f2_middle_string]) {
+                        const r1 = `${R1_START}${f2_middle_string}`;
+                          tableData.push([f1, f2, r1, r2]);
+                          console.log(f1, f2, r1, r2);
+                      }
+                  }
+              }
+          }
+          // clear the loading message
+          document.getElementById('results').innerHTML = '';
+          // Fill the table
+          table.clear().rows.add(tableData).draw();
+          // Clear the search bar
+          table.search('').draw();
+        });
+
+        return;
+      };
+
+      document.getElementById('submit').addEventListener('click', async () => {
+        const F1_START = document.getElementById('F1_START').value.trim().toUpperCase();
+        const F2_END = document.getElementById('F2_END').value.trim().toUpperCase();
+        const R1_START = document.getElementById('R1_START').value.trim().toUpperCase();
+        const R2_END = document.getElementById('R2_END').value.trim().toUpperCase();
+        //const MIN_SCORE = parseInt(document.getElementById('MIN_SCORE').value) || 50;
+        const MIN_SCORE = 50;
+        const GRID_SIZE = parseInt(document.getElementById('GRID_SIZE').value) || 11;
+
+        const result = processPuzzle(F1_START, F2_END, R1_START, R2_END, MIN_SCORE, GRID_SIZE);
+      });
+
+      $(document).ready(function () {
+        // hide and show relevant sections
+        $('#main').hide();
+        $('#loading').show();
+        window.words = {};
+        // fetch the data
+        if(typeof window.fetch === "function") {
+          fetch('spreadthewordlist.dict.zip')
+          .then(function (response) {
+            if (response.status === 200 || response.status === 0) {
+              return Promise.resolve(response.arrayBuffer())
+            } else {
+              return Promise.reject(new Error(response.statusText))
+            }
+          })
+          .then(JSZip.loadAsync)
+          .then(function (zip) {
+            return zip.file("spreadthewordlist.dict").async("string");
+          })
+          .then(function success(data) {
+            // populate dictionary
+            var list = data.split('\n');
+            for (var i=0; i<list.length; i++) {
+              var arr = list[i].split(';');
+              if (arr.length > 1) {
+                window.words[arr[0]] = parseInt(arr[1]);
+              }
+            }
+            // Initial table populate
+            var table = $('#datatables-table').DataTable();
+            var dataSet = [];
+            table.clear().rows.add(dataSet).draw();
+            // hide and show
+            $('#main').show();
+            $('#loading').hide();
+
+          }, function error(e) {
+            alert(e);
+          });
+        } else {
+          $('#loading').text('This browser does not support the Fetch API.  Please use Firefox or Chrome to use this page.');
+        }
+      });
+    </script>
+</body>
+</html>
