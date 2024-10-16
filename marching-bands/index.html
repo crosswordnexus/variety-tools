@@ -12,6 +12,17 @@
 
     <!-- JSZip -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Tries -->
+    <script src="trie.js"></script>
+
+    <!-- Helper function to reverse words -->
+    <script type="text/javascript">
+      function reverseWord(s) {
+        return s.split('').reverse().join('');
+      }
+    </script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -75,7 +86,7 @@
   <div id="loading">Loading ...</div>
 
     <script>
-      const processPuzzle = (F1_START, F2_END, R1_START, R2_END, MIN_SCORE = 50, GRID_SIZE = 11) => {
+      const processPuzzle = (F1_START, F2_END, R1_START, R2_END, GRID_SIZE = 13) => {
 
         document.getElementById('results').innerHTML = "<h2>Processing...</h2>"; // Display a loading message
 
@@ -88,49 +99,38 @@
         setTimeout(() => {
           const W2 = GRID_SIZE - F1_START.length - F2_END.length;
 
-          // word list
-          const words = window.words;
+          // Set up some word sets
+          let f1_words = prefixTrie.search(F1_START);
+          let f2_words = suffixTrie.search(reverseWord(F2_END));
+          let r1_words = prefixTrie.search(R1_START);
 
-          var we1 = [];
-          Object.keys(words).forEach(word => {
-            const score = words[word];
-            we1.push({"word": word.toUpperCase(), "score": score});
-          });
-          const wordEntries = we1.filter(entry => entry.score >= MIN_SCORE && entry.word.length > 3 && entry.word.length <= GRID_SIZE - 2);
-
-          const wordsHash = Object.fromEntries(wordEntries.map(entry => [entry.word, true]));
-
-          const regexFromPattern = (pattern) => new RegExp('^' + pattern.replace(/\./g, '.') + '.*$');
-
-          // Make an array of all words starting with F1_START
-          const f1_words = wordEntries.filter(({ word }) => regexFromPattern(F1_START).test(word));
-
-          let result = '';
-          for (const { word: f1 } of f1_words) {
-              const f1_end = f1.slice(F1_START.length).split('').reverse().join('');
+          for (f1 of f1_words) {
+              const f1_end = f1.slice(F1_START.length);
 
               // Find words ending in f1_end + R2_END
-              const r2_words = wordEntries.filter(({ word: r2 }) =>
-                  new RegExp('.' + f1_end + R2_END + '$').test(r2) && (r2.length - R2_END.length < W2)
-              );
+              // but backwards, because suffixTrie
+              const r2_words = suffixTrie.search(reverseWord(R2_END) + f1_end)
 
-              for (const { word: r2 } of r2_words) {
-                  const r2_start_length = r2.length - R2_END.length - f1_end.length;
-                  const r2_start = r2.slice(0, r2_start_length).split('').reverse().join('');
+              for (const r2 of r2_words) {
+                // find the length of the start of r2
+                const r2_start_length = r2.length - R2_END.length - f1_end.length;
+                // the end of f2 will be the start of r2, reversed
+                const r2_start = reverseWord(r2.slice(-r2_start_length));
 
-                  // Find words that start with r2_start and have length = GRID_SIZE - f1.length
-                  const f2_words = wordEntries.filter(({ word: f2 }) =>
-                      new RegExp('^' + r2_start + '.+' + F2_END + '$').test(f2) && f2.length === (GRID_SIZE - f1.length)
-                  );
-
-                  for (const { word: f2 } of f2_words) {
-                      const f2_middle_string = f2.slice(r2_start.length, -F2_END.length).split('').reverse().join('');
-                      if (wordsHash[R1_START + f2_middle_string]) {
-                        const r1 = `${R1_START}${f2_middle_string}`;
-                          tableData.push([f1, f2, r1, r2]);
-                          console.log(f1, f2, r1, r2);
-                      }
+                // Find words that start with r2_start and have length = GRID_SIZE - f1.length
+                for (const f2 of f2_words) {
+                  if (f2.length != GRID_SIZE - f1.length) continue;
+                  if (!f2.endsWith(r2_start)) continue;
+                  // get the "middle string"
+                  // remember, f2 is backwards
+                  const f2_middle_string = reverseWord(f2.slice(F2_END.length, -r2_start.length));
+                  // check if r1_start + f2_middle_string is a word
+                  if (r1_words.has(R1_START + reverseWord(f2_middle_string))) {
+                    const r1 = `${R1_START}${reverseWord(f2_middle_string)}`;
+                      tableData.push([f1, reverseWord(f2), r1, reverseWord(r2)]);
+                      console.log(f1, reverseWord(f2), r1, reverseWord(r2));
                   }
+                }
               }
           }
           // clear the loading message
@@ -149,18 +149,15 @@
         const F2_END = document.getElementById('F2_END').value.trim().toUpperCase();
         const R1_START = document.getElementById('R1_START').value.trim().toUpperCase();
         const R2_END = document.getElementById('R2_END').value.trim().toUpperCase();
-        //const MIN_SCORE = parseInt(document.getElementById('MIN_SCORE').value) || 50;
-        const MIN_SCORE = 50;
-        const GRID_SIZE = parseInt(document.getElementById('GRID_SIZE').value) || 11;
+        const GRID_SIZE = parseInt(document.getElementById('GRID_SIZE').value) || 13;
 
-        const result = processPuzzle(F1_START, F2_END, R1_START, R2_END, MIN_SCORE, GRID_SIZE);
+        const result = processPuzzle(F1_START, F2_END, R1_START, R2_END, GRID_SIZE);
       });
 
       $(document).ready(function () {
         // hide and show relevant sections
         $('#main').hide();
         $('#loading').show();
-        window.words = {};
         // fetch the data
         if(typeof window.fetch === "function") {
           fetch('spreadthewordlist.dict.zip')
@@ -178,10 +175,16 @@
           .then(function success(data) {
             // populate dictionary
             var list = data.split('\n');
+            window.prefixTrie = new Trie();
+            window.suffixTrie = new Trie();
             for (var i=0; i<list.length; i++) {
               var arr = list[i].split(';');
               if (arr.length > 1) {
-                window.words[arr[0]] = parseInt(arr[1]);
+                if (parseInt(arr[1]) >= 50 && arr[0].length > 3) {
+                  var word = arr[0].toUpperCase();
+                  prefixTrie.insert(word);
+                  suffixTrie.insert(reverseWord(word));
+                }
               }
             }
             // Initial table populate
