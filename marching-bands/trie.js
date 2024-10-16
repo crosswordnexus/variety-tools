@@ -76,6 +76,7 @@ class Trie {
     }
 }
 
+/**
 // Example usage
 let trie = new Trie();
 trie.insert("hotel");
@@ -91,3 +92,4 @@ console.log(trie.search("he.t"));  // Should return ["heat"]
 console.log(trie.search("h..."));  // Should return ["heat", "hint", "hitter", "hotel"]
 console.log(trie.search("h...r")); // Should return ["hitter"]
 console.log(trie.search("h"));     // Should return all words starting with "h": ["hat", "heat", "hint", "hitter", "hotel", "hop"]
+**/
