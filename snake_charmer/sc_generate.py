@@ -111,8 +111,8 @@ for word in all_words:
             begin_dict[w1] = begin_dict.get(w1, set()).union([this_word])
             end_dict[w2] = end_dict.get(w2, set()).union([this_word])
             good_words.add(word)
-            if len(w_m) == 5:
-                print(word, w_m)
+            #if len(w_m) == 5:
+            #    print(word, w_m)
 
 print(len(good_words))
 
@@ -129,8 +129,9 @@ for name, d in items.items():
         helper_dict[name][_str] = []
         for this_word in this_set:
             w0, w1 = this_word
-            score = all_word_dict.get(
-                w0, DEF_WORD_SCORE) + all_word_dict.get(w1, DEF_WORD_SCORE)
+            #score = all_word_dict.get(
+            #    w0, DEF_WORD_SCORE) + all_word_dict.get(w1, DEF_WORD_SCORE)
+            score = len(w0)
             leftover_len = len(w0) - len(_str)
             if w1 is not None:
                 leftover_len -= len(w1)

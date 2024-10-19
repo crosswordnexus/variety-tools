@@ -152,7 +152,7 @@ for line in qxd_output.split('\n'):
 
 pypuz_input = {}
 
-NOTES = "Answers in this puzzle are entered in the irregularly shaped areas, either delineated by colors or by bars. Answers are entered left to right, row by row within each piece."
+NOTES = "Answers in this puzzle are entered in the rectangular areas, either delineated by colors or by bars. Answers are entered left to right, row by row within each piece."
 
 pypuz_input['metadata'] = {
       'kind': 'crossword'
@@ -199,11 +199,11 @@ for y1 in range(height):
         # color and bars
         thisColor = colors[arr1Num % len(colors)]
         # Change colors as needed
-        if arr1Num in [6,10]: # red
+        if arr1Num in []: # red
             thisColor = colors[0]
         if arr1Num in []: # blue
             thisColor = colors[1]
-        if arr1Num in [7,8]: # white
+        if arr1Num in []: # white
             thisColor = colors[2]
         if arr1Num in []: # yellow
             thisColor = colors[3]
@@ -225,12 +225,14 @@ clues = [{'title': 'Colors', 'clues': []}, {'title': 'Patches', 'clues': []}]
 for k, v in arr1_words.items():
     thisNum = word2Num[(1, k)]
     cells = [(cell[1], cell[0]) for cell in v]
-    clues[0]['clues'].append({'number': thisNum, 'clue': 'TBD', 'cells': cells})
+    clue = ''.join([qxd_letters[_] for _ in v])
+    clues[0]['clues'].append({'number': thisNum, 'clue': clue, 'cells': cells})
     
 for k, v in arr2_words.items():
     thisNum = word2Num[(2, k)]
     cells = [(cell[1], cell[0]) for cell in v]
-    clues[1]['clues'].append({'number': thisNum, 'clue': 'TBD', 'cells': cells})
+    clue = ''.join([qxd_letters[_] for _ in v])
+    clues[1]['clues'].append({'number': thisNum, 'clue': clue, 'cells': cells})
 
 pypuz_input['clues'] = clues
 

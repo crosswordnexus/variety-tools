@@ -10,9 +10,9 @@ Convert an iPuz from CrossFire into a "two outta three ain't bad" iPuz file
 import json
 import re
 
-filename = r'supermajority.ipuz'
+filename = r'NotHalfBad.ipuz'
 
-with open(filename, 'r') as fid:
+with open(filename, encoding='utf-8') as fid:
     puz = json.load(fid)
     
 #%% Do some bookeeping
@@ -27,15 +27,21 @@ for key, cluelist in clues.items():
     for clue_arr in cluelist:
         num, clue = clue_arr
         clue = clue.upper()
+        # take out any notes we may have added
+        if '(' in clue:
+            clue = clue.split('(')[0].strip()
         w1, w2 = re.split(r'\s+\/\s+', clue)
         new_clue = ' / '.join(sorted([w1, w2]))
         new_clue_arr.append(['', new_clue])
     new_clue_arr = sorted(new_clue_arr, key=lambda x: x[1])
     clues[key] = new_clue_arr
     
-# Also write the "notes" part to be the "intro" part
-if puz['intro']:
-    puz['notes'] = puz['intro']
+# Make an intro (and notes)
+puz['intro'] = '''Each answer in this puzzle is a lowercase dictionary word. Clues come in three types: anagrams, rhymes, and synonyms of the answer word. However, for each answer, only two of the three types of clues are given. It is up to you to determine which clue is which type. Clues are given in alphabetical order.'''
+puz['notes'] = puz['intro']
+
+#%% Preview
+j = json.dumps(puz, indent=2)
 
 #%% Write the file
 with open(filename, 'w') as fid:
