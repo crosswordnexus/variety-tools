@@ -2,11 +2,13 @@ import trie
 import wordninja
 from nltk.stem import PorterStemmer
 from collections import Counter
+import itertools
 
 stemmer = PorterStemmer()
 
 MAX_WORD_LENGTH = 15
 MIN_WORD_LENGTH = 4
+GRID_SIZE = 13
 
 prefixTrie = trie.Trie()
 suffixTrie = trie.Trie()
@@ -21,9 +23,13 @@ with open(r'/Users/aboisvert/Documents/Personal/spreadthewordlist.dict', 'r') as
             suffixTrie.insert(word[::-1])
             
 #%%
-GRID_SIZE = 13
-
 def are_there_dupes(arr):
+    arr = set(arr)
+    # Simple check first
+    suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less']
+    for s, word in itertools.product(suffixes, arr):
+        if word.endswith(s) and word[:-len(s)] in arr:
+            return True
     c = Counter()
     for word in arr:
         word_arr = wordninja.split(word)
@@ -131,7 +137,40 @@ def find_mb_backward_words(r1_start, r2_end, b1_start, b2_end, grid_size=GRID_SI
     return ret
 #END find_mb_backward_words()
                     
-                    
-                    
-                    
-                    
+def find_mb_row1_words(r2_end, grid_size=GRID_SIZE):
+    """
+    Find words for row 1
+    It's a special enough case that we break it out
+    """
+    r2_words_b = suffixTrie.search(r2_end[::-1])
+    
+    ret = []
+    # TODO: we could change the ordering depending on where we are most constrained
+    for r2_b in r2_words_b:
+        if len(r2_b) > GRID_SIZE - MIN_WORD_LENGTH:
+            continue
+        r2 = r2_b[::-1]
+        # The end of b2 will be the start of r2
+        b2_end = r2[:-len(r2_end)]
+        # b1 will start with the end of r1
+        b2_words_b = suffixTrie.search(b2_end[::-1] + '.')
+        for b2_b in b2_words_b:
+            # r1 will end with the start of b2
+            b2 = b2_b[::-1]
+            r1_end = b2[:-len(b2_end)]
+            # Too often len r1_end == 1 results in trivial stuff
+            if len(r1_end) == 1:
+                continue
+            r1_words_b = suffixTrie.search(r1_end[::-1])
+            for r1_b in r1_words_b:
+                if len(r1_b) + len(r2) != GRID_SIZE:
+                    continue
+                r1 = r1_b[::-1]
+                # b1 is just what remains
+                b1 = r1[:-len(r1_end)]
+                if b1 in words:
+                    arr = [r1, r2, b1, b2]
+                    if not are_there_dupes(arr):
+                        ret.append(arr)
+    return ret
+#END find_mb_row1_words()              
