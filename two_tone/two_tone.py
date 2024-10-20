@@ -10,6 +10,7 @@ Helper lookup for making "two-tone" puzzles
 import itertools
 import os
 from collections import defaultdict
+import trie
 
 # The smallest length for words in the puzzle
 MIN_WORD_LENGTH = 4
@@ -132,41 +133,56 @@ while max(changed_values):
     ends = ends.intersection(set(end_dict.keys()))
     new_lengths = (len(good_words), len(beginnings), len(ends))
     changed_values = [orig_lengths[i] == new_lengths[i] for i in range(len(orig_lengths))]
-    
-#%% Now, what words can be starters?
-starter_words = set()
+
+# Make the Trie from the good words
+prefixTrie = trie.Trie()
 for word in good_words:
-    even, odd = odd_even[word]['even'], odd_even[word]['odd']
-    if even in beginnings and odd in beginnings:
-        starter_words.add(word)
-            
-#%% What words can we make from the insides?
-inside_words = set()
-for word in all_words:
-    for n in range(MIN_OVERLAP, len(word) - MIN_OVERLAP + 1):
-        w1, w2 = word[:n], word[n:]
-        if w1 in ends and w2 in beginnings:
-            inside_words.add(word)
+    prefixTrie.insert(word)
 
 #%%
-this_all_words = ['SPEEDO', 'ANNULMENT']
-even_words = ['PEON']
-odd_words = ['SEDAN']
-
-while True:
-    # print the current state
-    print(this_all_words)
-    print(even_words)
-    print(odd_words)
-    
-    # Find the next starters
-    all_string = ''.join(this_all_words)
+def add_word(word, all_words, even_words, odd_words):
+    """
+    Add a word to all_words. This updates even and odd words too.
+    """
+    all_words2 = all_words + [word]
+    all_string = ''.join(all_words2)
     even_string = ''.join(even_words)
     odd_string = ''.join(odd_words)
     
+    # We have to pull out any odd or even words that resulted from adding our word
     odd_start = all_string[::2][len(odd_string):]
     even_start = all_string[1::2][len(even_string):]
     
+    even_words2, odd_words2 = even_words, odd_words
+    
+    if prefixTrie.search(even_start):
+        # it's okay if there are future words we can make from this
+        pass
+    else:
+        for i in range(1, len(even_start)):
+            if even_start[:-i] in good_words:
+                even_words2 = even_words2 + [even_start[:-i]]
+                even_start = even_start[-i:]
+                break
+    if prefixTrie.search(odd_start):
+        pass
+    else:
+        for i in range(1, len(odd_start)):
+            if odd_start[:-i] in good_words:
+                odd_words2 = odd_words2 + [odd_start[:-i]]
+                odd_start = odd_start[-i:]
+                break
+    return all_words2, even_words2, odd_words2, even_start, odd_start
+    
+
+def does_word_work(word, all_words, even_words, odd_words, num_lookaheads=1):
+    """
+    Check if a word works with our current words
+    """
+    # Add the word to our list
+    all_words2, even_words2, odd_words2, even_start, odd_start = add_word(word, all_words, even_words, odd_words)
+    all_string = ''.join(all_words2)
+
     # `start_even` is True if the next letter in "all" words continues `even_start`
     start_even = len(all_string) % 2 == 1
     
@@ -175,6 +191,7 @@ while True:
     odd_endings = begin_end_dict[odd_start]
     next_even = set()
     next_odd = set()
+
     if not start_even:
         for x in even_endings:
             next_even = next_even.union(begin_even_dict.get(x, set()))
@@ -185,43 +202,37 @@ while True:
             next_even = next_even.union(begin_odd_dict.get(x, set()))
         for x in odd_endings:
             next_odd = next_odd.union(begin_even_dict.get(x, set()))
+            
     possible_next_words = next_even.intersection(next_odd)
     
-    # input the next word
-    print(possible_next_words)
-    next_word = input().strip().upper()
+    if num_lookaheads == 0:
+        return possible_next_words
     
-    this_all_words.append(next_word)
+    ret = set()
+    for nw in possible_next_words:
+        if does_word_work(nw, all_words2, even_words2, odd_words2, num_lookaheads-1):
+            ret.add(nw)
+            
+    return ret
     
-    # Now find the next even and odd words
-    all_string = ''.join(this_all_words)
-    even_string = ''.join(even_words)
-    odd_string = ''.join(odd_words)
-    next_start = all_string[(len(even_string) + len(odd_string)):]
-    if start_even:
-        all_evens, all_odds = next_start[::2], next_start[1::2]
+#%%
+all_words, even_words, odd_words = [], [], []
+word = 'SPEEDO'
+
+while True:
+    # Print our possibles
+    next_words = does_word_work(word, all_words, even_words, odd_words, num_lookaheads=1)
+    if next_words:
+        all_words, even_words, odd_words, even_start, odd_start = add_word(word, all_words, even_words, odd_words)
+        # Print our current length
+        print(len(''.join(all_words)))
+        print(all_words, even_words, odd_words)
+        print(even_start, odd_start)
+        # TODO: sort these by length of the next word (descending)
+        print(next_words)
     else:
-        all_evens, all_odds = next_start[1::2], next_start[::2]
-    # options for the next even word
-    next_even_exists = True
-    even_len = len(even_start)
-    all_evens = next_start[::2]
-    possible_next_evens = set([x for x in good_words if x.startswith(even_start) and all_evens.startswith(x[:len(all_evens)])])
-
-    # options for the next odd word
-    next_odd_exists = True
-    odd_len = len(odd_start)
-    all_odds = next_start[1::2]
-    possible_next_odds = set([x for x in good_words if x.startswith(odd_start) and all_odds.startswith(x[:len(all_odds)])])
-
-    # Input the next even and odd
-    print(possible_next_evens)
-    next_even = input().strip().upper()
-    print(possible_next_odds)
-    next_odd = input().strip().upper()
-    
-    even_words.append(next_even)
-    odd_words.append(next_odd)
-    
-    
+        # What do we do in this case?
+        pass
+    word = input("Enter the next word: ")
+    word = word.upper()
     
