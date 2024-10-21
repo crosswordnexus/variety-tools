@@ -10,7 +10,8 @@ Helper lookup for making "two-tone" puzzles
 import itertools
 import os
 from collections import defaultdict
-import trie
+import json
+import zipfile
 
 # The smallest length for words in the puzzle
 MIN_WORD_LENGTH = 4
@@ -79,9 +80,14 @@ with open(WORDLIST, 'r') as fid:
                 ends.add(w2)
                 
                 # we need to find words that finish certain "beginnings"
-                begin_end_dict[w1].add(w2)
-            
+                # they don't have to "finish" it, just continue it
+                for n2 in range(MIN_WORD_LENGTH//2, MIN_WORD_LENGTH+2):
+                    w3 = w2[:n2]
+                    begin_end_dict[w1].add(w3)
+                
             odd_even[word] = {'odd': odd, 'even': even}
+
+begin_keys = frozenset(begin_end_dict.keys())
             
 #%% Make word partitions
 # for each word we need to take all partitions of the odd and even
@@ -133,11 +139,28 @@ while max(changed_values):
     ends = ends.intersection(set(end_dict.keys()))
     new_lengths = (len(good_words), len(beginnings), len(ends))
     changed_values = [orig_lengths[i] == new_lengths[i] for i in range(len(orig_lengths))]
+    
+#%% Write file to zipped JSON for JS purposes
+# Note that we can create "begin_keys" from begin_end_dict in JS
 
-# Make the Trie from the good words
-prefixTrie = trie.Trie()
-for word in good_words:
-    prefixTrie.insert(word)
+begin_end_dict2 = dict((k, list(v)) for k, v in begin_end_dict.items())
+begin_even_dict2 = dict((k, list(v)) for k, v in begin_even_dict.items())
+begin_odd_dict2 = dict((k, list(v)) for k, v in begin_odd_dict.items())
+
+j = {
+  "good_words": list(good_words)
+, "begin_end_dict": begin_end_dict2
+, "begin_even_dict": begin_even_dict2
+, "begin_odd_dict": begin_odd_dict2
+}
+
+# Convert the Python object to a JSON string
+json_data = json.dumps(j)
+
+# Create a new ZIP file and add the JSON data to it
+with zipfile.ZipFile("two_tone_data.json.zip", 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    # Write JSON data to a file inside the ZIP
+    zip_file.writestr("two_tone_data.json", json_data)
 
 #%%
 def add_word(word, all_words, even_words, odd_words):
@@ -155,7 +178,7 @@ def add_word(word, all_words, even_words, odd_words):
     
     even_words2, odd_words2 = even_words, odd_words
     
-    if prefixTrie.search(even_start):
+    if begin_end_dict.get(even_start):
         # it's okay if there are future words we can make from this
         pass
     else:
@@ -164,7 +187,7 @@ def add_word(word, all_words, even_words, odd_words):
                 even_words2 = even_words2 + [even_start[:-i]]
                 even_start = even_start[-i:]
                 break
-    if prefixTrie.search(odd_start):
+    if begin_end_dict.get(odd_start):
         pass
     else:
         for i in range(1, len(odd_start)):
@@ -174,8 +197,7 @@ def add_word(word, all_words, even_words, odd_words):
                 break
     return all_words2, even_words2, odd_words2, even_start, odd_start
     
-
-def does_word_work(word, all_words, even_words, odd_words, num_lookaheads=1):
+def does_word_work(word, all_words, even_words, odd_words):
     """
     Check if a word works with our current words
     """
@@ -186,7 +208,7 @@ def does_word_work(word, all_words, even_words, odd_words, num_lookaheads=1):
     # `start_even` is True if the next letter in "all" words continues `even_start`
     start_even = len(all_string) % 2 == 1
     
-    # find a new "all" word that ends both the words
+    # find a new "all" word that "ends" both the words
     even_endings = begin_end_dict[even_start]
     odd_endings = begin_end_dict[odd_start]
     next_even = set()
@@ -205,34 +227,66 @@ def does_word_work(word, all_words, even_words, odd_words, num_lookaheads=1):
             
     possible_next_words = next_even.intersection(next_odd)
     
-    if num_lookaheads == 0:
-        return possible_next_words
-    
+    # Instead of doing a recursive check, just ensure
+    # that the "ends" of these are valid "beginnings"
     ret = set()
-    for nw in possible_next_words:
-        if does_word_work(nw, all_words2, even_words2, odd_words2, num_lookaheads-1):
-            ret.add(nw)
-            
+    for pnw in possible_next_words:
+        _, _, _, even_start, odd_start = add_word(pnw, all_words2, even_words2, odd_words2)
+        if even_start in begin_keys and odd_start in begin_keys:
+            ret.add(pnw)
     return ret
+
+def next_inner_words(word, all_words, even_words, odd_words):
+    """
+    Print the next "inner" words that would arise if we added "word"
+    """
+    _, even_words2, odd_words2, even_start, odd_start = add_word(word, all_words, even_words, odd_words)
+    return [' '.join(even_words2[len(even_words):]), ' '.join(odd_words2[len(odd_words):]), even_start, odd_start]
+    
+def next_word_sorter(next_word, all_words, even_words, odd_words):
+    """
+    Sort "next words" by length descending
+    """
+    next_even, next_odd, even_start, odd_start = next_inner_words(next_word, all_words, even_words, odd_words)
+    even_len, odd_len = len(''.join(next_even)), len(''.join(next_odd))
+    if not even_len:
+        even_len = len(even_start) + 2
+    if not odd_len:
+        odd_len = len(odd_start) + 2
+    return even_len + odd_len
     
 #%%
 all_words, even_words, odd_words = [], [], []
-word = 'SPEEDO'
+word = 'flaunt'
+
+word = word.upper()
 
 while True:
     # Print our possibles
-    next_words = does_word_work(word, all_words, even_words, odd_words, num_lookaheads=1)
+    next_words = does_word_work(word, all_words, even_words, odd_words)
     if next_words:
         all_words, even_words, odd_words, even_start, odd_start = add_word(word, all_words, even_words, odd_words)
         # Print our current length
         print(len(''.join(all_words)))
         print(all_words, even_words, odd_words)
         print(even_start, odd_start)
-        # TODO: sort these by length of the next word (descending)
-        print(next_words)
+        next_words = sorted(next_words, key=lambda x: next_word_sorter(x, all_words, even_words, odd_words), reverse=True)
+        for nw in next_words[:15]:
+            niw = next_inner_words(nw, all_words, even_words, odd_words)
+            print(' / '.join([nw] + niw))
     else:
         # What do we do in this case?
-        pass
-    word = input("Enter the next word: ")
-    word = word.upper()
+        print("No further fill found. Backtracking needed.")
+        break
+    
+    # Do a loop for choosing the next word
+    word = input("Enter the next word: ").upper()
+    remain_in_loop = True
+    while remain_in_loop:
+        if does_word_work(word, all_words, even_words, odd_words):
+            remain_in_loop = False
+        else:
+            word = input("That word doesn't work. Choose another: ").upper()
+            
+        
     
