@@ -23,6 +23,8 @@ MIT License - https://opensource.org/license/MIT
     <script src="https://unpkg.com/compromise"></script>
 </head>
 <body>
+    <!-- modal box placeholder -->
+    <div class="cw-modal" id="cw-modal"></div>
     <div class="container">
         <div class="textareas">
             <div>
@@ -69,6 +71,7 @@ MIT License - https://opensource.org/license/MIT
         <div class="textareas">
           <button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>
           <button class="button-primary" type="submit" id="export-button" value="Export as .rg">Export as .rg</button>
+          <button class="button-primary" type="submit" id="wordlist-button" value="Upload wordlist">Upload wordlist</button>
         </div>
 
     </div>
@@ -76,6 +79,8 @@ MIT License - https://opensource.org/license/MIT
     <script src="rg.js"></script>
     <!-- RG code for filling -->
     <script src="rg2.js"></script>
+    <!-- Word list processing -->
+    <script src="wordlist.js" type="text/javascript"></script>
 
     <script type="text/javascript">
       /** Stuff to run once the document is ready **/
