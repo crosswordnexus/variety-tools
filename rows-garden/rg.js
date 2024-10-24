@@ -87,5 +87,5 @@ function buttonActive(button) {
 
 // Start off with an empty grid
 const rg = makeRowsGardenPuzzle();
-console.log(rg);
+//console.log(rg);
 createCrossword(rg);
