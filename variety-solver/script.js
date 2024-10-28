@@ -48,6 +48,11 @@ function loadPuzzle(data) {
   }
 
   /** Clues **/
+  
+  // If there are no clues, hide the clue panel
+  if (data['improved-clues'].length === 0) {
+	  document.getElementById('clue-panels').style.display = 'none';
+  }
 
   // Change the width of the clue-numbers depending on size
   const clueNumberLengths = data['improved-clues'].map(x => x.clues).flat().map(x => x.number.length);
@@ -144,7 +149,7 @@ function loadPuzzle(data) {
       const letter = event.key; // Get the pressed key
       if (letter === 'Backspace' || letter === 'Delete') {
         removeLetter(clickX, clickY); // Remove letter if Backspace or Delete is pressed
-      } else if (letter.length === 1 && letter.match(/[a-z\.\=\+]/i)) {
+      } else if (letter.length === 1 && letter.match(/[a-z]/i)) {
         drawLetter(clickX, clickY, letter); // Draw the letter on the canvas
       }
       overlay.style.display = 'none'; // Hide the overlay
@@ -159,9 +164,6 @@ function loadPuzzle(data) {
     ctx.fillStyle = 'black'; // Set text color
 
     letter = letter.toUpperCase(); // I don't see a reason to allow lowercase
-
-    // make a "+" if the user entered "./=/+"
-    if (letter.match(/[\.\=\+]/)) letter = '+';
 
     const textWidth = ctx.measureText(letter).width; // Measure text width
     const textHeight = parseInt(ctx.font, 10); // Approximate text height
@@ -274,27 +276,7 @@ function loadPuzzle(data) {
     if (data.notes) bodyHTML += `<p id="modal-notes">${data.notes}</p>`;
     // Show the modal
     showModal(title, bodyHTML);
-  }); // end info
-
-  // Create PDF when the print button is clicked
-  document.getElementById('printButton').addEventListener('click', function() {
-    const vpuzObj = data;
-    // add the image to options
-    options_obj = {'image': data['puzzle-image']};
-
-    if (data['notes']) {
-      options_obj['show_notepad'] = true;
-    }
-    // add some fake iPuz data
-    vpuzObj['kind'] = ["http://ipuz.org/crossword#1"];
-    vpuzObj["dimensions"] = {"height": 3, "width": 3};
-    vpuzObj["puzzle"] = [ ["#", "#", "#"], ["#", "#", "#"], ["#", "#", "#"] ];
-
-    const xw_constructor = new JSCrossword();
-    const xw = xw_constructor.fromIpuz(vpuzObj);
-    jscrossword_to_pdf(xw, options=options_obj);
   });
-
 } // end loadPuzzle
 
 /** Generic modal functionality **/
@@ -394,18 +376,15 @@ function checkIfSolved(data, letters) {
   // Grab the solution string
   const solutionString = data['solution-string-sorted'];
 
-  // Clean up letters user has typed
-  const userLetters = letters.map(item => item.letter);
-  const userLettersString = userLetters.join('');
-  const cleanedStr = userLettersString.replace(/[^A-Za-z]/g, "");
-
   // We don't need to go on if the letter counts are mismatched
-  if (!solutionString || solutionString.length !== cleanedStr.length) {
+  if (!solutionString || solutionString.length !== letters.length) {
     return;
   }
 
   // Sort the letters the user has typed
-  const userLettersSorted = sortString(cleanedStr);
+  const userLetters = letters.map(item => item.letter);
+  const userLettersString = userLetters.join('');
+  const userLettersSorted = sortString(userLettersString);
 
   // If they match, make some confetti
   if (solutionString == userLettersSorted) {
