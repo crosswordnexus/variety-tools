@@ -49,6 +49,11 @@ function loadPuzzle(data) {
 
   /** Clues **/
 
+  // If there are no clues, hide the clue panel
+  if (data['improved-clues'].length === 0) {
+	  document.getElementById('clue-panels').style.display = 'none';
+  }
+
   // Change the width of the clue-numbers depending on size
   const clueNumberLengths = data['improved-clues'].map(x => x.clues).flat().map(x => x.number.length);
   const clueNumberWidth = 0.9 * Math.max(...clueNumberLengths);
