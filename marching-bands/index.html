@@ -105,30 +105,35 @@
           let r1_words = prefixTrie.search(R1_START);
 
           for (f1 of f1_words) {
+              // skip words that are too long
+              if (f1.length > GRID_SIZE - MIN_WORD_LENGTH) {
+                continue;
+              }
               const f1_end = f1.slice(F1_START.length);
 
               // Find words ending in f1_end + R2_END
               // but backwards, because suffixTrie
-              const r2_words = suffixTrie.search(reverseWord(R2_END) + f1_end)
+              const r2_words_b = suffixTrie.search(reverseWord(R2_END) + f1_end)
 
-              for (const r2 of r2_words) {
+              for (const r2_b of r2_words_b) {
+                let r2 = reverseWord(r2_b);
                 // find the length of the start of r2
                 const r2_start_length = r2.length - R2_END.length - f1_end.length;
-                // the end of f2 will be the start of r2, reversed
-                const r2_start = reverseWord(r2.slice(-r2_start_length));
+                // the start of f2 will be the start of r2, reversed
+                const f2_start = reverseWord(r2.slice(0, r2_start_length));
 
                 // Find words that start with r2_start and have length = GRID_SIZE - f1.length
-                for (const f2 of f2_words) {
-                  if (f2.length != GRID_SIZE - f1.length) continue;
-                  if (!f2.endsWith(r2_start)) continue;
+                for (const f2_b of f2_words) {
+                  if (f2_b.length != GRID_SIZE - f1.length) continue;
+                  let f2 = reverseWord(f2_b);
+                  if (!f2.startsWith(f2_start)) continue;
                   // get the "middle string"
-                  // remember, f2 is backwards
-                  const f2_middle_string = reverseWord(f2.slice(F2_END.length, -r2_start.length));
+                  const f2_middle_string = reverseWord(f2.slice(f2_start.length, -F2_END.length));
                   // check if r1_start + f2_middle_string is a word
-                  if (r1_words.has(R1_START + reverseWord(f2_middle_string))) {
-                    const r1 = `${R1_START}${reverseWord(f2_middle_string)}`;
-                      tableData.push([f1, reverseWord(f2), r1, reverseWord(r2)]);
-                      console.log(f1, reverseWord(f2), r1, reverseWord(r2));
+                  if (r1_words.has(R1_START + f2_middle_string)) {
+                    const r1 = `${R1_START}${f2_middle_string}`;
+                      tableData.push([f1, f2, r1, r2]);
+                      //console.log(f1, f2, r1, r2);
                   }
                 }
               }
@@ -145,13 +150,16 @@
       };
 
       document.getElementById('submit').addEventListener('click', async () => {
-        const F1_START = document.getElementById('F1_START').value.trim().toUpperCase();
-        const F2_END = document.getElementById('F2_END').value.trim().toUpperCase();
-        const R1_START = document.getElementById('R1_START').value.trim().toUpperCase();
-        const R2_END = document.getElementById('R2_END').value.trim().toUpperCase();
-        const GRID_SIZE = parseInt(document.getElementById('GRID_SIZE').value) || 13;
-
-        const result = processPuzzle(F1_START, F2_END, R1_START, R2_END, GRID_SIZE);
+        const elts = ['F1_START', 'F2_END', 'R1_START', 'R2_END']
+        const args = []
+        elts.forEach(elt => {
+          let thisEntry = document.getElementById(elt).value.trim().toUpperCase();
+          thisEntry = thisEntry.replaceAll('?', '.');
+          args.push(thisEntry);
+        });
+        args.push(parseInt(document.getElementById('GRID_SIZE').value) || 13);
+        //console.log(args);
+        const result = processPuzzle(...args);
       });
 
       $(document).ready(function () {
@@ -177,10 +185,11 @@
             var list = data.split('\n');
             window.prefixTrie = new Trie();
             window.suffixTrie = new Trie();
+            window.MIN_WORD_LENGTH = 3;
             for (var i=0; i<list.length; i++) {
               var arr = list[i].split(';');
               if (arr.length > 1) {
-                if (parseInt(arr[1]) >= 50 && arr[0].length > 3) {
+                if (parseInt(arr[1]) >= 50 && arr[0].length >= MIN_WORD_LENGTH) {
                   var word = arr[0].toUpperCase();
                   prefixTrie.insert(word);
                   suffixTrie.insert(reverseWord(word));

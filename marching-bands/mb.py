@@ -3,18 +3,21 @@ import wordninja
 from nltk.stem import PorterStemmer
 from collections import Counter
 import itertools
+import os
 
 stemmer = PorterStemmer()
 
 MAX_WORD_LENGTH = 15
-MIN_WORD_LENGTH = 4
+MIN_WORD_LENGTH = 3
 GRID_SIZE = 13
 
 prefixTrie = trie.Trie()
 suffixTrie = trie.Trie()
 
 words = set()
-with open(r'/Users/aboisvert/Documents/Personal/spreadthewordlist.dict', 'r') as fid:
+wordlist = r'spreadthewordlist.dict'
+wordlist_path = os.path.join('..', 'word_lists', wordlist)
+with open(wordlist_path, 'r') as fid:
     for line in fid:
         word, score = line.strip().split(';')
         if int(score) >= 50 and len(word) >= MIN_WORD_LENGTH and len(word) <= MAX_WORD_LENGTH:
@@ -64,7 +67,7 @@ def find_mb_forward_words(r1_start, r2_end, b2_end, hanging_b2=True, grid_size=G
         # The start of b1 will be the end of r1
         b1_start = r1[len(r1_start):]
         # b1 will start with the end of r1
-        b1_words = prefixTrie.search(b1_start + '.')
+        b1_words = prefixTrie.search(b1_start)
         for b1 in b1_words:
             # r2 will start with the end of b1
             r2_start = b1[len(b1_start):]
@@ -111,7 +114,7 @@ def find_mb_backward_words(r1_start, r2_end, b1_start, b2_end, grid_size=GRID_SI
         r1_end = r1[len(r1_start):]
         # Find words ending in r1_end + b2_end
         # These will be backward because suffixTrie
-        b2_words_b = suffixTrie.search(b2_end[::-1] + r1_end + '.')
+        b2_words_b = suffixTrie.search(b2_end[::-1] + r1_end)
         for b2_b in b2_words_b:
             b2 = b2_b[::-1]
             # Find the length of the start of b2
