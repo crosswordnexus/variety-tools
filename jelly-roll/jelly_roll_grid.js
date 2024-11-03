@@ -7,7 +7,7 @@ const centerY = canvas.height / 2;
 // Spiral configuration
 const spacing = 13; // Space between spiral arms
 const angleOffset = 4 * Math.PI / 3; // Start at 240 degrees
-const numLetters = 42; // letters in each of gray and white bands
+const NUM_LETTERS = 43; // letters in each of gray and white bands
 const numSubdivisions = 5e4; // for plotting
 const fillColor = "#CCCCCC";
 
@@ -104,7 +104,7 @@ function drawSegment(radius, angle, lineWidth, strokeStyle, relativeLength = 1, 
 }
 
 // Function to draw the jelly roll puzzle
-function drawJellyRoll() {
+function drawJellyRoll(numLetters=NUM_LETTERS) {
   /** Draw the main spiral to get spiralPoints **/
   const spiralPoints = drawSpiral(thickInitialRadius, 0, thickStrokeStyle, thickNumTurns, true, true);
 
@@ -194,12 +194,3 @@ function getTrimmedCanvas() {
      trimmedCtx.putImageData(imageData, -left, -top);
      return trimmedCanvas;
  }
-
- // Button event listener to export the image
- document.getElementById("exportButton").addEventListener("click", function () {
-     const trimmedCanvas = getTrimmedCanvas();
-     const link = document.createElement("a");
-     link.href = trimmedCanvas.toDataURL("image/png");
-     link.download = "jelly_roll.png";
-     link.click();
- });

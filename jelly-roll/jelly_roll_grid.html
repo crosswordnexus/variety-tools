@@ -11,7 +11,14 @@
 <button id="exportButton">Export as PNG</button>
 <script type="text/javascript" src="jelly_roll_grid.js"></script>
 <script>
-    // TODO: allow user to pass in parameters instead of editing the JS file
+    // Button event listener to export the image
+    document.getElementById("exportButton").addEventListener("click", function () {
+        const trimmedCanvas = getTrimmedCanvas();
+        const link = document.createElement("a");
+        link.href = trimmedCanvas.toDataURL("image/png");
+        link.download = "jelly_roll.png";
+        link.click();
+    });
     drawJellyRoll();
 </script>
 </body>

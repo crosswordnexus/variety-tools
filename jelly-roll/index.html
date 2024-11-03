@@ -56,15 +56,16 @@ MIT License - https://opensource.org/license/MIT
           <p>Click a row to insert into the puzzle
         </div>
 
-        <!--
         <div class="textareas">
-          <button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>
+          <button class="button-primary" type="submit" id="export-button" value="Export as .vpuz">Export as .vpuz</button>
         </div>
-        -->
+
+        <canvas id="spiralCanvas" width="600" height="600"></canvas>
 
     </div>
     <!-- JS code for filling -->
     <script src="jellyroll.js"></script>
+    <script src="jelly_roll_grid.js"></script>
 
     <script type="text/javascript">
       /** Helper function to convert an onject with array values to sets **/

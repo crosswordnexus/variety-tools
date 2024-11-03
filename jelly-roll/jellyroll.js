@@ -17,6 +17,28 @@ function setUnion(set1, set2) {
   return new Set([...set1, ...set2]);
 }
 
+// take pairs of letters from a word
+function pairsOfLetters(wordOrig) {
+  // The "keys" of ret are the offset of the word
+  // we're interested in 0, 1, 2
+  let ret = ['', '', ''];
+  for (var offset = 0; offset < ret.length; offset++) {
+    let remainder = '';
+    let word = wordOrig;
+    // cut off the beginning to add
+    let addition = word.substr(0, 2 - offset);
+    word = word.substr(2 - offset);
+    remainder += addition;
+    while (word.length) {
+      addition = word.substr(2, 2);
+      word = word.substr(4);
+      remainder += addition;
+    }
+    ret[offset] = remainder
+  }
+  return ret
+}
+
 // Helper function to slice a string like in Python
 function sliceString(str, { i = 0, j = str.length, k = 1 } = {}) {
   let result = '';
@@ -31,85 +53,103 @@ function sliceString(str, { i = 0, j = str.length, k = 1 } = {}) {
 }
 
 // add a word to our existing data, updating all arrays
-function addWord(word, allWords, evenWords, oddWords) {
+function addWord(word, allWords, whiteWords, grayWords) {
   const allWords2 = allWords.concat([word]);
   const allString = allWords2.join('');
-  const evenString = evenWords.join('');
-  const oddString = oddWords.join('');
+  const whiteString = whiteWords.join('');
+  const grayString = grayWords.join('');
 
-  // pull out any odd or even words that result from adding our word
-  var oddStart = sliceString(allString, {k:2}).slice(oddString.length);
-  var evenStart = sliceString(allString, {i:1, k:2}).slice(evenString.length);
+  // pull out any white or gray words
+  // that result from adding our word
+  var whiteStart = pairsOfLetters(allString)[1].slice(whiteString.length);
+  var grayStart = pairsOfLetters(allString.substr(1))[0].slice(grayString.length);
 
-  var evenWords2 = evenWords;
-  var oddWords2 = oddWords;
+  var whiteWords2 = whiteWords;
+  var grayWords2 = grayWords;
 
-  if (!BEGIN_END_DICT[evenStart]) {
-    const l1 = evenStart.length;
+  if (!BEGIN_END_DICT[whiteStart]) {
+    const l1 = whiteStart.length;
     for (var i=1; i < l1; i++) {
-      if (GOOD_WORDS.has(evenStart.substr(0, l1-i))) {
-        evenWords2 = evenWords2.concat(evenStart.substr(0, l1-i));
-        evenStart = evenStart.slice(-i);
+      if (GOOD_WORDS.has(whiteStart.substr(0, l1-i))) {
+        whiteWords2 = whiteWords2.concat(whiteStart.substr(0, l1-i));
+        whiteStart = whiteStart.slice(-i);
         break;
       }
     }
   }
-  if (!BEGIN_END_DICT[oddStart]) {
-    const l1 = oddStart.length;
+  if (!BEGIN_END_DICT[grayStart]) {
+    const l1 = grayStart.length;
     for (var i=1; i<l1; i++) {
-      if (GOOD_WORDS.has(oddStart.substr(0, l1-i))) {
-        oddWords2 = oddWords2.concat(oddStart.substr(0, l1-i));
-        oddStart = oddStart.slice(-i);
+      if (GOOD_WORDS.has(grayStart.substr(0, l1-i))) {
+        grayWords2 = grayWords2.concat(grayStart.substr(0, l1-i));
+        grayStart = grayStart.slice(-i);
         break;
       }
     }
   }
-  return [allWords2, evenWords2, oddWords2, evenStart, oddStart];
+  return [allWords2, whiteWords2, grayWords2, whiteStart, grayStart];
 }
 
 // Check if a new word will work with our current word
-function doesWordWork(word, allWords, evenWords, oddWords) {
+function doesWordWork(word, allWords, whiteWords, grayWords) {
   // add the word to new arrays
-  let [allWords2, evenWords2, oddWords2, evenStart, oddStart] = addWord(word, allWords, evenWords, oddWords);
+  let [allWords2, whiteWords2, grayWords2, whiteStart, grayStart] = addWord(word, allWords, whiteWords, grayWords);
   const allString = allWords2.join('');
 
-  // `startEven` is True if the next letter in "all" words continues `evenStart`
-  const startEven = (allString.length % 2 == 1);
+  // We start with white if the length mod 4 is 0 or 3
+  const startWhite = [0, 3].includes(allString.length % 4);
+  // we start with one letter if the length is even
+  const startOne = (allString.length %2 == 0);
 
-  // Find a new "all" word that "ends" the odd and even
-  const evenEndings = BEGIN_END_DICT[evenStart];
-  const oddEndings = BEGIN_END_DICT[oddStart];
-  var nextEven = new Set();
-  var nextOdd = new Set();
+  // Find a new "all" word that "ends" the words
+  const whiteEndings = BEGIN_END_DICT[whiteStart];
+  const grayEndings = BEGIN_END_DICT[grayStart];
+  var nextWhite = new Set();
+  var nextGray = new Set();
 
-  if (!evenEndings || !oddEndings) {
+  // no need to go through all this if there's nothing
+  if (!whiteEndings || !grayEndings) {
     return new Set();
   }
 
-  if (!startEven) {
-    evenEndings.forEach(x => {
-      nextEven = setUnion(nextEven, BEGIN_EVEN_DICT[x]);
+  if (!startWhite && !startOne) {
+    grayEndings.forEach(x => {
+      nextGray = setUnion(nextGray, BEGIN_PAIR_ARR[0][x]);
     });
-    oddEndings.forEach(x => {
-      nextOdd = setUnion(nextOdd, BEGIN_ODD_DICT[x]);
+    whiteEndings.forEach(x => {
+      nextWhite = setUnion(nextWhite, BEGIN_PAIR_ARR[2][x]);
     });
-  } else {
-    evenEndings.forEach(x => {
-      nextEven = setUnion(nextEven, BEGIN_ODD_DICT[x]);
+  } else if (startWhite && !startOne) {
+    grayEndings.forEach(x => {
+      nextGray = setUnion(nextGray, BEGIN_PAIR_ARR[2][x]);
     });
-    oddEndings.forEach(x => {
-      nextOdd = setUnion(nextOdd, BEGIN_EVEN_DICT[x]);
+    whiteEndings.forEach(x => {
+      nextWhite = setUnion(nextWhite, BEGIN_PAIR_ARR[0][x]);
+    });
+  } else if (startWhite && startOne) {
+    grayEndings.forEach(x => {
+      nextGray = setUnion(nextGray, BEGIN_PAIR_ARR[2][x]);
+    });
+    whiteEndings.forEach(x => {
+      nextWhite = setUnion(nextWhite, BEGIN_PAIR_ARR[1][x]);
+    });
+  } else if (!startWhite && startOne) {
+    grayEndings.forEach(x => {
+      nextGray = setUnion(nextGray, BEGIN_PAIR_ARR[1][x]);
+    });
+    whiteEndings.forEach(x => {
+      nextWhite = setUnion(nextWhite, BEGIN_PAIR_ARR[2][x]);
     });
   }
 
   // The intersection of these is what we want
-  const possibleNextWords = setIntersection(nextEven, nextOdd);
+  const possibleNextWords = setIntersection(nextGray, nextWhite);
 
   // do a little check to make sure these words can be continued
   var ret = new Set();
   for (var pnw of possibleNextWords) {
-    [_, _, _, evenStart, oddStart] = addWord(pnw, allWords2, evenWords2, oddWords2);
-    if (BEGIN_KEYS.has(evenStart) && BEGIN_KEYS.has(oddStart)) {
+    [_, _, _, whiteStart, grayStart] = addWord(pnw, allWords2, whiteWords2, grayWords2);
+    if (BEGIN_KEYS.has(whiteStart) && BEGIN_KEYS.has(grayStart)) {
       ret.add(pnw);
     }
   }
@@ -117,23 +157,23 @@ function doesWordWork(word, allWords, evenWords, oddWords) {
 } // END doesWordWork()
 
 // find the next "inner" words that would arise if we added "word"
-function nextInnerWords(word, allWords, evenWords, oddWords) {
-  [_, evenWords2, oddWords2, evenStart, oddStart] = addWord(word, allWords, evenWords, oddWords);
-  return [evenWords2.slice(evenWords.length).join(' '), oddWords2.slice(oddWords.length).join(' '), evenStart, oddStart];
+function nextInnerWords(word, allWords, whiteWords, grayWords) {
+  [_, whiteWords2, grayWords2, whiteStart, grayStart] = addWord(word, allWords, whiteWords, grayWords);
+  return [whiteWords2.slice(whiteWords.length).join(' '), grayWords2.slice(grayWords.length).join(' '), whiteStart, grayStart];
 }
 
 // helper function to sort the next words
-function nextWordSorter(nextWord, allWords, evenWords, oddWords) {
-  [nextEven, nextOdd, evenStart, oddStart] = nextInnerWords(nextWord, allWords, evenWords, oddWords);
-  let evenLen = nextEven.length;
-  let oddLen = nextOdd.length;
-  if (evenLen == 0) {
-    evenLen = evenStart.length + 2;
+function nextWordSorter(nextWord, allWords, whiteWords, grayWords) {
+  [nextWhite, nextGray, whiteStart, grayStart] = nextInnerWords(nextWord, allWords, whiteWords, grayWords);
+  let whiteLen = nextWhite.length;
+  let grayLen = nextGray.length;
+  if (whiteLen == 0) {
+    whiteLen = nextWhite.length + 2;
   }
-  if (oddLen == 0) {
-    oddLen = oddStart.length + 2;
+  if (grayLen == 0) {
+    grayLen = nextGray.length + 2;
   }
-  return evenLen + oddLen;
+  return whiteLen + grayLen + nextWord.length;
 }
 
 /** Handle button click events **/
@@ -144,9 +184,9 @@ function handleClick(newData=[]) {
   // Run all this asynchronously
   setTimeout(() => {
     // grab the data from the text boxes
-    let allWords1 = document.getElementById('two-tone').value.toUpperCase().split('\n').filter(Boolean);
-    let oddWords = document.getElementById('odd-squares').value.toUpperCase().split('\n').filter(Boolean);
-    let evenWords = document.getElementById('even-squares').value.toUpperCase().split('\n').filter(Boolean);
+    let allWords1 = document.getElementById('jelly-roll').value.toUpperCase().split('\n').filter(Boolean);
+    let oddWords = document.getElementById('white-squares').value.toUpperCase().split('\n').filter(Boolean);
+    let evenWords = document.getElementById('gray-squares').value.toUpperCase().split('\n').filter(Boolean);
 
     // assume the last word is what we're adding
     let allWords = allWords1.slice(0, -1);
@@ -159,7 +199,7 @@ function handleClick(newData=[]) {
     if (nextWords.size === 0) {
       alert("No fill found. Try a different entry.")
       // remove the new entry/entries from the text boxes
-      const textBoxes = ['two-tone', 'odd-squares', 'even-squares'];
+      const textBoxes = ['jelly-roll', 'white-squares', 'gray-squares'];
       for (i = 0; i < textBoxes.length; i++) {
         if (newData[i]) {
           let arr = document.getElementById(textBoxes[i]).value.toUpperCase().split('\n').filter(Boolean);
@@ -194,7 +234,7 @@ function handleClick(newData=[]) {
       table.search('').draw();
 
       // update the length
-      document.getElementById('two-tone-length').innerHTML = `(${allWords1.join('').length})`;
+      document.getElementById('jelly-roll-length').innerHTML = `(${allWords1.join('').length})`;
 
     } // end if/else
 
@@ -206,21 +246,21 @@ function handleClick(newData=[]) {
 /** Define what happens when we click on a row in the table **/
 $('#datatables-table tbody').on('click', 'tr', function() {
     // Grab data from text boxes
-    let allWords = document.getElementById('two-tone').value.toUpperCase().split('\n').filter(Boolean);
-    let oddWords = document.getElementById('odd-squares').value.toUpperCase().split('\n').filter(Boolean);
-    let evenWords = document.getElementById('even-squares').value.toUpperCase().split('\n').filter(Boolean);
+    let allWords = document.getElementById('jelly-roll').value.toUpperCase().split('\n').filter(Boolean);
+    let whiteWords = document.getElementById('white-squares').value.toUpperCase().split('\n').filter(Boolean);
+    let grayWords = document.getElementById('gray-squares').value.toUpperCase().split('\n').filter(Boolean);
 
     // Grab the data from the clicked row
     const data = table.row(this).data();
     // add relevant data to relevant arrays
     if (data[0]) allWords.push(data[0]);
-    if (data[1]) oddWords.push(data[1]);
-    if (data[2]) evenWords.push(data[2]);
+    if (data[1]) whiteWords.push(data[1]);
+    if (data[2]) grayWords.push(data[2]);
 
     // re-populate text boxes
-    document.getElementById('two-tone').value = allWords.join('\n');
-    document.getElementById('odd-squares').value = oddWords.join('\n');
-    document.getElementById('even-squares').value = evenWords.join('\n');
+    document.getElementById('jelly-roll').value = allWords.join('\n');
+    document.getElementById('white-squares').value = whiteWords.join('\n');
+    document.getElementById('gray-squares').value = grayWords.join('\n');
 
     // Click the button
     handleClick(newData=data);
@@ -241,4 +281,74 @@ function buttonActive(button) {
   button.innerHTML = 'Begin';
   button.style.cursor = 'pointer';
   button.addEventListener('click', handleClick);
+}
+
+/** Export a puzzle in RG format **/
+function exportToVpuz(_) {
+  // Set up the output variable
+  var vpuzOut = {"author": "AUTHOR_GOES_HERE", "title": "TITLE_GOES_HERE", "copyright": "COPYRIGHT_GOES_HERE"};
+  const notes = `Three paths curl toward the center of this jelly roll — a white path, a gray path, and a “jelly roll” path that uses all the letters of the other two (winding back and forth as indicated by the heavy bars). Answer words proceed one after the other. Word lengths are given for the answers in the white and gray paths. It’s up to you to determine where the jelly roll answers begin and end.`;
+  vpuzOut['notes'] = notes;
+
+  // Read the text boxes
+  let allArr = document.getElementById('jelly-roll').value.split('\n');
+
+  // solution string
+  const solutionString = allArr.join('').split('').sort().join('');
+  vpuzOut['solution-string'] = solutionString;
+
+  // clues
+  const clues = {};
+  const CLUE_HEADERS = ["White Path", "Gray Path", "Jelly Roll"];
+  const ELTS = ['white-squares', 'gray-squares', 'jelly-roll'];
+  for (var i=0; i < CLUE_HEADERS.length; i++) {
+    let arr = document.getElementById(ELTS[i]).value.split('\n');
+    clues[CLUE_HEADERS[i]] = [];
+    arr.forEach(x => {
+      let clue = `CLUE_FOR_${x}`;
+      if (ELTS[i] != 'jelly-roll') clue += ` ${x.length}`;
+      clues[CLUE_HEADERS[i]].push(clue);
+    });
+  }
+  vpuzOut["clues"] = clues;
+
+  // image
+  const numLetters = solutionString.length / 2; // solution length must be even
+  // draw on the canvas
+  drawJellyRoll(numLetters);
+  // trim
+  const trimmedCanvas = getTrimmedCanvas();
+  const base64String = trimmedCanvas.toDataURL("image/png");
+  vpuzOut['puzzle-image'] = base64String;
+
+  let fileName = allArr[0] + '.vpuz';
+  let vpuzString = JSON.stringify(vpuzOut, null, 2);
+  downloadStringAsFile(vpuzString, fileName, "text/plain");
+
+}
+
+// Export button functionality
+document.getElementById('export-button').addEventListener('click', exportToVpuz);
+
+// Helper function for creating downloads
+function downloadStringAsFile(content, fileName, mimeType) {
+    // Create a blob with the content
+    const blob = new Blob([content], { type: mimeType });
+
+    // Create a temporary anchor element
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName;
+
+    // Append the anchor to the body (required for some browsers)
+    document.body.appendChild(a);
+
+    // Trigger the download by simulating a click
+    a.click();
+
+    // Remove the anchor element from the document
+    document.body.removeChild(a);
+
+    // Revoke the object URL to free up memory
+    URL.revokeObjectURL(a.href);
 }
