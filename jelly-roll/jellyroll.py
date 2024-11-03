@@ -289,7 +289,7 @@ def next_word_sorter(next_word, all_words, white_words, gray_words):
     
 #%%
 all_words, white_words, gray_words = [], [], []
-word = 'runinto'
+word = 'alex'
 
 word = word.upper()
 
@@ -299,7 +299,7 @@ while True:
     if next_words:
         all_words, white_words, gray_words, white_start, gray_start = add_word(word, all_words, white_words, gray_words)
         # Print our current length
-        print(len(''.join(all_words)))
+        print(len(''.join(all_words)), len(''.join(white_words)), len(''.join(gray_words)))
         print(all_words, white_words, gray_words)
         print(white_start, gray_start)
         next_words = sorted(next_words, key=lambda x: next_word_sorter(x, all_words, white_words, gray_words), reverse=True)
