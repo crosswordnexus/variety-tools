@@ -1,0 +1,131 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /**height: 100vh;**/
+    margin: 0;
+    background-color: #f0f0f0;
+    font-family: Arial;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.textareas {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.textareas div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.textareas div:last-child {
+    margin-right: 0;
+}
+
+textarea {
+    width: 200px;
+    height: 200px;
+    resize: none;
+}
+
+#odd-squares {
+  background-color: lightgray;
+}
+
+#medium-text {
+  background-color: pink;
+}
+
+#dark-text {
+  background-color: lightblue;
+}
+
+.main-content {
+    display: flex;
+    align-items: flex-start;
+    padding-top: 10px;
+    padding-bottom: 50px;
+}
+
+#crossword {
+    display: grid;
+    gap: 2px;
+    margin-right: 20px;
+}
+
+.cell {
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border: 1px solid #888;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    text-transform: uppercase;
+}
+
+.cell.empty {
+    background-color: #888;
+    color: #888;
+}
+
+.cell.light {
+    background-color: white;
+}
+
+.cell.medium {
+    background-color: pink;
+}
+
+.cell.dark {
+    background-color: lightblue;
+}
+
+#text-display {
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: white;
+    width: 700px;
+    height: 400px;
+    overflow: auto;
+}
+
+/** Buttons **/
+
+.button-primary {
+    padding: 10px;
+    margin: 10px;
+    margin-top: 10px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    height: 40px;
+}
+
+.button-primary:hover {
+    background-color: #0056b3;
+}
+
+/** Tables **/
+#datatables-table-div {
+  width: 700px;
+}
+
+/* Change cursor to pointer when hovering over table rows */
+table.display tbody tr {
+    cursor: pointer;
+}
