@@ -185,15 +185,15 @@ function handleClick(newData=[]) {
   setTimeout(() => {
     // grab the data from the text boxes
     let allWords1 = document.getElementById('jelly-roll').value.toUpperCase().split('\n').filter(Boolean);
-    let oddWords = document.getElementById('white-squares').value.toUpperCase().split('\n').filter(Boolean);
-    let evenWords = document.getElementById('gray-squares').value.toUpperCase().split('\n').filter(Boolean);
+    let whiteWords = document.getElementById('white-squares').value.toUpperCase().split('\n').filter(Boolean);
+    let grayWords = document.getElementById('gray-squares').value.toUpperCase().split('\n').filter(Boolean);
 
     // assume the last word is what we're adding
     let allWords = allWords1.slice(0, -1);
     let word = allWords1[allWords1.length - 1];
 
     // get our possibles
-    let nextWords = doesWordWork(word, allWords, evenWords, oddWords);
+    let nextWords = doesWordWork(word, allWords, whiteWords, grayWords);
 
     // if there's nothing here, we create an alert and move on
     if (nextWords.size === 0) {
@@ -209,20 +209,20 @@ function handleClick(newData=[]) {
       }
     } else {
       // add the word
-      var evenStart, oddStart;
-      [allWords, evenWords, oddWords, evenStart, oddStart] = addWord(word, allWords, evenWords, oddWords);
+      var whiteStart, grayStart;
+      [allWords, whiteWords, grayWords, whiteStart, grayStart] = addWord(word, allWords, whiteWords, grayWords);
 
       // sort nextwords
       nextWords = [...nextWords].sort((a, b) =>
-        nextWordSorter(b, allWords, evenWords, oddWords) - nextWordSorter(a, allWords, evenWords, oddWords)
+        nextWordSorter(b, allWords, whiteWords, grayWords) - nextWordSorter(a, allWords, whiteWords, grayWords)
       );
 
       //console.log(nextWords);
       // create the data set for the table
       const dataSet = [];
       for (var i=0; i<nextWords.length; i++) {
-        const niw = nextInnerWords(nextWords[i], allWords, evenWords, oddWords);
-        const nextRow = [nextWords[i], niw[1], niw[0], niw[3], niw[2]];
+        const niw = nextInnerWords(nextWords[i], allWords, whiteWords, grayWords);
+        const nextRow = [nextWords[i], niw[0], niw[1], niw[2], niw[3]];
         //console.log(niw);
         dataSet.push(nextRow);
       }
