@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+(c) 2024, Crossword Nexus.
+MIT License - https://opensource.org/license/MIT
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jelly Roll Construction</title>
+    <link rel="stylesheet" href="jr.css">
+    <!-- Load JSZip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Load DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- Load compromise for dupe checking -->
+    <script src="https://unpkg.com/compromise"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="textareas">
+            <div>
+                <h3>Jelly Roll <span id="jelly-roll-length"></span></h3>
+                <textarea id="jelly-roll"></textarea>
+            </div>
+            <div>
+                <h3>White</h3>
+                <textarea id="white-squares"></textarea>
+            </div>
+            <div>
+                <h3>Gray</h3>
+                <textarea id="gray-squares"></textarea>
+            </div>
+        </div>
+        <div class="textareas">
+          <button class="button-primary" type="submit" id="begin-button" value="Begin">Begin</button>
+        </div>
+
+        <div id="datatables-table-div">
+          <table id="datatables-table" class="display">
+              <thead>
+                  <tr>
+                      <th>Jelly Roll</th>
+                      <th>White</th>
+                      <th>Gray</th>
+                      <th>Next White</th>
+                      <th>Next Gray</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <!-- Rows will be populated by JavaScript -->
+              </tbody>
+          </table>
+          <p>Click a row to insert into the puzzle
+        </div>
+
+        <div class="textareas">
+          <button class="button-primary" type="submit" id="export-button" value="Export as .vpuz">Export as .vpuz</button>
+        </div>
+
+        <canvas id="spiralCanvas" width="600" height="600"></canvas>
+
+    </div>
+    <!-- JS code for filling -->
+    <script src="jellyroll.js"></script>
+    <script src="jelly_roll_grid.js"></script>
+
+    <script type="text/javascript">
+      /** Helper function to convert an onject with array values to sets **/
+      function convertArraysToSets(obj) {
+          return Object.fromEntries(
+              Object.entries(obj).map(([key, value]) => [key, new Set(value)])
+          );
+      }
+
+      /** Stuff to run once the document is ready **/
+      document.addEventListener('DOMContentLoaded', function() {
+
+        // Change button to "Loading"
+        const beginButton = document.getElementById('begin-button');
+        buttonLoading(beginButton);
+
+        // Fetch the word list and process
+        fetch("jellyroll.json.zip")
+        .then(function (response) {
+          if (response.status === 200 || response.status === 0) {
+            return Promise.resolve(response.arrayBuffer())
+          } else {
+            return Promise.reject(new Error(response.statusText))
+          }
+          })
+        .then(JSZip.loadAsync)
+        .then(function (zip) {
+          return zip.file("jellyroll.json").async("string");
+        })
+        .then(function success(data) {
+          // populate dictionary
+          data = JSON.parse(data);
+          // get the word lists and make them globally available
+          window.GOOD_WORDS = new Set(data['good_words']);
+          window.BEGIN_END_DICT = convertArraysToSets(data['begin_end_dict']);
+          window.BEGIN_KEYS = new Set(Object.keys(window.BEGIN_END_DICT));
+          // handle begin_pair_arr slightly differently
+          let bpa1 = data['begin_pair_arr'];
+          window.BEGIN_PAIR_ARR = [];
+          bpa1.forEach(x => {
+            window.BEGIN_PAIR_ARR.push(convertArraysToSets(x));
+          });
+
+          // get the wordninja data
+          //window.WORDNINJA = data['WORDNINJA'];
+
+          // Show the button once words have been loaded
+          buttonActive(beginButton);
+
+        });
+      });
+
+      var table = $('#datatables-table').DataTable({
+        "order": []  // Disable initial sorting
+      });
+      var dataSet = [];
+      table.clear().rows.add(dataSet).draw();
+
+    </script>
+</body>
+</html>
