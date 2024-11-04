@@ -306,7 +306,7 @@ function exportToVpuz(_) {
     clues[CLUE_HEADERS[i]] = [];
     arr.forEach(x => {
       let clue = `CLUE_FOR_${x}`;
-      if (ELTS[i] != 'jelly-roll') clue += ` ${x.length}`;
+      if (ELTS[i] != 'jelly-roll') clue += ` (${x.length})`;
       clues[CLUE_HEADERS[i]].push(clue);
     });
   }
