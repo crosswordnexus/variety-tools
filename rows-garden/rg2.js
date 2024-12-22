@@ -35,6 +35,20 @@ function bloomPatterns(_input) {
   return patterns;
 }
 
+// Given a string of 6 letters, find one word that matches
+function constructBloomEntry(_input) {
+  let words = window.WORDS[6] || new Set();
+  let i2 = _input.substr(0,3) + reverseString(_input.substr(3));
+  let bp = bloomPatterns(i2);
+  for (const value of bp) {
+    if (words.has(value.toLowerCase())) {
+      return value;
+    }
+  }
+  // if this doesn't give us anything, just return the input
+  return _input;
+}
+
 // Given a pattern, find possible bloom entries
 function bloomMatches(_input) {
   // Set up our output variable
@@ -451,7 +465,7 @@ function handleClick(bloomEntries=null) {
       const [color, blooms] = lastBlooms(rgData, r);
       // Populate textBoxData
       blooms.forEach(b => {
-        textBoxData[color].push(bloomMapper[b] || b);
+        textBoxData[color].push(bloomMapper[b] || constructBloomEntry(b));
       });
     } // end for r
 
@@ -681,3 +695,22 @@ function checkForDupes(_) {
 
 // Dupe button functionality
 document.getElementById('checkdupes-button').addEventListener('click', checkForDupes);
+
+// Undo button functionality
+function removeLastRow(_) {
+  // grab the data from the text box
+  let rowWords = document.getElementById('rows-text').value;
+  // Create an array from this
+  let rowWordsArr = rowWords.split('\n');
+  // remove the last row
+  rowWordsArr.pop();
+  // populate the text box
+  document.getElementById('rows-text').value = rowWordsArr.join('\n');
+  // clear the other boxes
+  COLORS.forEach(color => {
+    document.getElementById(`${color}-text`).value = '';
+  });
+  // click the begin button
+  handleClick();
+}
+document.getElementById('undo-button').addEventListener('click', removeLastRow);
