@@ -9,16 +9,16 @@ function new_word_options(loop1, loop2) {
   var new_len = loop1.join('').length - loop2.join('').length;
   var this_dict = window.spiralData['begin'];
 
-  console.log(loop2);
+  //console.log(loop2);
 
   // Switch stuff depending on new_len
   if (new_len < 0) {
     this_word = loop2[loop2.length - 1];
     new_len = -1 * new_len;
   }
-  console.log(this_word);
+  //console.log(this_word);
   var this_str = this_word.substr(this_word.length - new_len);
-  console.log(this_str);
+  //console.log(this_str);
 
   // Get our initial return words
   var ret = this_dict[this_str];
@@ -39,7 +39,7 @@ function new_word_options(loop1, loop2) {
       ret2.push(r);
     }
   });
-  return ret2.slice(0, MAX_RET_WORDS);
+  return ret2;
 }
 
 /* add a word or pair of words to the relevant places */
@@ -69,54 +69,57 @@ function processTextAreas() {
 
   // get our options for the next word
   var nwo = new_word_options(loop1, loop2);
-  var html = '';
+  var tableData = [];
   nwo.forEach(function (nw) {
     var id = JSON.stringify(nw['words']);
-    var thisText = nw['words'][0];
+    var thisEntry = nw['words'][0];
     if (nw['words'][1]) {
-      thisText += ' / ' + nw['words'][1];
+      thisEntry += ' / ' + nw['words'][1];
     }
-    thisText += ` [${nw['leftover']}]`;
-    html += `
-    <label class="wordSelectorLabel">
-      <input type="radio" id='${id}' name="wordSelector" value='${id}'>
-      <span class="label-body">${thisText}</span>
-    </label>\n`;
+    var thisLeftOver = nw['leftover'];
+    tableData.push([thisEntry, thisLeftOver, nw['words'][0].length]);
   });
-  // add the button
-  html += `<button class="button-primary" type="submit" onclick="processSelectedItem()">Add Selected Word(s)</button>`;
-  document.getElementById('possibles').innerHTML = html;
+
+  // Fill the table
+  var table = $('#datatables-table').DataTable();
+  table.clear().rows.add(tableData).draw();
+  // Clear the search bar
+  table.search('').draw();
+
+  // change the headers
+  changeHeaders();
+
   return false;
 }
 
-/* Process the selected item from the list */
-function processSelectedItem() {
+$(document).on('click', '#datatables-table tbody tr', function() {
   // grab the words from the textareas
   var loop1 = document.getElementById('inwardWords').value.split('\n');
   var loop2 = document.getElementById('outwardWords').value.split('\n');
-  // Find out which radio button is checked
-  const radioButtons = document.querySelectorAll('input[name="wordSelector"]');
-  var selectedValue;
-  for (const radioButton of radioButtons) {
-      if (radioButton.checked) {
-          selectedValue = radioButton.value;
-          break;
-      }
-  }
-  console.log(selectedValue);
-  var this_word = JSON.parse(selectedValue);
+  // Grab the data
+  const data = table.row(this).data();
+  var this_word = data[0].split(' / ');
+
   var fb_words = add_word(loop1, loop2, this_word);
+
   // Replace the values in the text areas
   document.getElementById('inwardWords').value = fb_words[0].join('\n');
   document.getElementById('outwardWords').value = fb_words[1].join('\n');
   // Repeat the process
   processTextAreas();
 
-  // Change the inward and outward headers
-  var inwardLength = fb_words[0].join('').length;
-  document.getElementById('inwardHeader').innerHTML = `Loop 1 (${inwardLength})`;
-  var outwardLength = fb_words[1].join('').length;
-  document.getElementById('outwardHeader').innerHTML = `Loop 2 (${outwardLength})`;
+  // change the headers
+  changeHeaders();
 
   return true;
+});
+
+// Change the inward and outward headers
+function changeHeaders() {
+  var loop1 = document.getElementById('inwardWords').value.split('\n');
+  var loop2 = document.getElementById('outwardWords').value.split('\n');
+  var inwardLength = loop1.join('').length;
+  document.getElementById('inwardHeader').innerHTML = `Loop 1 (${inwardLength})`;
+  var outwardLength = loop2.join('').length;
+  document.getElementById('outwardHeader').innerHTML = `Loop 2 (${outwardLength})`;
 }

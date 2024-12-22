@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marching Bands Construction</title>
+
+    <!-- jQuery and DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
+    <!-- JSZip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Tries -->
+    <script src="trie.js"></script>
+
+    <!-- Helper function to reverse words -->
+    <script type="text/javascript">
+      function reverseWord(s) {
+        return s.split('').reverse().join('');
+      }
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, button {
+            margin-top: 5px;
+            padding: 5px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+  <div id="main">
+    <h1>Marching Bands Puzzle</h1>
+    <label for="F1_START">First letters of first forward word:</label>
+    <input type="text" id="F1_START" />
+
+    <label for="F2_END">Last letters of second forward word:</label>
+    <input type="text" id="F2_END" />
+
+    <label for="R1_START">First letters of first backward word:</label>
+    <input type="text" id="R1_START" />
+
+    <label for="R2_END">Last letters of second backward word:</label>
+    <input type="text" id="R2_END" />
+
+    <!--
+    <label for="MIN_SCORE">Minimum score for entries from the word list (default: 50):</label>
+    <input type="number" id="MIN_SCORE" value="50" />
+    -->
+
+    <label for="GRID_SIZE">Width of the marching bands puzzle (default: 13):</label>
+    <input type="number" id="GRID_SIZE" value="13" />
+
+    <button id="submit">Submit</button>
+
+    <div id="results"></div>
+      <div id="datatables-table-div">
+        <table id="datatables-table" class="display">
+            <thead>
+                <tr>
+                    <th>Forward 1</th>
+                    <th>Forward 2</th>
+                    <th>Backward 1</th>
+                    <th>Backward 2</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+  </div>
+  <div id="loading">Loading ...</div>
+
+    <script>
+      const processPuzzle = (F1_START, F2_END, R1_START, R2_END, GRID_SIZE = 13) => {
+
+        document.getElementById('results').innerHTML = "<h2>Processing...</h2>"; // Display a loading message
+
+        // table stuff
+        const tableData = [];
+        const table = $('#datatables-table').DataTable();
+        table.clear().rows.add([]).draw();
+
+        // Run all this asynchronously
+        setTimeout(() => {
+          const W2 = GRID_SIZE - F1_START.length - F2_END.length;
+
+          // Set up some word sets
+          let f1_words = prefixTrie.search(F1_START);
+          let f2_words = suffixTrie.search(reverseWord(F2_END));
+          let r1_words = prefixTrie.search(R1_START);
+
+          for (f1 of f1_words) {
+              // skip words that are too long
+              if (f1.length > GRID_SIZE - MIN_WORD_LENGTH) {
+                continue;
+              }
+              const f1_end = f1.slice(F1_START.length);
+
+              // Find words ending in f1_end + R2_END
+              // but backwards, because suffixTrie
+              const r2_words_b = suffixTrie.search(reverseWord(R2_END) + f1_end)
+
+              for (const r2_b of r2_words_b) {
+                let r2 = reverseWord(r2_b);
+                // find the length of the start of r2
+                const r2_start_length = r2.length - R2_END.length - f1_end.length;
+                // the start of f2 will be the start of r2, reversed
+                const f2_start = reverseWord(r2.slice(0, r2_start_length));
+
+                // Find words that start with r2_start and have length = GRID_SIZE - f1.length
+                for (const f2_b of f2_words) {
+                  if (f2_b.length != GRID_SIZE - f1.length) continue;
+                  let f2 = reverseWord(f2_b);
+                  if (!f2.startsWith(f2_start)) continue;
+                  // get the "middle string"
+                  const f2_middle_string = reverseWord(f2.slice(f2_start.length, -F2_END.length));
+                  // check if r1_start + f2_middle_string is a word
+                  if (r1_words.has(R1_START + f2_middle_string)) {
+                    const r1 = `${R1_START}${f2_middle_string}`;
+                      tableData.push([f1, f2, r1, r2]);
+                      //console.log(f1, f2, r1, r2);
+                  }
+                }
+              }
+          }
+          // clear the loading message
+          document.getElementById('results').innerHTML = '';
+          // Fill the table
+          table.clear().rows.add(tableData).draw();
+          // Clear the search bar
+          table.search('').draw();
+        });
+
+        return;
+      };
+
+      document.getElementById('submit').addEventListener('click', async () => {
+        const elts = ['F1_START', 'F2_END', 'R1_START', 'R2_END']
+        const args = []
+        elts.forEach(elt => {
+          let thisEntry = document.getElementById(elt).value.trim().toUpperCase();
+          thisEntry = thisEntry.replaceAll('?', '.');
+          args.push(thisEntry);
+        });
+        args.push(parseInt(document.getElementById('GRID_SIZE').value) || 13);
+        //console.log(args);
+        const result = processPuzzle(...args);
+      });
+
+      $(document).ready(function () {
+        // hide and show relevant sections
+        $('#main').hide();
+        $('#loading').show();
+        // fetch the data
+        if(typeof window.fetch === "function") {
+          fetch('spreadthewordlist.dict.zip')
+          .then(function (response) {
+            if (response.status === 200 || response.status === 0) {
+              return Promise.resolve(response.arrayBuffer())
+            } else {
+              return Promise.reject(new Error(response.statusText))
+            }
+          })
+          .then(JSZip.loadAsync)
+          .then(function (zip) {
+            return zip.file("spreadthewordlist.dict").async("string");
+          })
+          .then(function success(data) {
+            // populate dictionary
+            var list = data.split('\n');
+            window.prefixTrie = new Trie();
+            window.suffixTrie = new Trie();
+            window.MIN_WORD_LENGTH = 3;
+            for (var i=0; i<list.length; i++) {
+              var arr = list[i].split(';');
+              if (arr.length > 1) {
+                if (parseInt(arr[1]) >= 50 && arr[0].length >= MIN_WORD_LENGTH) {
+                  var word = arr[0].toUpperCase();
+                  prefixTrie.insert(word);
+                  suffixTrie.insert(reverseWord(word));
+                }
+              }
+            }
+            // Initial table populate
+            var table = $('#datatables-table').DataTable();
+            var dataSet = [];
+            table.clear().rows.add(dataSet).draw();
+            // hide and show
+            $('#main').show();
+            $('#loading').hide();
+
+          }, function error(e) {
+            alert(e);
+          });
+        } else {
+          $('#loading').text('This browser does not support the Fetch API.  Please use Firefox or Chrome to use this page.');
+        }
+      });
+    </script>
+</body>
+</html>

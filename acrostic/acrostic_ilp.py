@@ -23,7 +23,8 @@ LEN_DISTANCE = 3
 ###################
 # Add the directory to the wordlist
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-WORDLIST = os.path.join(THIS_DIR, WORDLIST1)
+#WORDLIST = os.path.join(THIS_DIR, WORDLIST1)
+WORDLIST = WORDLIST1
 
 # Set up logging
 logging.basicConfig(format='%(levelname)s [%(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
@@ -230,6 +231,7 @@ def create_acrostic(quote, source, excluded_words=[], wordlist=WORDLIST, min_sco
     non_first_letters = quote_alpha
     for let in source_alpha:
         non_first_letters = non_first_letters.replace(let, '', 1)
+
 
     # Set up our letter constraint targets
     logging.info('Setting up constraint targets')

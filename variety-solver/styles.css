@@ -1,0 +1,255 @@
+/**
+* (c) 2024, Crossword Nexus
+* MIT License https://mit-license.org/
+**/
+
+/** Generic CSS for display **/
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 1.4em;
+}
+
+#puzzle-container {
+    display: none;
+    align-items: flex-start;
+    height: 100%;
+    width: 100%;
+}
+
+#container {
+    display: flex;
+    align-items: flex-start;
+    height: 100%;
+    width: 100%;
+}
+
+#puzzle-image-container {
+    position: relative;
+    display: inline-block;
+    flex: 1; /* Allow it to take up available space */
+}
+
+.puzzle-image-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+}
+
+#puzzle-image {
+    display: block;
+}
+
+#canvas {
+    display: block;
+    position: absolute;
+}
+
+/** Metadata display **/
+.info {
+    margin: 10px;
+    font-size: 18px;
+    text-align: center;
+}
+
+/** Clues CSS **/
+h2.clues-title {
+  padding: 0;
+  margin: 0px 0px 5px 0px;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+#clue-panels {
+    display: flex;
+    flex-direction: column;
+    width: 475px;
+    height: 100%; /* Take up the full height of the container */
+    margin-left: 20px;
+}
+
+.clue-panel {
+    /*flex: 1; /* Each panel will take up an equal portion of the height */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    padding: 5px;
+    background: #f9f9f9;
+    box-sizing: border-box;
+}
+
+/* no bullets on clue lists */
+.clue-list {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    overflow-y: auto;
+}
+
+/* Space between clues */
+.clue-item {
+    margin-bottom: 5px;
+    cursor: pointer;
+    display: flex;
+    list-style: none;
+}
+
+.clue-item:hover {
+    background-color: lightgray; /* Change background on hover */
+}
+
+/* Clue note text box */
+.input-box {
+    display: none;
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+/* Bold the clue numbers */
+.clue-number {
+  font-weight: 600;
+  margin-right: 0.7rem;
+  text-align: right;
+}
+
+/* Placeholder for clue text */
+.clue-text {
+    flex: 1 1 auto;
+    word-wrap: break-word;
+    margin-right: 0.2rem;
+}
+
+/* Clue explanations */
+.clue-explanation {
+  display: none;
+  font-weight: bold;
+  font-style: italic;
+  color: #006400;
+}
+
+/** CSS for the overlay when the canvas is clicked **/
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+#circle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(155, 155, 155, 0.8); /* the last element is the transparency */
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/** Info button and modal box **/
+.button-container {
+    margin-top: 20px;
+}
+.info-button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.info-button:hover {
+    background-color: #0056b3;
+}
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 500px;
+    width: 90%;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 5px;
+}
+.modal-title {
+    font-size: 20px;
+    margin: 0;
+}
+.modal-close {
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/**
+* Open puzzle overlay
+**/
+
+div.cw-open-holder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 4;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+div.cw-overflow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: white;
+    z-index: -1;
+}
+
+.cw-open-puzzle {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 20px;
+    text-align: center;
+}
+
+/* we don't show the file input button */
+.cw-open-holder input {
+    visibility: hidden;
+    position: absolute;
+}
+
+/* drag-and-drop style */
+div.has-advanced-upload {
+    outline: 2px dashed gray;
+    outline-offset: -10px;
+}

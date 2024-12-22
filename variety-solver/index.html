@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+* (c) 2024, Crossword Nexus
+* MIT License https://mit-license.org/
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossword Nexus Variety Solver</title>
+    <link href="styles.css" rel="stylesheet">
+
+    <!-- Load lscache -->
+    <script src="lscache.min.js"></script>
+
+    <!-- PDF stuff -->
+    <script src="jspdf-2_5_1.min.js"></script>
+    <script src="jscrossword_combined.js"></script>
+    <script src="xw_pdf.js"></script>
+
+</head>
+<body>
+    <!-- Overlay for opening puzzles -->
+    <div class="cw-open-holder" id="cw-open-holder">
+      <div class="cw-overflow"></div>
+      <div class="cw-open-puzzle">
+        <div class="cw-open-puzzle-instructions">
+          Click the button to choose a file to open.
+        </div>
+        <button type="button" class="cw-button info-button" id="open-vpuz-button">
+          Open vPuz file
+        </button>
+      </div>
+      <input type="file" class="cw-open-vpuz" id="open-vpuz-input" accept=".vpuz">
+    </div>
+    <!-- end overlay -->
+    <div id="puzzle-container">
+      <div id="container">
+          <div id="puzzle-image-container">
+            <div class="puzzle-image-wrapper">
+              <img id="puzzle-image" alt="Puzzle Image">
+              <canvas id="canvas"></canvas>
+              <div class="button-container">
+                  <button class="info-button" id="infoButton">Puzzle Info</button>
+                  <button class="info-button" id="printButton">Print</button>
+              </div>
+            </div>
+          </div>
+          <div id="clue-panels">
+              <div id="clues-0" class="clue-panel">
+                  <h2 id="clues-0-title"></h2>
+                  <ul class="clue-list" id="clue-list-0">
+                  </ul>
+              </div>
+              <div id="clues-1" class="clue-panel">
+                  <h2 id="clues-1-title"></h2>
+                  <ul class="clue-list" id="clue-list-1">
+                  </ul>
+              </div>
+          </div>
+      </div>
+
+      <div class="modal" id="infoModal">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h2 class="modal-title" id="modal-title"></h2>
+                  <span class="modal-close" id="closeModal">&times;</span>
+              </div>
+              <div class="modal-body" id="modal-body">
+              </div>
+          </div>
+      </div>
+    </div> <!-- end puzzle-container div -->
+
+    <!-- Load the main JavaScript -->
+    <script src="script.js"></script>
+
+    <script type="text/javascript">
+    /** Stuff to run once the document is ready **/
+    document.addEventListener('DOMContentLoaded', function() {
+
+      // check that fetch is enabled
+      if(typeof window.fetch !== "function") {
+        alert('Please upgrade to a modern browser');
+      }
+
+      // Grab puzzle from query string if available
+      var url = new URL(window.location.href);
+      var puzzle = url.searchParams.get("puzzle");
+      if (!puzzle) puzzle = url.searchParams.get("file");
+
+      //puzzle = 'flowerpower.vpuz';
+
+      // Get the "open" overlay and puzzle container
+      const openHolder = document.getElementById('cw-open-holder');
+      const puzzleContainer = document.getElementById('puzzle-container');
+
+      // If there's no puzzle we allow the user to choose one
+      if (!puzzle) {
+        // Show the openHolder
+        openHolder.style.display = "flex";
+        const file_input = document.getElementById('open-vpuz-input');
+        file_input.addEventListener('change', function(evt) {
+          var files = evt.target.files.length ? evt.target.files : null;
+          if (files) {
+            var file = files[0];
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    // Parse the file content as JSON
+                    var json = JSON.parse(e.target.result);
+                    openHolder.style.display = "none";
+                    puzzleContainer.style.display = "flex";
+                    loadPuzzle(json);
+
+                } catch (err) {
+                    console.error('Error parsing JSON:', err);
+                }
+            };
+
+            reader.onerror = function() {
+                console.error('Error reading file:', reader.error);
+            };
+
+            // Read the file as text
+            reader.readAsText(file);
+          }
+        });
+      } else {
+        // otherwise we load the puzzle and hide the overlay
+        openHolder.style.display = "none";
+        puzzleContainer.style.display = "flex";
+        // Fetch the puzzle and process
+        fetch(puzzle)
+          .then(function (response) {
+            if (response.status === 200 || response.status === 0) {
+              return Promise.resolve(response.json())
+            } else {
+              return Promise.reject(new Error(response.statusText))
+            }
+          })
+          .then(function success(data) {
+            loadPuzzle(data);
+          });
+      }
+
+      //loadPuzzle(puzzle);
+
+    }); // end document ready
+    </script>
+
+</body>
+</html>

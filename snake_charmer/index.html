@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Snake Charmer Construction</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" />
+
+  <!-- Load DataTables -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
   <style>
   textarea.wordsarea {
     height: 150px;
@@ -28,21 +34,43 @@
 <body>
   <div class="container">
     <h2>Snake Charmer Construction</h2>
-    <p>To make a JPZ from your results, use the <a href="https://jpd236.github.io/kotwords/snake-charmer.html">Kotwords snake charmer tool</a>.
-    <div class="five columns">
-      <p id="possibles"></p>
-    </div>
-    <div class="three columns">
-      <label for="inwardWords" id="inwardHeader">Loop 1</label>
-      <textarea class="u-full-width wordsarea" id="inwardWords">INEVITABLE</textarea>
-    </div>
-    <div class="three columns">
-      <label for="outwardWords" id="outwardHeader">Loop 2</label>
-      <textarea class="u-full-width wordsarea" id="outwardWords">IN
+    <p>To make a JPZ from your results, use the <a href="https://jpd236.github.io/kotwords/snake-charmer.html" target="_blank">Kotwords snake charmer tool</a>.
+    <div class="row">
+      <div class="three columns">
+        <label for="inwardWords" id="inwardHeader">Loop 1</label>
+        <textarea class="u-full-width wordsarea" id="inwardWords">INEVITABLE</textarea>
+      </div>
+      <div class="three columns">
+        <label for="outwardWords" id="outwardHeader">Loop 2</label>
+        <textarea class="u-full-width wordsarea" id="outwardWords">IN
 EVITA</textarea>
-      <button class="button-primary" type="submit" value="Begin" onclick="processTextAreas()">Begin</button>
+        <button class="button-primary" type="submit" value="Begin" onclick="processTextAreas()">Begin</button>
+      </div>
+  </div> <!-- end first row -->
+  <div class="row">
+    <div id="datatables-table-div">
+      <table id="datatables-table" class="display">
+          <thead>
+              <tr>
+                  <th>Entry</th>
+                  <th>Remaining Letters</th>
+                  <th>Length</th>
+              </tr>
+          </thead>
+          <tbody>
+              <!-- Rows will be populated by JavaScript -->
+          </tbody>
+      </table>
+      <p>Click a row to insert into the puzzle
     </div>
-  </div>
+  </div> <!-- end table row -->
+
+<script type="text/javascript">
+var table = $('#datatables-table').DataTable();
+var dataSet = [];
+table.clear().rows.add(dataSet).draw();
+</script>
+
 
 </body>
 </html>
