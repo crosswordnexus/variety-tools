@@ -254,7 +254,7 @@ class Puzzle:
             numbering[(sec, pos)] = i+1
         return numbering
     
-    def draw_puzzle(self, show=False, solution=False):
+    def draw_puzzle(self, show=False, solution=False, pdf=False):
         """Draws the Eight Tracks puzzle grid with shading, a blank center, and inner letter separators."""
         plt.tight_layout()
         fig, ax = plt.subplots(figsize=(90, 90))
@@ -267,7 +267,7 @@ class Puzzle:
         blank_center = plt.Circle((0, 0), 0.2, color='white', fill=True)
         ax.add_patch(blank_center)
         
-        thick_line_width = 15
+        thick_line_width = 28
         thin_line_width = 8
         
         # Draw circles
@@ -335,7 +335,8 @@ class Puzzle:
         
         # Create base64 and save
         buf = io.BytesIO()
-        fig.savefig(buf, dpi=8, format='png')
+        dpi = 24 if pdf else 8
+        fig.savefig(buf, dpi=dpi, format='png')
         buf.seek(0)
         
         image_base64 = base64.b64encode(buf.read()).decode('utf-8')
@@ -413,7 +414,7 @@ class Puzzle:
             vpuz['clues'] = {"Clues": clues1}
         
         # Create and add the image
-        image_base64 = self.draw_puzzle()
+        image_base64 = self.draw_puzzle(pdf=pdf)
         vpuz['puzzle-image'] = f"data:image/png;base64,{image_base64}"
         
         extension = '_easier' if not harder else '_harder'
