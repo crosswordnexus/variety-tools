@@ -18,13 +18,6 @@ function loadPuzzle(data) {
 
   /** Define what to do when the image loads **/
   img.onload = function() {
-    // Set canvas dimensions to match the image dimensions
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-
-    // Adjust the canvas size in the DOM to match the image
-    canvas.style.width = img.width + 'px';
-    canvas.style.height = img.height + 'px';
 
     // If there are letters, render them
     letters.forEach(letter => {
