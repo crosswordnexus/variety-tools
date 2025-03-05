@@ -69,7 +69,8 @@ h2.clues-title {
 #clue-panels {
     display: flex;
     flex-direction: column;
-    width: 475px;
+    width: 30%;
+    min-width: 250px;
     height: 100%; /* Take up the full height of the container */
     margin-left: 20px;
 }
