@@ -20,7 +20,7 @@ function loadPuzzle(data) {
   img.onload = function() {
     // Set canvas dimensions to match the image dimensions
     canvas.width = img.width;
-    canvas.height = img.width;
+    canvas.height = img.height;
 
     // Adjust the canvas size in the DOM to match the image
     canvas.style.width = img.width + 'px';
@@ -161,6 +161,8 @@ function loadPuzzle(data) {
   // Function to draw a letter centered at (x, y) on the canvas
   function drawLetter(x, y, letter, push = true) {
     ctx.font = `${fontSize}px Arial`; // Set font size and family
+    ctx.textBaseline = "middle";  // center vertical alignment
+    ctx.textAlign = "center"; // center horizontal alignment
     ctx.fillStyle = 'black'; // Set text color
 
     letter = letter.toUpperCase(); // I don't see a reason to allow lowercase
@@ -169,10 +171,9 @@ function loadPuzzle(data) {
     if (letter.match(/[\.\=\+]/)) letter = '+';
 
     const textWidth = ctx.measureText(letter).width; // Measure text width
-    const textHeight = parseInt(ctx.font, 10); // Approximate text height
 
     // Draw the text centered at (x, y)
-    ctx.fillText(letter, x - textWidth / 2, y + textHeight / 2);
+    ctx.fillText(letter, x, y);
 
     // Store the letter and its position
     if (push) {
@@ -181,7 +182,7 @@ function loadPuzzle(data) {
         y,
         letter,
         width: textWidth,
-        height: textHeight
+        height: fontSize
       });
       lscache.set(data.letters_save, letters, saveTime);
     }
