@@ -4,7 +4,7 @@ Original code from Robin Yu can be found here:
 https://github.com/robincyu/flower/blob/master/flower.py
 */
 var CANVAS_SIZE, MARGIN_SIZE, PRECISION;
-CANVAS_SIZE = 500;
+CANVAS_SIZE = 750;
 MARGIN_SIZE = 10;
 PRECISION = 10000;
 

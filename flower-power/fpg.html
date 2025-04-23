@@ -11,7 +11,7 @@
         <div class="slider-value">Petal Thickness: <span id="petal-thickness-value" class="slider-value">80</span></div>
     </div>
     <div>
-        <input type="range" class="slider" min="50" max="200" value="60" data-slider-id="2" name="gravity">
+        <input type="range" class="slider" min="50" max="300" value="60" data-slider-id="2" name="gravity">
         <div class="slider-value">Gravity: <span id="gravity-value" class="slider-value">140</span></div>
     </div>
     <div>
@@ -34,12 +34,24 @@
               <option value="18" selected>18</option>
           </select>
     </div>
+    <div>
+        <label for="font_size">Number Font Size:</label>
+          <select id="4" name="font_size">
+              <option value="18">18</option>
+              <option value="19">19</option>
+              <option value="20" selected>20</option>
+              <option value="21">21</option>
+              <option value="22">22</option>
+              <option value="23">23</option>
+          </select>
+    </div>
   </form>
 </div>
 
 <div id="svg"></div>
 
 <button id="saveBtn">Save as PNG</button>
+<button onclick="copyDynamic()">Copy base64 to clipboard</button>
 
 <script type="text/javascript">
 // Get the form and change log container
@@ -51,12 +63,12 @@ function processChange(event) {
     const word_length = parseInt(form.elements['word_length'].value);
     const petal_thickness = parseInt(form.elements['petal_thickness'].value);
     const gravity = parseInt(form.elements['gravity'].value);
+    const font_size = parseInt(form.elements['font_size'].value);
 
     // update the displayed values
     document.getElementById('gravity-value').innerHTML = gravity;
     document.getElementById('petal-thickness-value').innerHTML = petal_thickness;
 
-    var font_size = 14;
     var number_margin = 5;
 
     var r = create_flower_power_svg(petals, word_length, petal_thickness, gravity, font_size, number_margin);
@@ -71,32 +83,47 @@ form.addEventListener('change', processChange);
 processChange(0);
 
 // Save as PNG functionality
-document.getElementById('saveBtn').addEventListener('click', function() {
-    const svg = document.getElementById('svgElement');
-    const svgData = new XMLSerializer().serializeToString(svg);
+function toPNG(save=true) {
+  const svg = document.getElementById('svgElement');
+  const svgData = new XMLSerializer().serializeToString(svg);
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
-    const img = new Image();
-    img.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(svgData));
+  const img = new Image();
+  img.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(svgData));
 
-    img.onload = function() {
-        canvas.width = svg.clientWidth;
-        canvas.height = svg.clientHeight;
-        ctx.drawImage(img, 0, 0);
+  img.onload = function() {
+      canvas.width = svg.clientWidth;
+      canvas.height = svg.clientHeight;
+      ctx.drawImage(img, 0, 0);
 
-        const pngFile = canvas.toDataURL('image/png');
+      const pngFile = canvas.toDataURL('image/png');
 
+      if (!save) {// copy to clipboard
+        navigator.clipboard.writeText(pngFile).then(() => {
+          alert("Base64 string copied to clipboard");
+        }).catch(err => {
+          alert("Failed to copy: " + err);
+        });
+      } else { // save the file
         const a = document.createElement('a');
         a.href = pngFile;
         a.download = 'image.png';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-    };
+      }
+  };
+}
+
+document.getElementById('saveBtn').addEventListener('click', function() {
+  toPNG(true);
 });
 
+function copyDynamic() {
+  return toPNG(false);
+}
 
 </script>
 
