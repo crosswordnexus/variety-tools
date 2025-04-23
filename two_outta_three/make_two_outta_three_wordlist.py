@@ -10,11 +10,12 @@ import nprcommontools as nct
 import rhyme
 import json
 import math
+import os
 
 words = dict()
 MIN_SCORE = 80
 # Word list with only Scrabble-eligible words
-wordlist_file = r'kaidoku_wordlist.dict'
+wordlist_file = os.path.join('..', 'word_lists', 'kaidoku_wordlist.dict')
 with open(wordlist_file, 'r') as fid:
     for line in fid:
         line = line.strip().lower()
@@ -101,11 +102,11 @@ for word in word_set:
             score = 70
             # We prioritize rhyme / anagram pairs
             if num_anagrams > 0:
-                score += 15
+                score += 4
             if num_rhymes > 0:
-                score += 10
-            if num_synonyms > 0:
                 score += 2
+            if num_synonyms > 0:
+                score += 1
             good_words[word] = {'score': score, 'rhymes': list(rhymes), 'anagrams': anagrams, 'synonyms': list(synonyms)}
     
 #%% Write to a file
@@ -119,3 +120,11 @@ with open('two_outta_three.json', 'w') as fid:
 #%% Read in good_words
 with open('two_outta_three.json', 'r') as fid:
     good_words = json.load(fid)
+    
+#%% What options do we have for a given word?
+
+word = 'wrote'
+
+word_lower = word.lower()
+print(good_words[word_lower])
+
