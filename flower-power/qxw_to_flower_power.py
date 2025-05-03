@@ -48,7 +48,7 @@ vpuz = {
 OUTFILE = INPUT_FILE + '.vpuz'
 
 with open(OUTFILE, 'w') as fid:
-    json.dump(vpuz, fid)
+    json.dump(vpuz, fid, indent=2)
     
 
 # Print some metadata to help create the grid image

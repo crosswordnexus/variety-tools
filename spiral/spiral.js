@@ -66,6 +66,29 @@ function add_word(forward_words, backward_words, this_word) {
   return [forward_words, backward_words];
 }
 
+/** Handle a click **/
+$(document).on('click', '#datatables-table tbody tr', function() {
+  // grab the words from the textareas
+  var loop1 = document.getElementById('inwardWords').value.split('\n');
+  var loop2 = document.getElementById('outwardWords').value.split('\n');
+  // Grab the data
+  const data = table.row(this).data();
+  var this_word = data[0].split(' / ');
+
+  var fb_words = add_word(loop1, loop2, this_word);
+
+  // Replace the values in the text areas
+  document.getElementById('inwardWords').value = fb_words[0].join('\n');
+  document.getElementById('outwardWords').value = fb_words[1].join('\n');
+  // Repeat the process
+  processTextAreas();
+
+  // change the headers
+  changeHeaders();
+
+  return true;
+});
+
 /* Process the words in the textareas and write results */
 function processTextAreas() {
   var forward_words = document.getElementById('inwardWords').value.split('\n');
@@ -73,24 +96,38 @@ function processTextAreas() {
 
   // get our options for the next word
   var nwo = new_word_options(forward_words, backward_words);
-  var html = '';
+  var tableData = [];
   nwo.forEach(function (nw) {
     var id = JSON.stringify(nw['words']);
-    var thisText = nw['words'][0];
+    var thisEntry = nw['words'][0];
+    var length = thisEntry.length;
     if (nw['words'][1]) {
-      thisText += ' / ' + nw['words'][1];
+      thisEntry += ' / ' + nw['words'][1];
+      length = (length + nw['words'][1].length)/2.;
     }
-    thisText += ` [${nw['leftover']}]`;
-    html += `
-    <label class="wordSelectorLabel">
-      <input type="radio" id='${id}' name="wordSelector" value='${id}'>
-      <span class="label-body">${thisText}</span>
-    </label>\n`;
+    var thisLeftOver = nw['leftover'];
+    tableData.push([thisEntry, thisLeftOver, length]);
   });
-  // add the button
-  html += `<button class="button-primary" type="submit" onclick="processSelectedItem()">Add Selected Word(s)</button>`;
-  document.getElementById('possibles').innerHTML = html;
+  // Fill the table
+  var table = $('#datatables-table').DataTable();
+  table.clear().rows.add(tableData).draw();
+  // Clear the search bar
+  table.search('').draw();
+
+  // change the headers
+  //changeHeaders();
+
   return false;
+}
+
+/** Change the headers to track lengths **/
+function changeHeaders() {
+  var loop1 = document.getElementById('inwardWords').value.split('\n');
+  var loop2 = document.getElementById('outwardWords').value.split('\n');
+  var inwardLength = loop1.join('').length;
+  document.getElementById('inwardHeader').innerHTML = `Inward (${inwardLength})`;
+  var outwardLength = loop2.join('').length;
+  document.getElementById('outwardHeader').innerHTML = `Outward (${outwardLength})`;
 }
 
 /* Process the selected item from the list */

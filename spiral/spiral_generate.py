@@ -52,7 +52,7 @@ beginnings = set()
 ends = set()
 all_word_dict = dict()
 
-with open(r'stwl.txt', 'r') as fid:
+with open(r'spreadthewordlist.dict', 'r') as fid:
     for line in fid:
         word, score = line.split(';')
         word = word.upper()

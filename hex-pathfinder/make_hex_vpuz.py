@@ -139,18 +139,22 @@ def plot_hexagon_of_hexagons(hex_radius=1, hex_grid_size=8, numbered_hexes={}, d
 # Plot the hexagon of hexagons with flat-sided hexagons, set DPI for higher resolution
 #image_base64 = plot_hexagon_of_hexagons(hex_radius=1, hex_grid_size=8, numbered_hexes=numbered_hexes, dpi=80)
 
-def make_vpuz(qxw_out, selected_paths, harder=False):
+def make_vpuz(selected_paths, harder=False, qxw_out=None, swordsmith_words=None):
     """
     Make a vpuz object from the output of Qxw and the paths
     """
-    # Convert string to array
-    qxw_arr = qxw_out.strip().split('\n')
-
-    # Extract words
     words = []
-    for line in qxw_arr:
-        if line.startswith('# '):
-            words.append(line[2:])
+    # Get our words
+    if qxw_out:
+        qxw_arr = qxw_out.strip().split('\n')
+
+        # Extract words
+        for line in qxw_arr:
+            if line.startswith('# '):
+                words.append(line[2:])
+    else:
+        sw_words = sorted([(k, v) for k, v in swordsmith_words.items()], key=lambda x: (x[0][0][0], x[0][0][1]))
+        words = [_[1] for _ in sw_words]
 
     # The solution string is half of each letter
     ctr = Counter(''.join(words).upper())
