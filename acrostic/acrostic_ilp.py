@@ -10,6 +10,32 @@ import time
 import argparse
 import os, sys
 
+import wordninja
+from nltk.stem import PorterStemmer
+import itertools
+
+stemmer = PorterStemmer()
+
+# Helper function for dupe checking
+def are_there_dupes(arr):
+    arr = set(arr)
+    # Simple check first
+    suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less']
+    for s, word in itertools.product(suffixes, arr):
+        if word.endswith(s) and word[:-len(s)] in arr:
+            return True
+    c = Counter()
+    for word in arr:
+        word_arr = wordninja.split(word)
+        word_stem_arr = [stemmer.stem(x) for x in word_arr]
+        c.update(Counter(word_stem_arr))
+    if max(c.values()) == 1:
+        return False
+    else:
+        c1 = [k for k, v in c.items() if v > 1]
+        print(c1)
+        return True
+
 # The default word list and score
 WORDLIST1 = r'xwordlist.dict'
 MIN_SCORE = 90
@@ -18,7 +44,7 @@ MIN_SCORE = 90
 MIN_WORD_LENGTH = 4
 
 # The "distance" around the mean length we look at
-LEN_DISTANCE = 3
+LEN_DISTANCE = 2
 
 ###################
 # Add the directory to the wordlist
@@ -288,6 +314,8 @@ def create_acrostic(quote, source, excluded_words=[], wordlist=WORDLIST, min_sco
     # Run the optimization.  This is the potential bottleneck.
     logging.info('Optimizing')
     #m.max_solutions = 1
+    # Silence the output
+    m.verbose = 0
     m.optimize(max_solutions=1)
 
     #logging.info(m.num_solutions)
@@ -342,6 +370,31 @@ def main():
         , wordlist=args.wordlist, min_score=args.minscore)
     for x in soln_array:
         print(x.upper())
+        
+    # Check for dupes
+    are_there_dupes(soln_array)
+    
+    return 0
+        
+#%% For running within an IDE
+
+if True:
+    quote = '''We ask ourselves, Who am I to be brilliant, gorgeous, talented, and fabulous? Actually, who are you not to be? You are a child of God. Your playing small does not serve the world. There is nothing enlightened about shrinking so that other people won't feel insecure around you.'''
+    source = 'Marianne Williamson'
+    wordlist = 'spreadthewordlist.dict'
+    minscore = 50
+    excluded = []
+    included = ['nerdculture']
+    
+    soln_array = create_acrostic2(quote, source
+            , excluded_words=excluded, included_words=included
+            , wordlist=wordlist, min_score=minscore)
+    
+    for x in soln_array:
+        print(x.upper())
+
+    if soln_array:
+        are_there_dupes(soln_array)
 
 #%%
 if __name__ == "__main__":
