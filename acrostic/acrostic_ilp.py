@@ -379,10 +379,25 @@ def main():
 #%% For running within an IDE
 
 if True:
-    quote = '''We ask ourselves, Who am I to be brilliant, gorgeous, talented, and fabulous? Actually, who are you not to be? You are a child of God. Your playing small does not serve the world. There is nothing enlightened about shrinking so that other people won't feel insecure around you.'''
-    source = 'Marianne Williamson'
-    wordlist = 'spreadthewordlist.dict'
-    minscore = 50
+    quote = '''
+    We consume five hundred million straws each day. 
+    The equivalent of a hundred twenty-seven school buses filled with straws. It’s disgusting. 
+    There should be children in those school buses, going to school, to learn, not straws.
+    '''
+    
+    quote = quote.replace('\n', ' ').replace('  ', ' ').strip()
+    
+    source = '''Adrian Grenier, The Cut'''
+    
+    wordlist, minscore = 'spreadthewordlist.dict', 50
+    #wordlist, minscore = 'peter-broda-wordlist__scored.dict', 70
+    
+    assert is_substring(alpha_only(source), alpha_only(quote))
+    
+    print(f"Quote length: {len(alpha_only(quote))}")
+    print(f"Source length: {len(alpha_only(source))}")
+    print(f"Average entry length: {len(alpha_only(quote))/len(alpha_only(source)):.2f}")
+    
     excluded = []
     included = ['nerdculture']
     
