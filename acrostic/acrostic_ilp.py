@@ -195,12 +195,12 @@ def create_acrostic2(quote, source, excluded_words=[], included_words=[], wordli
 
     # Make sure we are only including actual words
     included_words = [x for x in included_words if x]
-    
+
     # Ensure the "source" is in the quote
     s1 = alpha_only(source)
     s2 = alpha_only(quote)
     assert is_substring(s1, s2)
-    
+
 
     if included_words:
         # Take the letters from the words we're including
@@ -252,7 +252,7 @@ def create_acrostic(quote, source, excluded_words=[], wordlist=WORDLIST, min_sco
     # Normalize the inputs
     source_alpha = alpha_only(source.strip())
     quote_alpha = alpha_only(quote)
-    
+
     # Keep track of the non-first letters
     non_first_letters = quote_alpha
     for let in source_alpha:
@@ -370,41 +370,41 @@ def main():
         , wordlist=args.wordlist, min_score=args.minscore)
     for x in soln_array:
         print(x.upper())
-        
+
     # Check for dupes
     are_there_dupes(soln_array)
-    
+
     return 0
-        
+
 #%% For running within an IDE
 
 if True:
     quote = '''
-    We consume five hundred million straws each day. 
-    The equivalent of a hundred twenty-seven school buses filled with straws. It’s disgusting. 
+    We consume five hundred million straws each day.
+    The equivalent of a hundred twenty-seven school buses filled with straws. It’s disgusting.
     There should be children in those school buses, going to school, to learn, not straws.
     '''
-    
+
     quote = quote.replace('\n', ' ').replace('  ', ' ').strip()
-    
+
     source = '''Adrian Grenier, The Cut'''
-    
+
     wordlist, minscore = 'spreadthewordlist.dict', 50
     #wordlist, minscore = 'peter-broda-wordlist__scored.dict', 70
-    
+
     assert is_substring(alpha_only(source), alpha_only(quote))
-    
+
     print(f"Quote length: {len(alpha_only(quote))}")
     print(f"Source length: {len(alpha_only(source))}")
     print(f"Average entry length: {len(alpha_only(quote))/len(alpha_only(source)):.2f}")
-    
+
     excluded = []
     included = ['nerdculture']
-    
+
     soln_array = create_acrostic2(quote, source
             , excluded_words=excluded, included_words=included
             , wordlist=wordlist, min_score=minscore)
-    
+
     for x in soln_array:
         print(x.upper())
 
