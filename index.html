@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Variety Puzzle Tools</title>
+
+<style>
+body {
+    margin: 0 0 1em 0;
+    padding: 0;
+    color: black;
+    background-color: #eee;
+    line-height: 130%;
+    font-family: arial, helvetica, verdana, tahoma, sans-serif;
+    text-align: center;
+}
+
+/* Container for the entire grid */
+.link-container {
+  padding: 1rem;
+  box-sizing: border-box;
+  background: #f4f4f4;
+  min-height: 100vh;
+}
+
+/* Category headers */
+.category-header {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  margin: 1rem 0 1rem; /* Spacing above and below */
+  border-bottom: 2px solid #ddd; /* Optional underline */
+  padding-bottom: 0.5rem;
+}
+
+/* Grid layout */
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.8rem;
+}
+
+/* Link tiles */
+.link-tile {
+  color: inherit;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem;
+  text-align: center;
+  min-height: 100px;
+  text-decoration: none; /* Ensure no underline by default */
+}
+
+/* Tile content */
+.tile-content h3 {
+  font-size: 1.2rem;
+  margin: 0 0 0.3rem;
+}
+
+.tile-content p {
+  font-size: 1rem;
+  color: #555;
+  margin-left: 0;
+}
+
+/* Hover effects */
+.link-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+  border-color: #aaa;
+  text-decoration: none; /* Ensure no underline by default */
+}
+
+.link-grid .link-tile:hover {
+  text-decoration: none !important;
+}
+</style>
+</head>
+
+<body>
+    <div class="link-container">
+      <!-- Category: Solving Tools -->
+      <div class="category">
+        <div class="category-header">Variety Puzzle Tools</div>
+        <div class="link-grid">
+
+          <a href="acrostic" class="link-tile">
+            <div class="tile-content">
+              <h3>The Acrostic Machine</h3>
+              <p>Create your own acrostic puzzle.</p>
+            </div>
+          </a>
+
+          <a href="flower-power/fpg.html" class="link-tile">
+            <div class="tile-content">
+              <h3>Flower Power Grid</h3>
+              <p>Make a grid for a flower power puzzle.</p>
+            </div>
+          </a>
+
+          <a href="jelly-roll" class="link-tile">
+            <div class="tile-content">
+              <h3>Jelly Roll</h3>
+              <p>Make a jelly roll puzzle.</p>
+            </div>
+          </a>
+
+          <a href="rows-garden" class="link-tile">
+            <div class="tile-content">
+              <h3>Rows Garden</h3>
+              <p>Make a rows garden puzzle.</p>
+            </div>
+          </a>
+
+          <a href="snake_charmer" class="link-tile">
+            <div class="tile-content">
+              <h3>Snake Charmer</h3>
+              <p>Make a snake charmer puzzle.</p>
+            </div>
+          </a>
+
+          <a href="two-tone" class="link-tile">
+            <div class="tile-content">
+              <h3>Two Tone</h3>
+              <p>Make a two-tone puzzle.</p>
+            </div>
+          </a>
+
+       </div>
+     </div>
+</body>
+
+</html>

@@ -380,15 +380,14 @@ def main():
 
 if True:
     quote = '''
-Family. Religion. Friendship.
-These are the three demons you must slay if you wish to succeed in business.
-When opportunity knocks, you don't want to be driving to the maternity hospital
-or sitting in some phoney-baloney church.
-'''
+    We consume five hundred million straws each day.
+    The equivalent of a hundred twenty-seven school buses filled with straws. It’s disgusting.
+    There should be children in those school buses, going to school, to learn, not straws.
+    '''
 
     quote = quote.replace('\n', ' ').replace('  ', ' ').strip()
 
-    source = '''Montgomery Burns'''
+    source = '''Adrian Grenier, The Cut'''
 
     wordlist, minscore = 'spreadthewordlist.dict', 50
     #wordlist, minscore = 'peter-broda-wordlist__scored.dict', 70
@@ -399,8 +398,8 @@ or sitting in some phoney-baloney church.
     print(f"Source length: {len(alpha_only(source))}")
     print(f"Average entry length: {len(alpha_only(quote))/len(alpha_only(source)):.2f}")
 
-    excluded = ['onestowatch', 'setittomusic']
-    included = ['montypython', 'nothingburger', 'bodypositivity', 'ohnoyoudont', 'offthemarket', 'rhinoplasty']
+    excluded = []
+    included = ['nerdculture']
 
     soln_array = create_acrostic2(quote, source
             , excluded_words=excluded, included_words=included
