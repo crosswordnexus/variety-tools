@@ -382,10 +382,16 @@ function nextRowOptions(rgData) {
   return newData;
 }
 
+// memoized version of the above
+const memoizedNextRowOptions = memoize(nextRowOptions);
+
 /** Handle button click events **/
 function handleClick(bloomEntries=null) {
   // change the button to "loading"
   buttonLoading(BEGIN_BUTTON);
+
+  // Clear the "no results" div
+  document.getElementById('no-results-div').innerHTML = '';
 
   // Run all this asynchronously
   setTimeout(() => {
@@ -410,9 +416,8 @@ function handleClick(bloomEntries=null) {
       createCrossword(rgData);
 
       // create options for the next row
-      dataObj = nextRowOptions(rgData);
+      dataObj = memoizedNextRowOptions(rgData);
     }
-
 
     // Convert to array
     if (dataObj) {
@@ -427,6 +432,10 @@ function handleClick(bloomEntries=null) {
       table.clear().rows.add(tableData).draw();
       // Clear the search bar
       table.search('').draw();
+
+      if (!tableData.length) {
+        document.getElementById('no-results-div').innerHTML = 'No results.';
+      }
     }
 
     /** Populate the text boxes **/
