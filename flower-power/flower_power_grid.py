@@ -60,20 +60,20 @@ def end(s, color = "black", fill = "transparent", stroke_width = "1"):
 
 def create_flower_power_svg(petals, word_length, petal_thickness, gravity, \
                             font_size, number_margin, canvas_size=CANVAS_SIZE, \
-                            margin_size=MARGIN_SIZE):
+                            margin_size=MARGIN_SIZE, inner_numbers=False):
     ret = ''
     ret += "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<svg width=\"" + str(canvas_size+margin_size) + "\" height=\"" + str(canvas_size+margin_size) + "\" viewBox=\"" + str(-(canvas_size+margin_size)/2) + " " + str(-(canvas_size+margin_size)/2) + " " + str(canvas_size+margin_size) + " " + str(canvas_size+margin_size) + "\" xmlns=\"http://www.w3.org/2000/svg\">\n"
     ret += "<style>text {font: " + str(font_size) + "px sans-serif; text-anchor: middle; dominant-baseline: middle;}</style>"
-    
+
     # Prepare petals and other constants
     end_x, end_y = 0, -canvas_size/2
     left_x, left_y = -petal_thickness*canvas_size/200, -canvas_size/4 + gravity
     right_x, right_y = petal_thickness*canvas_size/200, -canvas_size/4 + gravity
-    
+
     border_end_x, border_end_y = 0, -canvas_size/2 - 2
     border_left_x, border_left_y = -petal_thickness*canvas_size/200, -canvas_size/4 + gravity - 2
     border_right_x, border_right_y = petal_thickness*canvas_size/200, -canvas_size/4 + gravity - 2
-    
+
     outer_points = []
     border_outer_points = []
     for i in range(petals+word_length+1):
@@ -87,13 +87,11 @@ def create_flower_power_svg(petals, word_length, petal_thickness, gravity, \
         border_right_x, border_right_y = rotate(border_right_x, border_right_y, 2*math.pi/petals)
     z = calculate_z(0, 0, outer_points[4], outer_points[5], outer_points[2], outer_points[3], 0, 0, outer_points[6*word_length], outer_points[6*word_length+1], outer_points[6*word_length+2], outer_points[6*word_length+3])
     z_inner = calculate_z(0, 0, outer_points[4], outer_points[5], outer_points[2], outer_points[3], 0, 0, outer_points[6*(word_length+1)], outer_points[6*(word_length+1)+1], outer_points[6*(word_length+1)+2], outer_points[6*(word_length+1)+3])
-    
-    print(i)
-    
+
     _, _, _, _, circle_limit_x, circle_limit_y = split_bezier_curve_first(0, 0, outer_points[6*i+4], outer_points[6*i+5], outer_points[6*i+2], outer_points[6*i+3], z_inner)
     radius = math.sqrt(squared_dist(0, 0, circle_limit_x, circle_limit_y))
     h = calculate_z(outer_points[2], outer_points[3], outer_points[4], outer_points[5], 0, 0, outer_points[6+2], outer_points[6+3], outer_points[6], outer_points[6+1], 0, 0)
-    
+
     # Draw petals
     path = start(0, 0)
     for i in range(petals):
@@ -101,7 +99,7 @@ def create_flower_power_svg(petals, word_length, petal_thickness, gravity, \
         path = bezier_through_to(path, outer_points[6*i+4], outer_points[6*i+5], 0, 0)
     path = end(path, "black", "transparent", "2")
     ret += path + "\n"
-    
+
     # Shade inside for word length
     path = start(0, 0)
     for i in range(petals):
@@ -111,7 +109,7 @@ def create_flower_power_svg(petals, word_length, petal_thickness, gravity, \
         path = bezier_through_to(path, c_x, c_y, d_x, d_y)
     path = end(path, "transparent", "black")
     ret += path + "\n"
-    
+
     # Make outside of petal thicker
     path = start(border_outer_points[2], border_outer_points[3])
     for i in range(petals+1): # +1 here to close the top of the flower properly
@@ -121,17 +119,35 @@ def create_flower_power_svg(petals, word_length, petal_thickness, gravity, \
         path = bezier_through_to(path, c_x, c_y, d_x, d_y)
     path = end(path, "black", "transparent", "5")
     ret += path + "\n"
-    
+
     # White circle
     ret += "<circle cx=\"0\" cy=\"0\" r=\"" + str(radius) + "\" stroke=\"transparent\" fill=\"white\"/>\n"
-    
+
     # Numbering
     x, y = outer_points[2], outer_points[3]+font_size+number_margin
     for i in range(petals):
         ret += "<text x=\"" + str(x) + "\" y=\"" + str(y) + "\">" + str(i+1) + "</text>\n"
         x, y = rotate(x, y, 2*math.pi/petals)
-    
+
+    # Numbering Inside Petals
+    # Note: this doesn't quite work yet
+    if inner_numbers:
+        inner_radius = radius + 2 * (font_size + number_margin)
+        x_in, y_in = 0, -inner_radius
+        for i in range(petals):
+            x_i, y_i = rotate(x_in, y_in, 2*math.pi*i/petals)
+            ret += (f"<text x='{x_i}' y='{y_i}'>{petals + i+1}</text>")
+
     ret += "</svg>"
-    
+
     return ret
 #END make flower power
+
+#%%
+if __name__ == '__main__':
+    svg = create_flower_power_svg(petals, word_length, petal_thickness, gravity, \
+                                font_size, number_margin, canvas_size=CANVAS_SIZE, \
+                                margin_size=MARGIN_SIZE, inner_numbers=False)
+    
+    with open('fp.svg', 'w') as fid:
+        fid.write(svg)

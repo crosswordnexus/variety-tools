@@ -242,3 +242,9 @@ table.display tbody tr {
     margin: 10px auto;
     height: 20px;
 }
+
+/** The "no results" div **/
+#no-results-div {
+    font-size: 150%;
+    color: red;
+}
