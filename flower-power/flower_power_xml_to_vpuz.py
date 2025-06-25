@@ -52,4 +52,4 @@ my_string = my_string.decode('utf-8')
 vpuz['puzzle-image'] = f"data:image/png;base64,{my_string}"
 
 with open(r'flower-power.vpuz', 'w') as fid:
-    json.dump(vpuz, fid)
+    json.dump(vpuz, fid, indent=2)
