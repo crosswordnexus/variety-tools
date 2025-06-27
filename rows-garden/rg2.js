@@ -649,55 +649,72 @@ function inferSpaces(s, maxword = 15) {
   return out.reverse().join(" ");
 }
 
+// helper function to recreate Python's Counter
+function counter(arr) {
+  const counts = {};
+  for (const item of arr) {
+    counts[item] = (counts[item] || 0) + 1;
+  }
+  return counts;
+}
+
+// check an array of words for dupes
+function areThereDupes(arr) {
+  let ret = [];
+  let arrSet = new Set(arr);
+  // Simple check first
+  const suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less'];
+  suffixes.forEach(s => {
+    arr.forEach(word => {
+      if (word.endsWith(s) && arrSet.has(word.substr(0, word.length-s.length))) {
+        ret.push(word.substr(0, word.length-s.length));
+      }
+    });
+  });
+
+  // more sophisticated check
+  let counterArr = [];
+  arr.forEach(word => {
+    let word_stem_arr = lemmatize(inferSpaces(word));
+    counterArr.push(...word_stem_arr);
+  });
+  let c = counter(counterArr);
+  Object.keys(c).forEach(k => {
+    let v = c[k];
+    if (v > 1) {
+      ret.push(k);
+    }
+  });
+
+  return ret;
+
+}
+
 function checkForDupes(_) {
   // Grab the words from the text boxes
   const boxNames = ['rows'].concat(COLORS);
-  const words = {};
-  const bloomWords = new Set();
+  const arr = [];
   boxNames.forEach(box => {
     let wordsArr = document.getElementById(`${box}-text`).value.split('\n');
     wordsArr.forEach(w => {
       if (!w) return;
       let w1 = w.split('/');
       w1.forEach(w2 => {
-        // infer spaces and lemmatize
-        let w3 = lemmatize(inferSpaces(w2.toLowerCase()))
-        w3.forEach(w4 => {
-          if (!words[w4]) words[w4] = new Set();
-          words[w4].add(w2);
-          // Save lemmatized words from "colors" for later dupe checking
-          if (COLORS.indexOf(box) !== -1 && w4.length >= 4) {
-            bloomWords.add(w4);
-          }
-        });
+        arr.push(w2.toLowerCase());
       });
     });
   });
 
-  // Loop through bloom words and see if a row word contains it
-  let rowWords = document.getElementById('rows-text').value.split('\n');
-  bloomWords.forEach(bw => {
-    rowWords.forEach(rw => {
-      if (!rw) return;
-      let w1 = rw.split('/');
-      w1.forEach(w2 => {
-        if (w2.toLowerCase().includes(bw)) {
-          words[bw].add(w2);
-        }
-      });
-    });
-  });
-
-  console.log(words);
+  let dupes = areThereDupes(arr);
 
   // Prepare text for an alert
   var alertText = '';
-  Object.keys(words).forEach(k => {
-    if (words[k].size > 1 && k.length > 3) {
-      let dupeDisplay = [...words[k]].join(', ');
-      alertText += `${k} => ${dupeDisplay}\n`;
-    }
-  });
+  if (dupes.length) {
+    alertText += `Dupes detected\n----\n`;
+    dupes.forEach(k => {
+      alertText += `${k}\n`;
+    });
+  }
   if (!alertText) alertText = "No dupes found.";
   alert(alertText);
 }
