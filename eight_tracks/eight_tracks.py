@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Code to help write eight tracks puzzles
+"""
+
+# Import needed packages
 import itertools
 import matplotlib.pyplot as plt
 import math
@@ -15,9 +21,10 @@ stemmer = PorterStemmer()
 
 #%% helper functions
 def are_there_dupes(arr):
+    """Check if there are dupes in an array"""
     arr = set(arr)
     # Simple check first
-    suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less']
+    suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less', 'er']
     for s, word in itertools.product(suffixes, arr):
         if word.endswith(s) and word[:-len(s)] in arr:
             return True
@@ -423,31 +430,39 @@ class Puzzle:
         with open(f"{filename}{extension}.vpuz", "w") as fid:
             json.dump(vpuz, fid, indent=2)
 
-#%%
+#%% Import word list
 word_list = set()
 with open(os.path.join('..', 'word_lists', r'spreadthewordlist.dict'), 'r') as fid:
     for line in fid:
         line = line.strip()
         word, score = line.split(';')
         score = int(score)
-        if score >= 50 and len(word) >= 5:
+        if score >= 50 and len(word) >= 4:
             word_list.add(word.lower())
             
 #%% Example of construction
 p = Puzzle(word_list)
-p.tracks[7] = Track(7, '+')
-p.set_initial_word('latteart', 0, 0)
+p.tracks[7] = Track(7, '+') # "+" is clockwise, "-" is counterclockwise
 
+# The "4" is the sector, the "0" is the position within that sector
+p.set_initial_word('DESSERTS', 4, 0)
 
 #%% Track 6
+# Set up the track number and direction
 track_num, _dir = 6, '-'
+# Create the track in the grid
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('ornamental', 7, 0)
-sec, pos = p.tracks[track_num].place_word('tablet', sec, pos)
+# These are for putting in values into the grid
+sec, pos = p.tracks[track_num].place_word('threesisters', 2, 0)
+sec, pos = p.tracks[track_num].place_word('dose', sec, pos)
 
+# This is commented out but you can run these lines individually
 if False:
-    p.get_valid_words_for_track(track_num, min_length=10, strict=False)
+    # This next line looks for words to add
+    # Looks for all possibilities in this track of length at least 10
+    p.get_valid_words_for_track(track_num, min_length=11, strict=False)
+    # This one adds a word after the first
     p.get_valid_words_for_track(track_num, sector=sec, position=pos)
 
 p.validate_grid()
@@ -457,7 +472,9 @@ p.validate_grid()
 track_num, _dir = 5, '-'
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('pattilabelle', 3, 2)
+# Put in the first word in this track
+sec, pos = p.tracks[track_num].place_word('stresstest', 4, 1)
+
 sec, pos = p.tracks[track_num].place_word('stoners', sec, pos)
 sec, pos = p.tracks[track_num].place_word('maine', sec, pos)
 

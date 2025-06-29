@@ -20,7 +20,7 @@ stemmer = PorterStemmer()
 def are_there_dupes(arr):
     arr = set(arr)
     # Simple check first
-    suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less']
+    suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less', 'er']
     for s, word in itertools.product(suffixes, arr):
         if word.endswith(s) and word[:-len(s)] in arr:
             return True
@@ -380,14 +380,17 @@ def main():
 
 if True:
     quote = '''
-    We consume five hundred million straws each day.
-    The equivalent of a hundred twenty-seven school buses filled with straws. It’s disgusting.
-    There should be children in those school buses, going to school, to learn, not straws.
-    '''
+ You must remember always to give, of everything you have. 
+ You must give foolishly even. You must be extravagant. 
+ You must give to all who come into your life. 
+ Then nothing and no one shall have power to cheat you of anything, 
+ for if you give to a thief, he cannot steal from you, and he himself is then no longer a thief. 
+ And the more you give, the more you will have to give.
+ '''
 
     quote = quote.replace('\n', ' ').replace('  ', ' ').strip()
 
-    source = '''Adrian Grenier, The Cut'''
+    source = '''Saroyan, The Human Comedy'''
 
     wordlist, minscore = 'spreadthewordlist.dict', 50
     #wordlist, minscore = 'peter-broda-wordlist__scored.dict', 70
@@ -399,7 +402,7 @@ if True:
     print(f"Average entry length: {len(alpha_only(quote))/len(alpha_only(source)):.2f}")
 
     excluded = []
-    included = ['nerdculture']
+    included = []
 
     soln_array = create_acrostic2(quote, source
             , excluded_words=excluded, included_words=included
