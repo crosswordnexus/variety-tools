@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Spiral Construction</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" />
+
+  <!-- Load DataTables -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
   <style>
   textarea.wordsarea {
     height: 150px;
@@ -28,27 +34,44 @@
 <body>
   <div class="container">
     <h2>Spiral Construction</h2>
-    <p>To make a JPZ from your results, use the <a href="https://jpd236.github.io/kotwords/spiral.html">Kotwords spiral tool</a>.
-    <div class="five columns">
-      <p id="possibles"></p>
+    <p>To make a JPZ or iPuz from your results, use the <a href="https://jpd236.github.io/kotwords/spiral.html" target="_blank">Kotwords spiral tool</a>.
+    <div class="row">
+      <div class="three columns">
+        <label for="inwardWords" id="inwardHeader">Inward</label>
+        <textarea class="u-full-width wordsarea" id="inwardWords">SENEGAL</textarea>
+      </div>
+      <div class="three columns">
+        <label for="outwardWords" id="outwardHeader">Outward</label>
+        <textarea class="u-full-width wordsarea" id="outwardWords">GENES</textarea>
+        <button class="button-primary" type="submit" value="Begin" onclick="processTextAreas()">Begin</button>
+      </div>
+  </div> <!-- end first row -->
+  <div class="row">
+    <div id="datatables-table-div">
+      <table id="datatables-table" class="display">
+          <thead>
+              <tr>
+                  <th>Entry</th>
+                  <th>Remaining Letters</th>
+                  <th>Length</th>
+              </tr>
+          </thead>
+          <tbody>
+              <!-- Rows will be populated by JavaScript -->
+          </tbody>
+      </table>
+      <p>Click a row to insert into the puzzle
     </div>
-    <div class="three columns">
-      <label for="inwardWords" id="inwardHeader">Inward</label>
-      <textarea class="u-full-width wordsarea" id="inwardWords">SENEGAL</textarea>
-    </div>
-    <div class="three columns">
-      <label for="outwardWords" id="outwardHeader">Outward</label>
-      <textarea class="u-full-width wordsarea" id="outwardWords">GENES</textarea>
-      <button class="button-primary" type="submit" value="Begin" onclick="processTextAreas()">Begin</button>
-    </div>
-  </div>
+  </div> <!-- end table row -->
 
-  <script type="text/javascript">
-  function foo() {
-     alert("Submit button clicked!");
-     return true;
-  }
-  </script>
+<script type="text/javascript">
+var table = $('#datatables-table').DataTable({
+  order: [[2, 'desc']]
+});
+var dataSet = [];
+table.clear().rows.add(dataSet).draw();
+</script>
+
 
 </body>
 </html>

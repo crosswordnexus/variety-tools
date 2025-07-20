@@ -35,6 +35,20 @@ function bloomPatterns(_input) {
   return patterns;
 }
 
+// Given a string of 6 letters, find one word that matches
+function constructBloomEntry(_input) {
+  let words = window.WORDS[6] || new Set();
+  let i2 = _input.substr(0,3) + reverseString(_input.substr(3));
+  let bp = bloomPatterns(i2);
+  for (const value of bp) {
+    if (words.has(value.toLowerCase())) {
+      return value;
+    }
+  }
+  // if this doesn't give us anything, just return the input
+  return _input;
+}
+
 // Given a pattern, find possible bloom entries
 function bloomMatches(_input) {
   // Set up our output variable
@@ -368,10 +382,16 @@ function nextRowOptions(rgData) {
   return newData;
 }
 
+// memoized version of the above
+const memoizedNextRowOptions = memoize(nextRowOptions);
+
 /** Handle button click events **/
 function handleClick(bloomEntries=null) {
   // change the button to "loading"
   buttonLoading(BEGIN_BUTTON);
+
+  // Clear the "no results" div
+  document.getElementById('no-results-div').innerHTML = '';
 
   // Run all this asynchronously
   setTimeout(() => {
@@ -396,9 +416,8 @@ function handleClick(bloomEntries=null) {
       createCrossword(rgData);
 
       // create options for the next row
-      dataObj = nextRowOptions(rgData);
+      dataObj = memoizedNextRowOptions(rgData);
     }
-
 
     // Convert to array
     if (dataObj) {
@@ -413,6 +432,10 @@ function handleClick(bloomEntries=null) {
       table.clear().rows.add(tableData).draw();
       // Clear the search bar
       table.search('').draw();
+
+      if (!tableData.length) {
+        document.getElementById('no-results-div').innerHTML = 'No results.';
+      }
     }
 
     /** Populate the text boxes **/
@@ -451,7 +474,7 @@ function handleClick(bloomEntries=null) {
       const [color, blooms] = lastBlooms(rgData, r);
       // Populate textBoxData
       blooms.forEach(b => {
-        textBoxData[color].push(bloomMapper[b] || b);
+        textBoxData[color].push(bloomMapper[b] || constructBloomEntry(b));
       });
     } // end for r
 
@@ -626,58 +649,94 @@ function inferSpaces(s, maxword = 15) {
   return out.reverse().join(" ");
 }
 
+// helper function to recreate Python's Counter
+function counter(arr) {
+  const counts = {};
+  for (const item of arr) {
+    counts[item] = (counts[item] || 0) + 1;
+  }
+  return counts;
+}
+
+// check an array of words for dupes
+function areThereDupes(arr) {
+  let ret = [];
+  let arrSet = new Set(arr);
+  // Simple check first
+  const suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less'];
+  suffixes.forEach(s => {
+    arr.forEach(word => {
+      if (word.endsWith(s) && arrSet.has(word.substr(0, word.length-s.length))) {
+        ret.push(word.substr(0, word.length-s.length));
+      }
+    });
+  });
+
+  // more sophisticated check
+  let counterArr = [];
+  arr.forEach(word => {
+    let word_stem_arr = lemmatize(inferSpaces(word));
+    counterArr.push(...word_stem_arr);
+  });
+  let c = counter(counterArr);
+  Object.keys(c).forEach(k => {
+    let v = c[k];
+    if (v > 1) {
+      ret.push(k);
+    }
+  });
+
+  return ret;
+
+}
+
 function checkForDupes(_) {
   // Grab the words from the text boxes
   const boxNames = ['rows'].concat(COLORS);
-  const words = {};
-  const bloomWords = new Set();
+  const arr = [];
   boxNames.forEach(box => {
     let wordsArr = document.getElementById(`${box}-text`).value.split('\n');
     wordsArr.forEach(w => {
       if (!w) return;
       let w1 = w.split('/');
       w1.forEach(w2 => {
-        // infer spaces and lemmatize
-        let w3 = lemmatize(inferSpaces(w2.toLowerCase()))
-        w3.forEach(w4 => {
-          if (!words[w4]) words[w4] = new Set();
-          words[w4].add(w2);
-          // Save lemmatized words from "colors" for later dupe checking
-          if (COLORS.indexOf(box) !== -1 && w4.length >= 4) {
-            bloomWords.add(w4);
-          }
-        });
+        arr.push(w2.toLowerCase());
       });
     });
   });
 
-  // Loop through bloom words and see if a row word contains it
-  let rowWords = document.getElementById('rows-text').value.split('\n');
-  bloomWords.forEach(bw => {
-    rowWords.forEach(rw => {
-      if (!rw) return;
-      let w1 = rw.split('/');
-      w1.forEach(w2 => {
-        if (w2.toLowerCase().includes(bw)) {
-          words[bw].add(w2);
-        }
-      });
-    });
-  });
-
-  console.log(words);
+  let dupes = areThereDupes(arr);
 
   // Prepare text for an alert
   var alertText = '';
-  Object.keys(words).forEach(k => {
-    if (words[k].size > 1 && k.length > 3) {
-      let dupeDisplay = [...words[k]].join(', ');
-      alertText += `${k} => ${dupeDisplay}\n`;
-    }
-  });
+  if (dupes.length) {
+    alertText += `Dupes detected\n----\n`;
+    dupes.forEach(k => {
+      alertText += `${k}\n`;
+    });
+  }
   if (!alertText) alertText = "No dupes found.";
   alert(alertText);
 }
 
 // Dupe button functionality
 document.getElementById('checkdupes-button').addEventListener('click', checkForDupes);
+
+// Undo button functionality
+function removeLastRow(_) {
+  // grab the data from the text box
+  let rowWords = document.getElementById('rows-text').value;
+  // Create an array from this
+  let rowWordsArr = rowWords.split('\n');
+  // remove the last row
+  rowWordsArr.pop();
+  // populate the text box
+  document.getElementById('rows-text').value = rowWordsArr.join('\n');
+  // clear the other boxes
+  COLORS.forEach(color => {
+    document.getElementById(`${color}-text`).value = '';
+  });
+  // click the begin button
+  handleClick();
+}
+document.getElementById('undo-button').addEventListener('click', removeLastRow);

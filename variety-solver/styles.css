@@ -37,11 +37,13 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 50px;
+    margin-top: 20px;
 }
 
 #puzzle-image {
     display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 120px);
 }
 
 #canvas {
@@ -67,7 +69,8 @@ h2.clues-title {
 #clue-panels {
     display: flex;
     flex-direction: column;
-    width: 475px;
+    width: 30%;
+    min-width: 250px;
     height: 100%; /* Take up the full height of the container */
     margin-left: 20px;
 }
@@ -159,6 +162,7 @@ h2.clues-title {
 /** Info button and modal box **/
 .button-container {
     margin-top: 20px;
+    height: 200px;
 }
 .info-button {
     padding: 10px 20px;

@@ -10,6 +10,32 @@ import time
 import argparse
 import os, sys
 
+import wordninja
+from nltk.stem import PorterStemmer
+import itertools
+
+stemmer = PorterStemmer()
+
+# Helper function for dupe checking
+def are_there_dupes(arr):
+    arr = set(arr)
+    # Simple check first
+    suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less', 'er']
+    for s, word in itertools.product(suffixes, arr):
+        if word.endswith(s) and word[:-len(s)] in arr:
+            return True
+    c = Counter()
+    for word in arr:
+        word_arr = wordninja.split(word)
+        word_stem_arr = [stemmer.stem(x) for x in word_arr]
+        c.update(Counter(word_stem_arr))
+    if max(c.values()) == 1:
+        return False
+    else:
+        c1 = [k for k, v in c.items() if v > 1]
+        print(c1)
+        return True
+
 # The default word list and score
 WORDLIST1 = r'xwordlist.dict'
 MIN_SCORE = 90
@@ -18,7 +44,7 @@ MIN_SCORE = 90
 MIN_WORD_LENGTH = 4
 
 # The "distance" around the mean length we look at
-LEN_DISTANCE = 3
+LEN_DISTANCE = 2
 
 ###################
 # Add the directory to the wordlist
@@ -169,12 +195,12 @@ def create_acrostic2(quote, source, excluded_words=[], included_words=[], wordli
 
     # Make sure we are only including actual words
     included_words = [x for x in included_words if x]
-    
+
     # Ensure the "source" is in the quote
     s1 = alpha_only(source)
     s2 = alpha_only(quote)
     assert is_substring(s1, s2)
-    
+
 
     if included_words:
         # Take the letters from the words we're including
@@ -226,7 +252,7 @@ def create_acrostic(quote, source, excluded_words=[], wordlist=WORDLIST, min_sco
     # Normalize the inputs
     source_alpha = alpha_only(source.strip())
     quote_alpha = alpha_only(quote)
-    
+
     # Keep track of the non-first letters
     non_first_letters = quote_alpha
     for let in source_alpha:
@@ -288,6 +314,8 @@ def create_acrostic(quote, source, excluded_words=[], wordlist=WORDLIST, min_sco
     # Run the optimization.  This is the potential bottleneck.
     logging.info('Optimizing')
     #m.max_solutions = 1
+    # Silence the output
+    m.verbose = 0
     m.optimize(max_solutions=1)
 
     #logging.info(m.num_solutions)
@@ -342,6 +370,49 @@ def main():
         , wordlist=args.wordlist, min_score=args.minscore)
     for x in soln_array:
         print(x.upper())
+
+    # Check for dupes
+    are_there_dupes(soln_array)
+
+    return 0
+
+#%% For running within an IDE
+
+if True:
+    quote = '''
+ You must remember always to give, of everything you have. 
+ You must give foolishly even. You must be extravagant. 
+ You must give to all who come into your life. 
+ Then nothing and no one shall have power to cheat you of anything, 
+ for if you give to a thief, he cannot steal from you, and he himself is then no longer a thief. 
+ And the more you give, the more you will have to give.
+ '''
+
+    quote = quote.replace('\n', ' ').replace('  ', ' ').strip()
+
+    source = '''Saroyan, The Human Comedy'''
+
+    wordlist, minscore = 'spreadthewordlist.dict', 50
+    #wordlist, minscore = 'peter-broda-wordlist__scored.dict', 70
+
+    assert is_substring(alpha_only(source), alpha_only(quote))
+
+    print(f"Quote length: {len(alpha_only(quote))}")
+    print(f"Source length: {len(alpha_only(source))}")
+    print(f"Average entry length: {len(alpha_only(quote))/len(alpha_only(source)):.2f}")
+
+    excluded = []
+    included = []
+
+    soln_array = create_acrostic2(quote, source
+            , excluded_words=excluded, included_words=included
+            , wordlist=wordlist, min_score=minscore)
+
+    for x in soln_array:
+        print(x.upper())
+
+    if soln_array:
+        are_there_dupes(soln_array)
 
 #%%
 if __name__ == "__main__":

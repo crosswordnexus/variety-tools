@@ -6,6 +6,8 @@
 
   "solution-string": "AAAAABCCCDDDDDDEEEEEEEEEEEEEEEFGHIIIIJLLLLLMNNNNNNNNOOOOOOPPQQRRRRRRRRRTTTTUWWWYYYYY",
 
+  "multiple-letters": true,
+
   "clues": {
     "Clockwise": [["1","\"Scan me\" item"],["2","Identity theft, for one"],["3","In a portentous way"],["4","\"Whac-a-Mole\" implement"],["5","Aggregated"],["6","Linked together, as two SQL tables"],["7","Surname for Yakko, Wakko, and Dot"],["8","<i>The Simpsons</i> character whose catchphrase is a loud belch"],["9","Steel bars used as a support framework"],["10","Stand for"],["11","Paul whose number 34 is retired by the Boston Celtics"],["12","Word that I use when writing etymology clues, and at no other time"],["13","Weaved together"],["14","It's mine!"]],
 

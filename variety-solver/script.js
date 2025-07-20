@@ -19,8 +19,8 @@ function loadPuzzle(data) {
   /** Define what to do when the image loads **/
   img.onload = function() {
     // Set canvas dimensions to match the image dimensions
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
+    canvas.width = img.width;
+    canvas.height = img.height;
 
     // Adjust the canvas size in the DOM to match the image
     canvas.style.width = img.width + 'px';
@@ -28,7 +28,12 @@ function loadPuzzle(data) {
 
     // If there are letters, render them
     letters.forEach(letter => {
-      drawLetter(letter.x, letter.y, letter.letter, push = false);
+      if (data['multiple-letters']) {
+        drawLetter(letter.x, letter.y, letter.letter, push = false, align="left");
+      }
+      else {
+        drawLetter(letter.x, letter.y, letter.letter, push = false);
+      }
     });
   }
 
@@ -49,6 +54,11 @@ function loadPuzzle(data) {
 
   /** Clues **/
   
+  // If there are no clues, hide the clue panel
+  if (data['improved-clues'].length === 0) {
+	  document.getElementById('clue-panels').style.display = 'none';
+  }
+
   // If there are no clues, hide the clue panel
   if (data['improved-clues'].length === 0) {
 	  document.getElementById('clue-panels').style.display = 'none';
@@ -133,8 +143,22 @@ function loadPuzzle(data) {
     overlay.style.display = 'flex'; // Show the overlay
     overlay.style.pointerEvents = 'auto'; // Enable pointer events for the overlay
 
-    // Add a keydown event listener to capture user input
-    document.addEventListener('keydown', handleKeydown);
+    // If we're looking for multiple letters, handle that
+    if (data['multiple-letters']) {
+      const input = prompt("Enter letters:");
+      if (input) {
+        let nextX = clickX, nextY = clickY;
+        for (const letter of input.toUpperCase()) {
+          textWidth = drawLetter(nextX, nextY, letter, align="left", family="monospace");
+          nextX += textWidth + 2;
+        }
+      }
+      overlay.style.display = 'none'; // Hide the overlay
+    }
+    else {
+      // Add a keydown event listener to capture user input
+      document.addEventListener('keydown', handleKeydown);
+    }
   });
 
   // Event listener to hide the overlay on click
@@ -159,17 +183,19 @@ function loadPuzzle(data) {
   }
 
   // Function to draw a letter centered at (x, y) on the canvas
-  function drawLetter(x, y, letter, push = true) {
-    ctx.font = `${fontSize}px Arial`; // Set font size and family
+  function drawLetter(x, y, letter, push = true, align="center", family="Arial") {
+    console.log(family);
+    ctx.font = `${fontSize}px ${family}`; // Set font size and family
+    ctx.textBaseline = "middle";  // center vertical alignment
+    ctx.textAlign = align; // horizontal alignment
     ctx.fillStyle = 'black'; // Set text color
 
     letter = letter.toUpperCase(); // I don't see a reason to allow lowercase
 
     const textWidth = ctx.measureText(letter).width; // Measure text width
-    const textHeight = parseInt(ctx.font, 10); // Approximate text height
 
     // Draw the text centered at (x, y)
-    ctx.fillText(letter, x - textWidth / 2, y + textHeight / 2);
+    ctx.fillText(letter, x, y);
 
     // Store the letter and its position
     if (push) {
@@ -178,13 +204,15 @@ function loadPuzzle(data) {
         y,
         letter,
         width: textWidth,
-        height: textHeight
+        height: fontSize
       });
       lscache.set(data.letters_save, letters, saveTime);
     }
 
     // Confetti if needed
     checkIfSolved(data, letters);
+
+    return textWidth;
 
   }
 

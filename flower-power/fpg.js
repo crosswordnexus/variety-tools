@@ -4,7 +4,7 @@ Original code from Robin Yu can be found here:
 https://github.com/robincyu/flower/blob/master/flower.py
 */
 var CANVAS_SIZE, MARGIN_SIZE, PRECISION;
-CANVAS_SIZE = 500;
+CANVAS_SIZE = 750;
 MARGIN_SIZE = 10;
 PRECISION = 10000;
 
@@ -64,7 +64,9 @@ function end(s, color = "black", fill = "transparent", stroke_width = "1") {
   return s + "\" stroke=\"" + color + "\" fill=\"" + fill + "\" stroke-width=\"" + stroke_width + "\"/>";
 }
 
-function create_flower_power_svg(petals, word_length, petal_thickness, gravity, font_size, number_margin, canvas_size = CANVAS_SIZE, margin_size = MARGIN_SIZE) {
+function create_flower_power_svg(petals, word_length, petal_thickness, gravity,
+                                font_size, number_margin, canvas_size = CANVAS_SIZE,
+                                margin_size = MARGIN_SIZE, inner_numbers = true) {
   var _, a_x, a_y, b_x, b_y, border_end_x, border_end_y, border_left_x, border_left_y, border_outer_points, border_right_x, border_right_y, c_x, c_y, circle_limit_x, circle_limit_y, d_x, d_y, end_x, end_y, h, left_x, left_y, outer_points, path, radius, ret, right_x, right_y, x, y, z, z_inner;
 
   ret = "";
@@ -136,9 +138,21 @@ function create_flower_power_svg(petals, word_length, petal_thickness, gravity, 
   ret += "<circle cx=\"0\" cy=\"0\" r=\"" + radius.toString() + "\" stroke=\"transparent\" fill=\"white\"/>\n";
   [x, y] = [outer_points[2], outer_points[3] + font_size + number_margin];
 
+  // Numbering
   for (var i = 0, _pj_a = petals; i < _pj_a; i += 1) {
     ret += "<text x=\"" + x.toString() + "\" y=\"" + y.toString() + "\">" + (i + 1).toString() + "</text>\n";
     [x, y] = rotate(x, y, 2 * Math.PI / petals);
+  }
+
+  // Inner numbers
+  // Note: this doesn't quite work yet
+  if (inner_numbers) {
+    let inner_radius = radius + 2 * (font_size + number_margin);
+    let x_in = 0, y_in = -inner_radius;
+    for (var i = 0; i < petals; i++) {
+      let [x_i, y_i] = rotate(x_in, y_in, 2 * Math.PI * i /petals);
+      ret += `<text x='${x_i}' y='${y_i}'>${petals + i + 1}</text>\n`;
+    }
   }
 
   ret += "</svg>";

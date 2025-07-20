@@ -4,16 +4,33 @@ Created on Sun Mar 13 21:12:26 2022
 
 @author: Alex Boisvert
 
-Convert an iPuz from CrossFire into a "two outta three ain't bad" iPuz file
+Convert an iPuz from CrossFire/Ingrid into a "two outta three ain't bad" iPuz file
 """
 
 import json
 import re
+from collections import defaultdict
 
-filename = r'NotHalfBad.ipuz'
+filename = r'TwoOuttaThree.ipuz'
 
 with open(filename, encoding='utf-8') as fid:
     puz = json.load(fid)
+    
+#%% How many of each clue type do we have?
+# For this we assume each clue is like [ANGERED / ANGERED (as)]
+clues = puz['clues']
+
+clue_types = defaultdict(int)
+for _, cluelist in clues.items():
+    for clue_arr in cluelist:
+        num, clue = clue_arr
+        r = re.search(r'\((.*)\)', clue)
+        if r is not None:
+            m = r.groups()[0]
+            k = json.dumps(sorted(m))
+            clue_types[k] += 1
+            
+print(clue_types)
     
 #%% Do some bookeeping
 puz['fakeclues'] = True
@@ -21,7 +38,7 @@ puz['fakeclues'] = True
 # and make them uppercase
 # and remove the numbers
 # then sort the clue list
-clues = puz['clues']
+
 for key, cluelist in clues.items():
     new_clue_arr = []
     for clue_arr in cluelist:

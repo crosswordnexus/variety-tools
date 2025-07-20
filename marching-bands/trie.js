@@ -75,21 +75,3 @@ class Trie {
         return results;
     }
 }
-
-/**
-// Example usage
-let trie = new Trie();
-trie.insert("hotel");
-trie.insert("hitter");
-trie.insert("hat");
-trie.insert("heat");
-trie.insert("hint");
-trie.insert("hop");
-
-// Searching with wildcards and getting all matches
-console.log(trie.search("h.t"));   // Should return ["hat", "hitter", "hotel"]
-console.log(trie.search("he.t"));  // Should return ["heat"]
-console.log(trie.search("h..."));  // Should return ["heat", "hint", "hitter", "hotel"]
-console.log(trie.search("h...r")); // Should return ["hitter"]
-console.log(trie.search("h"));     // Should return all words starting with "h": ["hat", "heat", "hint", "hitter", "hotel", "hop"]
-**/
