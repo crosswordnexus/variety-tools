@@ -28,7 +28,12 @@ function loadPuzzle(data) {
 
     // If there are letters, render them
     letters.forEach(letter => {
-      drawLetter(letter.x, letter.y, letter.letter, push = false);
+      if (data['multiple-letters']) {
+        drawLetter(letter.x, letter.y, letter.letter, push = false, align="left");
+      }
+      else {
+        drawLetter(letter.x, letter.y, letter.letter, push = false);
+      }
     });
   }
 
@@ -133,8 +138,22 @@ function loadPuzzle(data) {
     overlay.style.display = 'flex'; // Show the overlay
     overlay.style.pointerEvents = 'auto'; // Enable pointer events for the overlay
 
-    // Add a keydown event listener to capture user input
-    document.addEventListener('keydown', handleKeydown);
+    // If we're looking for multiple letters, handle that
+    if (data['multiple-letters']) {
+      const input = prompt("Enter letters:");
+      if (input) {
+        let nextX = clickX, nextY = clickY;
+        for (const letter of input.toUpperCase()) {
+          textWidth = drawLetter(nextX, nextY, letter, align="left", family="monospace");
+          nextX += textWidth + 2;
+        }
+      }
+      overlay.style.display = 'none'; // Hide the overlay
+    }
+    else {
+      // Add a keydown event listener to capture user input
+      document.addEventListener('keydown', handleKeydown);
+    }
   });
 
   // Event listener to hide the overlay on click
@@ -159,10 +178,11 @@ function loadPuzzle(data) {
   }
 
   // Function to draw a letter centered at (x, y) on the canvas
-  function drawLetter(x, y, letter, push = true) {
-    ctx.font = `${fontSize}px Arial`; // Set font size and family
+  function drawLetter(x, y, letter, push = true, align="center", family="Arial") {
+    console.log(family);
+    ctx.font = `${fontSize}px ${family}`; // Set font size and family
     ctx.textBaseline = "middle";  // center vertical alignment
-    ctx.textAlign = "center"; // center horizontal alignment
+    ctx.textAlign = align; // horizontal alignment
     ctx.fillStyle = 'black'; // Set text color
 
     letter = letter.toUpperCase(); // I don't see a reason to allow lowercase
@@ -189,6 +209,8 @@ function loadPuzzle(data) {
 
     // Confetti if needed
     checkIfSolved(data, letters);
+
+    return textWidth;
 
   }
 

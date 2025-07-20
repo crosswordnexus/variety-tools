@@ -139,7 +139,7 @@ class SevenSages:
             if i != index and word.isalpha():
                 self.set_word(word, i)
                 
-    def _next_unfilled_word_index(self):
+    def next_unfilled_word_index(self):
         for i, patt in enumerate(self.words):
             if not patt.isalpha():
                 return i
@@ -181,7 +181,7 @@ class SevenSages:
         rows = copy.deepcopy(self.rows)
         # find the first one that is not alpha
         if index is None:
-            ix = self._next_unfilled_word_index()
+            ix = self.next_unfilled_word_index()
         else:
             ix = index
         patt = self.words[ix]
@@ -207,7 +207,7 @@ class SevenSages:
     def set_word(self, word, index=None):
         """Set the word at position index"""
         if index is None:
-            index = self._next_unfilled_word_index()
+            index = self.next_unfilled_word_index()
         # Setting the word is really just setting letters in the rows
         pattern = self.words[index]
         self.readable_words[index] = word
@@ -343,7 +343,7 @@ class SevenSages:
         
         quote_author = metadata.get('quote_author', '')
         if quote_author:
-            quote_author = f" by {quote_author}"
+            quote_author = f" by {quote_author}."
 
         notes = f'''Each answer in this puzzle is seven letters long and encircles the correspondingly numbered space, reading either clockwise (+) or counterclockwise (-) as indicated. The starting point of each answer is for you to determine. When the grid is correctly filled in, the letters in the outermost ring (reading clockwise from answer 1) will spell out a quote{quote_author}'''.strip()
         
@@ -375,23 +375,62 @@ class SevenSages:
         with open(f"{filename}.vpuz", "w") as fid:
             json.dump(vpuz, fid, indent=2)
             
+        print(f"File saved as {filename}.vpuz")
+            
 #END class
 
 
 #%% Set up a grid
-quote = 'Maybe all one can do is hope to end up with the right regrets.'
+quote = 'My fake plants died because I did not pretend to water them.'
 ss = SevenSages(quote)
-rw = ["masters", "standby", "eastend", "thrills", "carrion", "candice", "radians", "dollars", "illness", "reshoot", "openest", "rentout", "neutron", "conduit", "pitcrew", "tastier", "ashtree", "heather", "irately", "ghastly", "rantsat", "pageant", "rapinoe", "stoners", "speedos", "seadogs", "shrieks", "inadaze", "ocanada", "carseat", "reactor", "toccata", "estates", "sheilae", "glitter", "respite"]
+
+#%% If you want to visualize the grid at any point you can run this
+_ = ss.grid()
+    
+#%% The main loop
+
+## Add words to the grid ##
+# Keep augmenting the `rw` array as you build from the above cell
+# If you have to backtrack, remove the last few entries
+ss.reset()
+rw = []
+
 for i in range(len(rw)):
     ss.set_word(rw[i], i)
-    
-#%% Help for finishing a band
-ix = 28
-arr10 = ss.word_options(ix)
 
-for w, _ in arr10:
-    ss.set_word(w, ix)
-    tmp = ss.word_options(ix+1)
-    if tmp:
-        print(w)
-    ss.remove_word_at(ix)
+## Look for options for the next slot that aren't dead ends ##
+ix = ss.next_unfilled_word_index()
+
+# Don't do this if no index
+if ix is None:
+    pass
+# If we're at index 0 or 24 you'll want to do a lookback
+elif ix in (0, 24):
+    arr = ss.word_options(ix, lookahead=True, lookback=True)
+    print(sorted(arr, key=lambda x: x[1], reverse=True))
+# Otherwise, just look ahead
+else: 
+    lookahead = (ix < 35) # don't look ahead at the last index
+    arr = ss.word_options(ix, lookahead=lookahead)
+    if not lookahead:
+        print(arr)
+    else:
+        for w, _ in arr:
+            ss.set_word(w, ix)
+            tmp = ss.word_options(ix+1)
+            if tmp:
+                print(w)
+            ss.remove_word_at(ix)
+
+#%% Dupe check
+ss.check_for_dupes()
+    
+#%% Export to vpuz (you'll need to open the file to add clues)
+metadata = {
+  "quote_author": "Mitch Hedberg"
+, "author": "Alex Boisvert"
+, "title": "Stained Glass"
+, "copyright": "© 2025 Crossword Nexus. CC BY 4.0 License."    
+}
+
+ss.to_vpuz(metadata=metadata)
