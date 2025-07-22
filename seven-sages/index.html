@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seven Sages Construction</title>
+  <!-- Skeleton CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" />
+  <style>
+    #loading { font-style: italic; color: gray; }
+    #spinner { display: inline-block; width: 1em; height: 1em; border: 2px solid #ccc; border-top: 2px solid #333; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5em; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    #mainUI { display: none; }
+    #grid img {
+      max-width: 100%;
+      height: auto;
+      display: block;    /* prevent inline‐image whitespace issues */
+    }
+    .prelike {
+      white-space: pre;        /* preserve all spaces/newlines */
+      font-family: monospace;  /* match the typical <pre> font */
+      overflow-x: auto;        /* allow horizontal scroll if lines get long */
+      font-size: 1.25em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- modal box placeholder -->
+    <div class="cw-modal" id="cw-modal"></div>
+    <h2>Seven Sages Construction</h2>
+    <div id="loading"><span id="spinner"></span>Loading Pyodide and modules...</div>
+
+    <div id="mainUI">
+      <div class="row">
+        <div class="six columns">
+          <h4>Inputs</h4>
+          <form>
+            <label class="label">
+              <span class="label-text">Quote (must be 48 characters exactly)</span>
+              <br />
+              <input class="input" id="quote"></input>
+            </label>
+            <!-- One entry per line -->
+            <textarea id="inputs" rows="34" placeholder="Enter each entry (7 letters) on its own line"></textarea>
+            <br />
+            <button id="generate" class="button-primary">Find next entry</button>
+          </form>
+
+          <div id="results-loading"></div>
+          <div id="results" class="prelike"></div>
+
+        </div>
+        <div class="six columns">
+          <h4>Grid</h4>
+          <div id="grid">
+            <img id="myImg" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- container -->
+
+  <!-- Load Pyodide via classic script so loadPyodide() is global -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.js"></script>
+  <!-- The main script -->
+  <script>
+  let pyodide = null;
+  async function initPyodide() {
+    pyodide = await loadPyodide();
+    // load PIL
+    await pyodide.loadPackage("pillow");
+    await pyodide.loadPackage("joblib");
+
+    // set up the files we want to load
+    const files = {
+      "seven_sages.py": await (await fetch("./seven_sages.py")).text(),
+      "spreadthewordlist.dict": await (await fetch("./spreadthewordlist.dict")).text(),
+      "seven_sages.jpg": new Uint8Array(
+        await fetch('seven_sages.jpg').then(res => res.arrayBuffer())
+      ),
+      "DejaVuSans.ttf": new Uint8Array(
+        await fetch('DejaVuSans.ttf').then(res => res.arrayBuffer())
+      )
+    };
+
+    // load the files
+    for (const [name, content] of Object.entries(files)) {
+      pyodide.FS.writeFile(name, content);
+    }
+
+    // Import the seven_sages module
+    await pyodide.runPythonAsync("import seven_sages, json");
+
+    // hide and show
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("mainUI").style.display = "block";
+  }
+
+  async function findNextEntry(event) {
+    event.preventDefault();
+
+    // change "results" to "loading"
+    const loadText = 'Loading! This takes especially long for the 1st and 25th entries';
+    document.getElementById("results-loading").textContent = loadText;
+    document.getElementById("results").textContent = '';
+
+    // ensure that pyodide is loaded
+    if (!pyodide) {
+      document.getElementById("results").textContent = "Pyodide not yet loaded...";
+      return;
+    }
+
+    // grab the quote and entries
+    const quote = document.getElementById("quote").value.trim();
+    const entries = document
+      .getElementById('inputs')
+      .value
+      .split('\n')
+      .filter(line => line.trim() !== '');
+
+    // set the constants in pyodide
+    pyodide.globals.set("_quote", quote);
+    pyodide.globals.set("_entries", entries);
+
+    const result = await pyodide.runPythonAsync(`
+ss = seven_sages.SevenSages(_quote)
+for i in range(len(_entries)):
+    ss.set_word(_entries[i], i)
+
+entries = ss.find_next_entry_options(n_jobs=1)
+b64 = ss.grid(filled=True)
+json.dumps([entries, b64])
+    `);
+
+    console.log(result);
+    const jsResult = JSON.parse(result);
+    let [entries1, b64] = jsResult;
+    let output = '';
+    entries1.forEach(x => {
+      output += x;
+      output += "\n";
+    });
+    if (!output) output = 'No entries found.';
+    document.getElementById("results").textContent = output;
+
+    document.getElementById("results-loading").textContent = '';
+
+    // Show the image
+    const dataUri = `data:image/png;base64,${b64}`;
+    document.getElementById("myImg").src = dataUri;
+  }
+
+  // initialize
+  initPyodide();
+  </script>
+
+  <script type="text/javascript">
+    document.querySelector("form").addEventListener("submit", findNextEntry);
+  </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ Seven Sages Construction
 (c) 2025, Crossword Nexus
 MIT License -- https://opensource.org/license/MIT
 """
-import os
+
 import re
 import io
 import base64
@@ -16,10 +16,14 @@ from joblib import Parallel, delayed
 from collections import Counter
 import itertools
 import json
+import time
 
-import wordninja
-from nltk.stem import PorterStemmer
-stemmer = PorterStemmer()
+try:
+    import wordninja
+    from nltk.stem import PorterStemmer
+    stemmer = PorterStemmer()
+except:
+    wordninja = None
 
 MIN_SCORE = 50
 
@@ -29,7 +33,7 @@ WORDS = set()
 UPPERCASE_LETTERS = frozenset('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
 # Read in the word list
-with open(os.path.join('..', 'word_lists', 'spreadthewordlist.dict'), 'r') as fid:
+with open('spreadthewordlist.dict', 'r') as fid:
     for line in fid:
         word, score = line.split(';')
         word = word.lower()
@@ -37,7 +41,11 @@ with open(os.path.join('..', 'word_lists', 'spreadthewordlist.dict'), 'r') as fi
         if len(word) == 7 and score >= MIN_SCORE:
             WORDS.add(word)
             
-#%% Helper functions
+# Read in the image
+with open("seven_sages.jpg", "rb") as image_file:
+    IMAGE_BASE64 = base64.b64encode(image_file.read()).decode("utf-8")
+
+## Helper functions ##
 def alpha_only(s):
     return re.sub(r'[^a-z]+', '', s.lower())
 
@@ -101,8 +109,8 @@ def simple_regex(pattern):
 def is_lowercase_or_period(s):
     allowed_chars = set("abcdefghijklmnopqrstuvwxyz.")
     return all(char in allowed_chars for char in s)
-    
-#%% Seven Sages class
+
+### Seven Sages class ##
 class SevenSages:
     def __init__(self, quote):
         self.quote = quote
@@ -120,7 +128,7 @@ class SevenSages:
         self._update_words()
         self.readable_words = self.words
         self.directions = [''] * 36
-        
+
     def reset(self, index=None):
         """Reset back to the given index"""
         if not index:
@@ -130,7 +138,7 @@ class SevenSages:
             self.__init__(self.quote)
             for i in range(index + 1):
                 self.set_word(words[i], i)
-                
+
     def remove_word_at(self, index):
         """Remove the word at the given index"""
         words = self.readable_words
@@ -138,47 +146,46 @@ class SevenSages:
         for i, word in enumerate(words):
             if i != index and word.isalpha():
                 self.set_word(word, i)
-                
+
     def next_unfilled_word_index(self):
         for i, patt in enumerate(self.words):
             if not patt.isalpha():
                 return i
         return None
     
-    def _test_word(self, word, ix, lookback=False):
+
+    def _test_word(self, word, ix, lookback=False, lookback_words=5):
         """Test that a word works in a slot"""
         ret = None
-        rows = copy.deepcopy(self.rows)
+        # make a copy of "self"
+        ss = copy.deepcopy(self)
         # place the word
-        self.set_word(word, ix)
+        ss.set_word(word, ix)
         # Look for words in the next slot
         ix2 = ix + 1
         if ix == 35:
             ix2 = 24
-        words2 = set(self.word_options(ix2, lookahead=False))
-        if lookback and words2:
+        words2 = set(ss.word_options(ix2, lookahead=False))
+        if lookback and len(words2) >= lookback_words:
             # make sure this works with the entry before
             ix0 = ix - 1
             if ix == 0:
                 ix0 = 23
             elif ix == 24:
                 ix0 = 35
-            words3 = set(self.word_options(ix0, lookahead=False))
+            words3 = set(ss.word_options(ix0, lookahead=False))
             # only continue if there are at least 5 options
-            if len(words3) < 5 or len(words2) < 5:
+            if len(words3) < 5:
                 words2 = set()
             else:
                 words2 = words2 if len(words2) < len(words3) else words3
-        if words2:
+        if (words2 and not lookback) or (lookback and len(words2) >= lookback_words):
             ret = (word, len(words2))
-        # reset
-        self.rows = copy.deepcopy(rows)
-        self._update_words()
         return ret
-        
-    def word_options(self, index=None, lookahead=True, lookback=False):
+
+    def word_options(self, index=None, lookahead=True, lookback=False, n_jobs=-1):
         """Get the next unfilled word and give options for it"""
-        rows = copy.deepcopy(self.rows)
+        rows = rows = [r[:] for r in self.rows]
         # find the first one that is not alpha
         if index is None:
             ix = self.next_unfilled_word_index()
@@ -187,23 +194,26 @@ class SevenSages:
         patt = self.words[ix]
         # find options for this word
         options = bloom_matches(patt)
-        
+
         # Loop through them and make sure the next word works
         ret = []
         if lookahead:
             # parallelize
-            ret = Parallel(n_jobs=-1)(delayed(self._test_word)(w, ix, lookback=lookback) for w in options)
+            ret = Parallel(n_jobs=n_jobs)(delayed(self._test_word)(w, ix, lookback=lookback) for w in options)
             ret = [_ for _ in ret if _]
+            # Remove the count
+            ret = sorted(ret, key=lambda x: x[1], reverse=True)
+            ret = [_[0] for _ in ret]
         else:
             ret = options
-            
+
         # reset
-        self.rows = rows        
+        self.rows = rows
         self._update_words()
         
         return ret
-            
-            
+
+
     def set_word(self, word, index=None):
         """Set the word at position index"""
         if index is None:
@@ -219,7 +229,7 @@ class SevenSages:
         self._update_words()
         # update directions
         self.directions[index] = direction
-            
+
     def _word_indices(self, jx):
         """Get the row and index numbers for the word at jx"""
         ix = jx + 1
@@ -232,13 +242,13 @@ class SevenSages:
                    (4, ix - 25), (5, ix - 25), (6, ix - 25), \
                    (5, (ix - 26) % 12), (4, (ix - 26) % 12), \
                    (3, (ix - 26) * 2 % 24 + 1)]
-                
+
         return ret
-    
+
     def check_for_dupes(self):
         arr = [_ for _ in self.readable_words if _.isalpha()]
         # Simple check first
-        suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less']
+        suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less', 'er']
         for s, word in itertools.product(suffixes, arr):
             if word.endswith(s) and word[:-len(s)] in arr:
                 return True
@@ -253,45 +263,44 @@ class SevenSages:
             d = dict((k, v) for k, v in c.items() if v > 1)
             print(d)
             return True
-        
-        
+
+
     def _word_at(self, jx):
         """Extract the "word" at position jx"""
         ret = ''
         for row, ix2 in self._word_indices(jx):
             ret += self.rows[row][ix2]
         return ret
-    
+
     def _update_words(self):
         """Update words based on rows"""
         self.words = []
         for i in range(36):
             self.words.append(self._word_at(i))
-            
+
     def grid(self, font_size=30, filled=True, output_path=None, show=True):
         """
         Overlays the given quote onto the blank Seven Sages grid image, starting from the top middle position.
         """
         # Load the blank grid image
-        with open("seven_sages.jpg", "rb") as image_file:
-            b64 = base64.b64encode(image_file.read()).decode("utf-8")
+        b64 = IMAGE_BASE64
         image_data = base64.b64decode(b64)  # Decode base64 to binary data
         image_stream = io.BytesIO(image_data)
         image = Image.open(image_stream)
         draw = ImageDraw.Draw(image)
-        
+
         rows = self.rows
-        
+
         # Load a font (adjust path as needed)
         try:
-            font = ImageFont.truetype("arial.ttf", font_size)
+            font = ImageFont.truetype("DejaVuSans.ttf", font_size)
         except IOError:
             font = ImageFont.load_default()
-        
+
         # Calculate positions using polar coordinates
         center_x, center_y = image.width // 2, image.height // 2
-        
-        
+
+
         rings = [
           {'letters': 48, 'radius_factor': 0.94, 'start_angle': -math.pi / 2 + math.pi / 48, 'angle_offset': math.pi / 24}
         , {'letters': 24, 'radius_factor': 0.83, 'start_angle': -math.pi / 2 + math.pi / 12, 'angle_offset': math.pi / 12}
@@ -301,52 +310,52 @@ class SevenSages:
         , {'letters': 12, 'radius_factor': 0.41, 'start_angle': -math.pi / 2 + math.pi / 12, 'angle_offset': math.pi / 6}
         , {'letters': 12, 'radius_factor': 0.31, 'start_angle': -math.pi / 2, 'angle_offset': math.pi / 6}
         ]
-        
+
         if filled:
             for i, ring_info in enumerate(rings):
                 row = [_.upper() for _ in rows[i]]
                 start_angle = ring_info['start_angle']
                 radius = min(center_x, center_y) * ring_info['radius_factor']  # Adjustable radius factor
-        
+
                 ring_positions = []
                 for i in range(ring_info['letters']):
                     angle = start_angle + ring_info['angle_offset'] * i  # Distribute letters evenly
                     x = center_x + radius * math.cos(angle)
                     y = center_y + radius * math.sin(angle)
                     ring_positions.append((x, y))
-        
+
                 # Draw letters on the image
                 for i, (x, y) in enumerate(ring_positions):
                     draw.text((x, y), row[i], fill="black", font=font, anchor="mm")
-        
+
         # Save and show the image
         if output_path:
             image.save(output_path)
         if show:
             image.show()
-            
+
         # convert to base64
         buffer = io.BytesIO()
         image.save(buffer, format='PNG')
         base64_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
         return base64_str
-    
-    def to_vpuz(self, metadata={}):
+
+    def to_vpuz(self, metadata={}, save=True):
         """Create and save a vpuz of the puzzle"""
-        
+
         # solution string is the letters concatenated
         soln_string = ''
         for t in self.rows:
             for let in t:
                 soln_string += let
         soln_string = ''.join(sorted(soln_string)).upper()
-        
+
         quote_author = metadata.get('quote_author', '')
         if quote_author:
             quote_author = f" by {quote_author}."
 
         notes = f'''Each answer in this puzzle is seven letters long and encircles the correspondingly numbered space, reading either clockwise (+) or counterclockwise (-) as indicated. The starting point of each answer is for you to determine. When the grid is correctly filled in, the letters in the outermost ring (reading clockwise from answer 1) will spell out a quote{quote_author}'''.strip()
-        
+
         # Initialize the return object
         vpuz = {
           "author": metadata.get('author', "AUTHOR_GOES_HERE")
@@ -355,82 +364,102 @@ class SevenSages:
         , "solution-string": soln_string
         , "notes": notes
         }
-        
+
         filename = 'seven_sages'
-        
+
         # Set up clues
         clues = []
         # extract the words
         for j, w in enumerate(self.readable_words):
             _dir = self.directions[j]
-            
+
             clues.append([f"{j+1} ({_dir})", f"clue_for_{w}"])
 
         vpuz['clues'] = {"Clues": clues}
-        
+
         # Create and add the image
         image_base64 = self.grid(filled=False, show=False)
         vpuz['puzzle-image'] = f"data:image/png;base64,{image_base64}"
 
-        with open(f"{filename}.vpuz", "w") as fid:
-            json.dump(vpuz, fid, indent=2)
-            
+        if save:
+            with open(f"{filename}.vpuz", "w") as fid:
+                json.dump(vpuz, fid, indent=2)
+
         print(f"File saved as {filename}.vpuz")
-            
+
+        return vpuz
+    
+    def find_next_entry_options(self, n_jobs=-1):
+        """
+        Helper function to find the next entry
+        This is a small wrapper around existing stuff
+        We're basically looking for things that aren't dead ends
+        """
+        ix = self.next_unfilled_word_index()
+
+        # Don't do this if no index
+        if ix is None:
+            return []
+        # If we're at index 0 or 24 you'll want to do a lookback
+        elif ix in (0, 24):
+            arr = self.word_options(ix, lookahead=True, lookback=True, n_jobs=n_jobs)
+            return arr
+        # Otherwise, just look ahead
+        else:
+            lookahead = (ix < 35) # don't look ahead at the last index
+            arr = self.word_options(ix, lookahead=lookahead, n_jobs=n_jobs)
+            if not lookahead:
+                return arr
+            else:
+                ret = []
+                for w in arr:
+                    self.set_word(w, ix)
+                    tmp = self.word_options(ix+1, n_jobs=n_jobs)
+                    if tmp:
+                        ret.append(w)
+                    self.remove_word_at(ix)
+            return ret
+    #END find_next_entry_options()
+
 #END class
 
-
-#%% Set up a grid
-quote = 'My fake plants died because I did not pretend to water them.'
-ss = SevenSages(quote)
-
-#%% If you want to visualize the grid at any point you can run this
-_ = ss.grid()
-    
-#%% The main loop
-
-## Add words to the grid ##
-# Keep augmenting the `rw` array as you build from the above cell
-# If you have to backtrack, remove the last few entries
-ss.reset()
-rw = []
-
-for i in range(len(rw)):
-    ss.set_word(rw[i], i)
-
-## Look for options for the next slot that aren't dead ends ##
-ix = ss.next_unfilled_word_index()
-
-# Don't do this if no index
-if ix is None:
+#%%
+if __name__ == '__main__':
     pass
-# If we're at index 0 or 24 you'll want to do a lookback
-elif ix in (0, 24):
-    arr = ss.word_options(ix, lookahead=True, lookback=True)
-    print(sorted(arr, key=lambda x: x[1], reverse=True))
-# Otherwise, just look ahead
-else: 
-    lookahead = (ix < 35) # don't look ahead at the last index
-    arr = ss.word_options(ix, lookahead=lookahead)
-    if not lookahead:
-        print(arr)
-    else:
-        for w, _ in arr:
-            ss.set_word(w, ix)
-            tmp = ss.word_options(ix+1)
-            if tmp:
-                print(w)
-            ss.remove_word_at(ix)
+    #%% Set up a grid
+    quote = 'My fake plants died because I did not pretend to water them.'
+    ss = SevenSages(quote)
 
-#%% Dupe check
-ss.check_for_dupes()
+    #%% If you want to visualize the grid at any point you can run this
+    _ = ss.grid()
+
+    #%% Add words to the grid
     
-#%% Export to vpuz (you'll need to open the file to add clues)
-metadata = {
-  "quote_author": "Mitch Hedberg"
-, "author": "Alex Boisvert"
-, "title": "Stained Glass"
-, "copyright": "© 2025 Crossword Nexus. CC BY 4.0 License."    
-}
+    # Keep augmenting the `rw` array as you build from the above cell
+    # If you have to backtrack, remove the last few entries
+    ss.reset()
+    rw = []
 
-ss.to_vpuz(metadata=metadata)
+    for i in range(len(rw)):
+        ss.set_word(rw[i], i)
+
+    t1 = time.time()
+    next_options = ss.find_next_entry_options(n_jobs=-1)
+    t2 = time.time()
+    
+    print(next_options)
+    print(f"Time taken: {t2 - t1:.2f} seconds")
+
+    #%% Dupe check
+    if wordninja is not None:
+        ss.check_for_dupes()
+
+    #%% Export to vpuz (you'll need to open the file to add clues)
+    metadata = {
+      "quote_author": "Mitch Hedberg"
+    , "author": "Alex Boisvert"
+    , "title": "Stained Glass"
+    , "copyright": "© 2025 Crossword Nexus. CC BY 4.0 License."
+    }
+
+    ss.to_vpuz(metadata=metadata)
