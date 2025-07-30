@@ -6,6 +6,7 @@ Code to help write eight tracks puzzles
 # Import needed packages
 import itertools
 import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
 import math
 import os
 import wordninja
@@ -261,10 +262,11 @@ class Puzzle:
             numbering[(sec, pos)] = i+1
         return numbering
     
-    def draw_puzzle(self, show=False, solution=False, pdf=False):
+    def draw_puzzle(self, show=False, solution=False, pdf=False, figsize=10):
         """Draws the Eight Tracks puzzle grid with shading, a blank center, and inner letter separators."""
+       
         plt.tight_layout()
-        fig, ax = plt.subplots(figsize=(90, 90))
+        fig, ax = plt.subplots(figsize=(figsize, figsize))
         fig.tight_layout()
         ax.set_xlim(-0.92, 0.92)
         ax.set_ylim(-0.92, 0.92)
@@ -273,21 +275,21 @@ class Puzzle:
         ax.set_frame_on(False)
         blank_center = plt.Circle((0, 0), 0.2, color='white', fill=True)
         ax.add_patch(blank_center)
-        
-        thick_line_width = 28
-        thin_line_width = 8
-        
+       
+        thick_line_width = max(int(0.4 * figsize), 2)
+        thin_line_width = max(int(0.1 * figsize), 1)
+       
         # Draw circles
         for track_num in range(9):
             color = 'white' if track_num % 2 != 0 or track_num == 8 else 'lightgray'
             circle = plt.Circle((0, 0), 0.9 - (track_num * 0.1), color=color, fill=True, lw=0)
             ax.add_patch(circle)
             radius = 0.9 - (track_num * 0.1)
-            
+           
             lw = thick_line_width if track_num in (0, 8) else thin_line_width
             circle = plt.Circle((0, 0), radius, color='black', fill=False, lw=lw)
             ax.add_patch(circle)
-            
+           
         # Draw heavy lines for sectors
         angle = math.pi / 8
         inner_radius, outer_radius = 0.1, 0.9
@@ -295,8 +297,10 @@ class Puzzle:
             ax.plot([inner_radius * math.cos(angle), outer_radius * math.cos(angle)], [inner_radius * math.sin(angle), outer_radius * math.sin(angle)],
                     color='black', lw=thick_line_width)
             angle += math.pi / 4
-            
+           
         # Draw thin lines for letter separators
+        # Time taken: one second. Can we speed this up?
+        lines = []
         for i in range(8):
             for track_num in range(7):
                 inner_radius = 0.9 - ((track_num + 1) * 0.1)
@@ -304,10 +308,14 @@ class Puzzle:
                 angle = math.pi / 8
                 num_letters = 64 - 8 * track_num
                 for j in range(num_letters):
-                    ax.plot([inner_radius * math.cos(angle), outer_radius * math.cos(angle)], [inner_radius * math.sin(angle), outer_radius * math.sin(angle)],
-                        color='black', lw=thin_line_width)
+                    x0, y0 = inner_radius * math.cos(angle), inner_radius * math.sin(angle)
+                    x1, y1 = outer_radius * math.cos(angle), outer_radius * math.sin(angle)
+                    lines.append([(x0, y0), (x1, y1)])
                     angle += 2 * math.pi / num_letters
-                    
+       
+        lc = LineCollection(lines, colors='black', linewidths=thin_line_width)
+        ax.add_collection(lc)
+                   
         # draw numbers
         numbering = self.numbering()
         for sec_pos, num in numbering.items():
@@ -316,8 +324,8 @@ class Puzzle:
             angle_offset = pos * math.pi / 32
             num_separator = math.pi / 96
             angle = base_angle - angle_offset - num_separator
-            ax.text(0.875 * math.cos(angle), 0.875 * math.sin(angle), str(num), ha='center', va='center', fontsize=120, color='black')
-        
+            ax.text(0.875 * math.cos(angle), 0.875 * math.sin(angle), str(num), ha='center', va='center', fontsize=1.5 * figsize, color='black')
+       
         # draw letters
         if solution:
             for track_num, track in self.tracks.items():
@@ -333,20 +341,22 @@ class Puzzle:
                         angle_offset = pos * 2 * math.pi / num_subdivisions
                         letter_offset = math.pi / num_subdivisions
                         angle = base_angle - angle_offset - letter_offset
-                        radius = 0.84 - (track_num * 0.1)
-                        ax.text(radius * math.cos(angle), radius * math.sin(angle), letter.upper(), ha='center', va='center', fontsize=220, color='black')
-                    
-                    
+                        radius = 0.85 - (track_num * 0.1)
+                        ax.text(radius * math.cos(angle), radius * math.sin(angle), letter.upper(), ha='center', va='center', fontsize=2.45 * figsize, color='black')
+
         if show:
             plt.show()
-        
+       
         # Create base64 and save
         buf = io.BytesIO()
-        dpi = 24 if pdf else 8
+        dpi = int(900/figsize) if pdf else int(300/figsize)
         fig.savefig(buf, dpi=dpi, format='png')
         buf.seek(0)
-        
+       
         image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+       
+        # Don't show in an IDE
+        plt.close(fig)
 
         return image_base64
     
