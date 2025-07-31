@@ -455,7 +455,7 @@ p = Puzzle(word_list)
 p.tracks[7] = Track(7, '+') # "+" is clockwise, "-" is counterclockwise
 
 # The "4" is the sector, the "0" is the position within that sector
-p.set_initial_word('DESSERTS', 4, 0)
+p.set_initial_word('ARACHNID', 4, 0)
 
 #%% Track 6
 # Set up the track number and direction
@@ -464,8 +464,8 @@ track_num, _dir = 6, '-'
 p.tracks[track_num] = Track(track_num, _dir)
 
 # These are for putting in values into the grid
-sec, pos = p.tracks[track_num].place_word('threesisters', 2, 0)
-sec, pos = p.tracks[track_num].place_word('dose', sec, pos)
+sec, pos = p.tracks[track_num].place_word('imonthecase', 2, 1)
+sec, pos = p.tracks[track_num].place_word('rando', sec, pos)
 
 # This is commented out but you can run these lines individually
 if False:
@@ -473,7 +473,7 @@ if False:
     # Looks for all possibilities in this track of length at least 10
     p.get_valid_words_for_track(track_num, min_length=11, strict=False)
     # This one adds a word after the first
-    p.get_valid_words_for_track(track_num, sector=sec, position=pos)
+    p.get_valid_words_for_track(track_num, sector=sec, position=pos, length=5)
 
 p.validate_grid()
 
@@ -483,48 +483,48 @@ track_num, _dir = 5, '-'
 p.tracks[track_num] = Track(track_num, _dir)
 
 # Put in the first word in this track
-sec, pos = p.tracks[track_num].place_word('stresstest', 4, 1)
+sec, pos = p.tracks[track_num].place_word('santodomingo', 4, 2)
 
-sec, pos = p.tracks[track_num].place_word('stoners', sec, pos)
-sec, pos = p.tracks[track_num].place_word('maine', sec, pos)
+sec, pos = p.tracks[track_num].place_word('hatchet', sec, pos)
+sec, pos = p.tracks[track_num].place_word('aster', sec, pos)
 
 if False:
-    p.get_valid_words_for_track(track_num, min_length=10, strict=False)
+    p.get_valid_words_for_track(track_num, min_length=10, strict=True)
     p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=5)
 
 p.validate_grid()
 
 #%% Track 4
 # Set up the direction
-track_num, _dir = 4, '-'
+track_num, _dir = 4, '+'
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('netcapital', 4, 1)
-sec, pos = p.tracks[track_num].place_word('enabler', sec, pos)
-sec, pos = p.tracks[track_num].place_word('lastone', sec, pos)
-sec, pos = p.tracks[track_num].place_word('transmit', sec, pos)
+sec, pos = p.tracks[track_num].place_word('dontanswerthat', 3, 0)
+sec, pos = p.tracks[track_num].place_word('satchel', sec, pos)
+sec, pos = p.tracks[track_num].place_word('thankgod', sec, pos)
+sec, pos = p.tracks[track_num].place_word('mio', sec, pos)
 
 if False:
     p.get_valid_words_for_track(track_num, min_length=10, strict=True)
-    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=7)
+    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=5)
 
 p.validate_grid()
 
 #%% Track 3
 # Set up the direction
-track_num, _dir = 3, '+'
+track_num, _dir = 3, '-'
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('petronastowers', 5, 4)
-sec, pos = p.tracks[track_num].place_word('llbean', sec, pos)
-sec, pos = p.tracks[track_num].place_word('starlit', sec, pos)
-sec, pos = p.tracks[track_num].place_word('carpet', sec, pos)
-sec, pos = p.tracks[track_num].place_word('neimans', sec, pos)
+sec, pos = p.tracks[track_num].place_word('fatherinlaw', 6, 1)
+sec, pos = p.tracks[track_num].place_word('stoned', sec, pos)
+sec, pos = p.tracks[track_num].place_word('imdoingok', sec, pos)
+sec, pos = p.tracks[track_num].place_word('mathlete', sec, pos)
+sec, pos = p.tracks[track_num].place_word('cheats', sec, pos)
 
 
 if False:
-    p.get_valid_words_for_track(track_num, min_length=12, strict=False)
-    p.get_valid_words_for_track(track_num, sector=sec, position=pos, length=7)
+    p.get_valid_words_for_track(track_num, min_length=11, strict=False)
+    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=5)
 
 p.validate_grid()
 
