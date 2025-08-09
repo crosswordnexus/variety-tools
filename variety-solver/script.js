@@ -147,6 +147,9 @@ function loadPuzzle(data) {
           textWidth = drawLetter(nextX, nextY, letter, align="left", family="monospace");
           nextX += textWidth + 2;
         }
+      } else {
+        // if no input, try to delete the text that's there
+        removeLetter(clickX, clickY, xRadius=5);
       }
       overlay.style.display = 'none'; // Hide the overlay
     }
@@ -215,21 +218,27 @@ function loadPuzzle(data) {
   }
 
   // Function to remove a letter if clicked and backspace/delete is pressed
-  function removeLetter(x, y) {
-    // Find the letter close to the click coordinates
-    const index = letters.findIndex(letter => {
-      return Math.abs(letter.x - x) < letter.width / 2 && Math.abs(letter.y - y) < letter.height / 2;
+  function removeLetter(x, y, xRadius=1) {
+    // Separate into letters to keep and letters to remove
+    const kept = letters.filter(letter => {
+      const withinX = Math.abs(letter.x - x) <= xRadius * letter.height / 2;
+      const withinY = Math.abs(letter.y - y) < letter.height / 2;
+      // Keep only those that do NOT match both conditions
+      return !(withinX && withinY);
     });
 
-    if (index !== -1) {
-      // Remove the letter from the array
-      letters.splice(index, 1);
+    if (kept.length !== letters.length) {
+      // Replace letters array contents
+      letters.length = 0;
+      letters.push(...kept);
+
+      // Save updated list
       lscache.set(data.letters_save, letters, saveTime);
 
-      // Clear the canvas and redraw all remaining letters
+      // Clear and redraw
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       letters.forEach(letter => {
-        drawLetter(letter.x, letter.y, letter.letter, push = false);
+        drawLetter(letter.x, letter.y, letter.letter, false);
       });
     }
   } // end removeLetter
