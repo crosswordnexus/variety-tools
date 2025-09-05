@@ -648,6 +648,7 @@ function jscrossword_to_pdf2(xw, options={}) {
     ,   min_grid_size: 240
     ,   clue_padding_denominator: 3
     ,   font_type: DEFAULT_FONT_TYPE
+    ,   print: false
     };
 
     var clue_length = xw.clues.map(x=>x.clue).flat().map(x=>x.text).join('').length;
@@ -992,6 +993,13 @@ function jscrossword_to_pdf2(xw, options={}) {
     if (options.num_pages == 2) {
         doc.movePage(2,1);
     }
-
-    doc.save(options.outfile);
+    
+    if (options.print) {
+      // mark the PDF so it will auto-print
+      doc.autoPrint();
+      // open in a new tab and trigger print dialog
+      window.open(doc.output("bloburl"), "_blank");
+    } else {
+      doc.save(options.outfile);
+    }
 }
