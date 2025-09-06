@@ -316,8 +316,8 @@ function loadPuzzle(data) {
   // Create PDF when the print button is clicked
   document.getElementById('printButton').addEventListener('click', function() {
     const vpuzObj = data;
-    // add the image to options
-    options_obj = {'image': data['puzzle-image']};
+    // add the image to options, and launch print dialog
+    options_obj = {'image': data['puzzle-image'], 'print': true};
 
     if (data['notes']) {
       options_obj['show_notepad'] = true;
