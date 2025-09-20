@@ -35,10 +35,14 @@ from pathlib import Path
 
 # Global constants / defaults
 MIN_SCORE = 50
-WORDLIST = Path(__file__).parent.parent / 'word_lists' / 'spreadthewordlist.dict'
+
 LEN_DISTANCE = 3         # allowed deviation from mean word length
 MIN_WORD_LENGTH = 4
 DEFAULT_MAX_CANDIDATES_PER_LETTER = None
+
+WORDLIST = Path(__file__).parent.parent / 'word_lists' / 'spreadthewordlist.dict'
+if not WORDLIST.exists():
+    WORDLIST = 'spreadthewordlist.dict'
 
 # ----------------------------
 # Utility helpers
