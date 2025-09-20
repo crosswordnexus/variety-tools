@@ -355,8 +355,7 @@ if False:
     When singers at concerts hold out the mic for the audience to sing it's like what am i, your maid
     '''.strip().replace('\n', ' ').replace('  ', ' ')
     source = 'Megan Amram'
-    wordlist = r'/Users/aboisvert/Documents/Personal/spreadthewordlist.dict'
-    #wordlist = r'/Users/aboisvert/Documents/Personal/xwordlist.dict'
+    wordlist = r'spreadthewordlist.dict'
     minscore = 50
     candidates_per_letter = None
     
