@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crushword Spiral Construction</title>
+
+  <!-- Skeleton CSS for layout -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
+  <style>
+    textarea.wordsarea {
+      height: 150px;
+    }
+    label.wordSelectorLabel {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Crushword Spiral Construction</h2>
+
+    <p>
+      For traditional spirals, see our <a href="index.html">spiral tool</a>.
+    </p>
+
+    <p>
+      To make a JPZ or iPuz from your results, use the
+      <a href="https://jpd236.github.io/kotwords/spiral.html" target="_blank">
+        Kotwords spiral tool
+      </a>.
+    </p>
+
+    <div class="row">
+      <div class="four columns">
+        <label for="inwardWords" id="inwardHeader">Inward</label>
+        <textarea class="u-full-width wordsarea" id="inwardWords">man|ning</textarea>
+      </div>
+
+      <div class="four columns">
+        <label for="outwardWords" id="outwardHeader">Outward</label>
+        <textarea class="u-full-width wordsarea" id="outwardWords">bur|ning|man</textarea>
+      </div>
+
+      <div class="four columns">
+        <label for="inwardCells" id="inwardCellsHeader">Inward Cells</label>
+        <textarea class="u-full-width wordsarea" id="inwardCells" readonly></textarea>
+      </div>
+
+    </div> <!-- end first row -->
+
+    <div class="row">
+      <button class="button-primary" type="button" onclick="processTextAreas()">Begin</button>
+      <button class="button" type="button" onclick="undoLast()">Undo</button>
+    </div>
+
+
+    <div class="row">
+      <div id="datatables-table-div" class="twelve columns">
+        <table id="datatables-table" class="display">
+          <thead>
+            <tr>
+              <th>Entry</th>
+              <th>Remaining Letters</th>
+              <th>Length</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rows will be populated by JavaScript -->
+          </tbody>
+        </table>
+        <p>Click a row to insert into the puzzle.</p>
+      </div>
+    </div> <!-- end table row -->
+  </div> <!-- end container -->
+
+  <!-- Load jQuery and DataTables -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+  <!-- Load pako -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js" integrity="sha512-g2TeAWw5GPnX7z0Kn8nFbYfeHcvAu/tx6d6mrLe/90mkCxO+RcptyYpksUz35EO337F83bZwcmUyHiHamspkfg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Load helper JSON -->
+  <script>
+  fetch("crushword_helper_dict.json.gz")
+    .then(r => r.arrayBuffer())
+    .then(buf => {
+      const decompressed = pako.inflate(new Uint8Array(buf), { to: "string" });
+      window.spiralData = JSON.parse(decompressed);
+    });
+  </script>
+
+  <!-- Spiral logic -->
+  <script src="crushword_spiral.js"></script>
+
+  <!-- DataTable initialization -->
+  <script>
+    var table = $('#datatables-table').DataTable({
+      order: [[2, 'desc']]
+    });
+  </script>
+</body>
+</html>

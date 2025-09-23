@@ -242,7 +242,7 @@ def export_helper_dict(begin_dict, end_dict, output_path=OUTPUT_JSON):
                 helper_dict[name][key].append(d2)
 
     with open(output_path, 'w') as fid:
-        json.dump(helper_dict, fid, indent=2)
+        json.dump(helper_dict, fid)
 
 
 # ---------------------------------------------------------------------
