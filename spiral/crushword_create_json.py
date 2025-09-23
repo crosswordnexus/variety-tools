@@ -23,7 +23,7 @@ Created: Mon Sep 22 15:51:04 2025
 from collections import Counter
 from functools import lru_cache
 import itertools
-import json
+import json, gzip
 from pathlib import Path
 
 
@@ -41,7 +41,17 @@ OUTPUT_JSON = 'crushword_helper_dict.json'
 # N-gram helpers
 # ---------------------------------------------------------------------
 
-def top_ngrams(words, min_n=2, max_n=4, top_k=3000):
+def prune_palindromes(d):
+    pruned = {}
+    for key, entries in d.items():
+        chunks = key
+        if chunks == chunks[::-1] and len(entries) == 1:
+            # skip palindromic key with single entry
+            continue
+        pruned[key] = entries
+    return pruned
+
+def top_ngrams(words, min_n=2, max_n=5, top_k=3500):
     """
     Find the top substrings (n-grams) in a list of words.
 
@@ -197,12 +207,17 @@ def build_dicts(words, ngram_set):
                     begin_dict[w1] = begin_dict.get(w1, set()).union([this_word])
                     end_dict[w2] = end_dict.get(w2, set()).union([this_word])
                     gw.add(word)
+                    
+        # Prune palindromes
+        begin_dict = prune_palindromes(begin_dict)
+        end_dict = prune_palindromes(end_dict)
 
         good_words = gw.copy()
         prev_word_count = len(beginnings)
         beginnings = set(begin_dict.keys())
         ends = set(end_dict.keys())
         new_word_count = len(beginnings)
+    #END while
 
     # Add hidden words
     for word in all_words:
@@ -214,14 +229,17 @@ def build_dicts(words, ngram_set):
                 begin_dict[w1] = begin_dict.get(w1, set()).union([this_word])
                 end_dict[w2] = end_dict.get(w2, set()).union([this_word])
                 good_words.add(word)
+                
+    
 
     return good_words, begin_dict, end_dict
 
 
-def export_helper_dict(begin_dict, end_dict, output_path=OUTPUT_JSON):
+def export_helper_dict(begin_dict, end_dict, output_path=OUTPUT_JSON, compress=True):
     """
     Serialize begin/end dictionaries into JSON format.
     Tuple keys are stringified with '|' as separator.
+    If compress=True, write to a gzip-compressed file.
     """
     helper_dict = {}
     for name, d in {'begin': begin_dict, 'end': end_dict}.items():
@@ -238,11 +256,24 @@ def export_helper_dict(begin_dict, end_dict, output_path=OUTPUT_JSON):
                     leftover = w0[-leftover_len:][::-1]
                 else:
                     leftover = w0[:leftover_len][::-1]
-                d2 = {'words': [w0, w1], 'leftover': leftover}
+                # build words list (skip None)
+                words_list = [w0]
+                if w1 is not None:
+                    words_list.append(w1)
+                d2 = {"words": words_list, "leftover": leftover}
                 helper_dict[name][key].append(d2)
 
-    with open(output_path, 'w') as fid:
-        json.dump(helper_dict, fid)
+    if compress:
+        # ensure .gz suffix if compressing
+        if not output_path.endswith(".gz"):
+            output_path += ".gz"
+        with gzip.open(output_path, "wt", encoding="utf-8") as fid:
+            json.dump(helper_dict, fid, ensure_ascii=False)
+    else:
+        with open(output_path, "w", encoding="utf-8") as fid:
+            json.dump(helper_dict, fid, ensure_ascii=False)
+            
+    return output_path
 
 
 # ---------------------------------------------------------------------
@@ -257,5 +288,5 @@ if __name__ == "__main__":
     good_words, begin_dict, end_dict = build_dicts(words, ngram_set)
     print(f"Good words: {len(good_words)}")
 
-    export_helper_dict(begin_dict, end_dict, OUTPUT_JSON)
-    print(f"Exported helper dictionary to {OUTPUT_JSON}")
+    output_path = export_helper_dict(begin_dict, end_dict, OUTPUT_JSON)
+    print(f"Exported helper dictionary to {output_path}")
