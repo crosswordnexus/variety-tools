@@ -83,11 +83,17 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
+  <!-- Load pako -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js" integrity="sha512-g2TeAWw5GPnX7z0Kn8nFbYfeHcvAu/tx6d6mrLe/90mkCxO+RcptyYpksUz35EO337F83bZwcmUyHiHamspkfg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
   <!-- Load helper JSON -->
   <script>
-    fetch("./crushword_helper_dict.json")
-      .then(response => response.json())
-      .then(spiralData => window.spiralData = spiralData);
+  fetch("crushword_helper_dict.json.gz")
+    .then(r => r.arrayBuffer())
+    .then(buf => {
+      const decompressed = pako.inflate(new Uint8Array(buf), { to: "string" });
+      window.spiralData = JSON.parse(decompressed);
+    });
   </script>
 
   <!-- Spiral logic -->
