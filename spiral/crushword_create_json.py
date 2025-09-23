@@ -45,13 +45,13 @@ def prune_palindromes(d):
     pruned = {}
     for key, entries in d.items():
         chunks = key
-        if chunks == chunks[::-1] and len(entries) == 1:
-            # skip palindromic key with single entry
+        if chunks == chunks[::-1] and len(chunks) > 2:
+            # skip palindromic keys
             continue
         pruned[key] = entries
     return pruned
 
-def top_ngrams(words, min_n=2, max_n=5, top_k=3500):
+def top_ngrams(words, min_n=2, max_n=5, top_k=5000):
     """
     Find the top substrings (n-grams) in a list of words.
 
