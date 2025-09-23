@@ -4,8 +4,6 @@ function reverseString(str) {
 }
 
 function new_word_options(forward_words, backward_words) {
-  // The maximum number of words to return
-  MAX_RET_WORDS = 20;
   // Find the words we've already used
   var used_words = new Set(forward_words.concat(backward_words));
   // Get the last word
@@ -43,7 +41,7 @@ function new_word_options(forward_words, backward_words) {
       ret2.push(r);
     }
   });
-  return ret2.slice(0, MAX_RET_WORDS);
+  return ret2;
 }
 
 /* add a word or pair of words to the relevant place */
@@ -128,36 +126,4 @@ function changeHeaders() {
   document.getElementById('inwardHeader').innerHTML = `Inward (${inwardLength})`;
   var outwardLength = loop2.join('').length;
   document.getElementById('outwardHeader').innerHTML = `Outward (${outwardLength})`;
-}
-
-/* Process the selected item from the list */
-function processSelectedItem() {
-  // grab the words from the textareas
-  var forward_words = document.getElementById('inwardWords').value.split('\n');
-  var backward_words = document.getElementById('outwardWords').value.split('\n');
-  // Find out which radio button is checked
-  const radioButtons = document.querySelectorAll('input[name="wordSelector"]');
-  var selectedValue;
-  for (const radioButton of radioButtons) {
-      if (radioButton.checked) {
-          selectedValue = radioButton.value;
-          break;
-      }
-  }
-  console.log(selectedValue);
-  var this_word = JSON.parse(selectedValue);
-  var fb_words = add_word(forward_words, backward_words, this_word);
-  // Replace the values in the text areas
-  document.getElementById('inwardWords').value = fb_words[0].join('\n');
-  document.getElementById('outwardWords').value = fb_words[1].join('\n');
-  // Repeat the process
-  processTextAreas();
-
-  // Change the inward and outward headers
-  var inwardLength = fb_words[0].join('').length;
-  document.getElementById('inwardHeader').innerHTML = `Inward (${inwardLength})`;
-  var outwardLength = fb_words[1].join('').length;
-  document.getElementById('outwardHeader').innerHTML = `Outward (${outwardLength})`;
-
-  return true;
 }
