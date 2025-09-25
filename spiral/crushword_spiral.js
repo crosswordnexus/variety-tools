@@ -25,6 +25,17 @@ function arrayToWord(arr) {
   return Array.isArray(arr) ? arr.join("") : arr;
 }
 
+// Count total n-grams (chunks) in a word or list of words
+function chunkCount(item) {
+  if (Array.isArray(item[0])) {
+    // list of words (each is array of chunks)
+    return item.reduce((a, w) => a + w.length, 0);
+  } else {
+    // single word (array of chunks)
+    return item.length;
+  }
+}
+
 // Global stack of past states
 let historyStack = [];
 
@@ -196,11 +207,11 @@ function processTextAreas() {
     // Collapse leftover for display
     var entry1 = encodeKey(nw["leftover"]);
 
-    // Compute length from collapsed strings
-    var len0 = arrayToWord(nw["words"][0]).length;
+    // Compute length from chunk arrays
+    var len0 = chunkCount(nw["words"][0]);
     var length = len0;
     if (nw["words"][1]) {
-      var len1 = arrayToWord(nw["words"][1]).length;
+      var len1 = chunkCount(nw["words"][1]);
       length = (len0 + len1) / 2.0;
     }
 
@@ -219,13 +230,22 @@ function processTextAreas() {
 
 /** Change the headers to track lengths **/
 function changeHeaders() {
-  var loop1 = document.getElementById('inwardWords').value.split('\n');
-  var loop2 = document.getElementById('outwardWords').value.split('\n');
-  var inwardLength = loop1.join('').length;
+  // Decode inward into arrays of n-grams
+  var loop1 = document.getElementById('inwardWords').value
+    .split('\n').filter(Boolean).map(decodeKey);
+
+  // Decode outward into arrays of n-grams
+  var loop2 = document.getElementById('outwardWords').value
+    .split('\n').filter(Boolean).map(decodeKey);
+
+  // Count n-grams, not characters
+  var inwardLength = chunkCount(loop1);
+  var outwardLength = chunkCount(loop2);
+
   document.getElementById('inwardHeader').innerHTML = `Inward (${inwardLength})`;
-  var outwardLength = loop2.join('').length;
   document.getElementById('outwardHeader').innerHTML = `Outward (${outwardLength})`;
 }
+
 
 function updateInwardCells() {
   const inwardWords = document.getElementById('inwardWords').value
