@@ -30,13 +30,16 @@ import swiglpk as glp
 import argparse
 import sys
 import math
+import itertools
+import wordninja
+from nltk.stem import PorterStemmer
 
 from pathlib import Path
 
 # Global constants / defaults
 MIN_SCORE = 50
 
-LEN_DISTANCE = 3         # allowed deviation from mean word length
+LEN_DISTANCE = 2         # allowed deviation from mean word length
 MIN_WORD_LENGTH = 4
 DEFAULT_MAX_CANDIDATES_PER_LETTER = None
 
@@ -47,6 +50,29 @@ if not WORDLIST.exists():
 # ----------------------------
 # Utility helpers
 # ----------------------------
+
+stemmer = PorterStemmer()
+
+# Helper function for dupe checking
+def are_there_dupes(arr):
+    arr = set(arr)
+    # Simple check first
+    suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less', 'er']
+    for s, word in itertools.product(suffixes, arr):
+        if word.endswith(s) and word[:-len(s)] in arr:
+            return True
+    c = Counter()
+    for word in arr:
+        word_arr = wordninja.split(word)
+        word_stem_arr = [stemmer.stem(x) for x in word_arr]
+        c.update(Counter(word_stem_arr))
+    if max(c.values()) == 1:
+        return False
+    else:
+        c1 = [k for k, v in c.items() if v > 1]
+        print(c1)
+        return True
+
 def prune_candidates(candidates, k=DEFAULT_MAX_CANDIDATES_PER_LETTER):
     """Keep only the top-k per first letter by fit score"""
     if k is None:
@@ -221,6 +247,7 @@ def create_acrostic_glpk(quote, source,
     # Read and filter candidate words
     mean_len = len(quote_alpha) / len(source_alpha)
     max_len = mean_len + LEN_DISTANCE
+    min_len = mean_len - LEN_DISTANCE
     excl = {w.lower().strip() for w in excluded_words}
     
     # Precompute quote letter distribution
@@ -233,7 +260,7 @@ def create_acrostic_glpk(quote, source,
         for line in f:
             w, score = line.strip().split(';')
             w = w.lower().strip()
-            if not (int(score) >= min_score and MIN_WORD_LENGTH <= len(w) <= max_len):
+            if not (int(score) >= min_score and min_len <= len(w) <= max_len):
                 continue
             if w[0] not in sctr or w in excl:
                 continue
@@ -356,14 +383,23 @@ if __name__ == "__main__":
 #%% For running within an IDE
 if False:
     quote = '''
-    When singers at concerts hold out the mic for the audience to sing it's like what am i, your maid
+Honeydew? Jesus, why does cantaloupe think every time 
+it gets invited to a party it can bring along its dumb 
+friend honeydew? You don’t get a plus one, cantaloupe.
     '''.strip().replace('\n', ' ').replace('  ', ' ')
-    source = 'Megan Amram'
+    source = 'Bojack Horseman'
     wordlist = r'spreadthewordlist.dict'
+    
+    print("Quote length: ", len(alpha_only(quote)))
+    print("Source length: ", len(alpha_only(source)))
+    print("Words per entry: ", len(alpha_only(quote))/len(alpha_only(source)))
+    
     minscore = 50
     candidates_per_letter = None
     
-    excluded, included = [], []
+    excluded = ['chethuntley', 'eyetoeye', 'hewentthere', 'mmddyyyy', 
+        'hoitytoity', 'sevenofnine']
+    included = []
     
     results = create_acrostic2(quote, source, 
                      excluded_words=excluded, included_words=included, 
@@ -371,4 +407,6 @@ if False:
                      max_candidates_per_letter=candidates_per_letter)
     for r in results:
         print(r.upper())
+        
+    are_there_dupes(results)
     
