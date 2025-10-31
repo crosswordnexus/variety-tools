@@ -530,22 +530,23 @@ p.validate_grid()
 
 #%% Track 2
 # Set up the direction
-track_num, _dir = 2, '-'
+track_num, _dir = 2, '+'
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('ancientegypt', 5, 2)
-sec, pos = p.tracks[track_num].place_word('cartier', sec, pos)
-sec, pos = p.tracks[track_num].place_word('lancebass', sec, pos)
-sec, pos = p.tracks[track_num].place_word('reallot', sec, pos)
-sec, pos = p.tracks[track_num].place_word('ewaste', sec, pos)
-sec, pos = p.tracks[track_num].place_word('onramps', sec, pos)
+sec, pos = p.tracks[track_num].place_word('whereitsat', 4, 5)
+sec, pos = p.tracks[track_num].place_word('farfetched', sec, pos)
+sec, pos = p.tracks[track_num].place_word('lathe', sec, pos)
+sec, pos = p.tracks[track_num].place_word('mekong', sec, pos)
+sec, pos = p.tracks[track_num].place_word('dominion', sec, pos)
+sec, pos = p.tracks[track_num].place_word('dietplans', sec, pos)
 
 
 if False:
-    p.get_valid_words_for_track(track_num, min_length=12, strict=False)
-    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=6)
-    p.get_valid_words_for_track(track_num, sector=6, position=3, length=7)
+    p.get_valid_words_for_track(track_num, min_length=10, strict=True)
+    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=8)
+    p.get_valid_words_for_track(track_num, sector=1, min_length=7)
 
+_ = p.draw_puzzle(show=True, solution=True)
 p.validate_grid()
 
 #%% Track 1
@@ -553,19 +554,20 @@ p.validate_grid()
 track_num, _dir = 1, '+'
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('afternoontea', 6, 0)
-sec, pos = p.tracks[track_num].place_word('swirls', sec, pos)
-sec, pos = p.tracks[track_num].place_word('leanest', sec, pos)
-sec, pos = p.tracks[track_num].place_word('bacterial', sec, pos)
-sec, pos = p.tracks[track_num].place_word('copycat', sec, pos)
-sec, pos = p.tracks[track_num].place_word('regiments', sec, pos)
-sec, pos = p.tracks[track_num].place_word('pacman', sec, pos)
+sec, pos = p.tracks[track_num].place_word('towplanes', 3, 5)
+sec, pos = p.tracks[track_num].place_word('henrietta', sec, pos)
+sec, pos = p.tracks[track_num].place_word('surface', sec, pos)
+sec, pos = p.tracks[track_num].place_word('fathead', sec, pos)
+sec, pos = p.tracks[track_num].place_word('lefthome', sec, pos)
+sec, pos = p.tracks[track_num].place_word('kingminos', sec, pos)
+sec, pos = p.tracks[track_num].place_word('divined', sec, pos)
 
 if False:
-    p.get_valid_words_for_track(track_num, min_length=12, strict=False)
-    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=6)
-    j = p.get_valid_words_for_track(track_num, sector=4, min_length=7)
+    p.get_valid_words_for_track(track_num, min_length=10, strict=False)
+    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=7, strict=False)
+    j = p.get_valid_words_for_track(track_num, sector=4, min_length=5)
 
+_ = p.draw_puzzle(show=True, solution=True)
 p.validate_grid()
 
 #%% Track 0
@@ -573,21 +575,47 @@ p.validate_grid()
 track_num, _dir = 0, '+'
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('versailles', 0, 0)
-sec, pos = p.tracks[track_num].place_word('canitbe', sec, pos)
-sec, pos = p.tracks[track_num].place_word('literacy', sec, pos)
-sec, pos = p.tracks[track_num].place_word('compartment', sec, pos)
-sec, pos = p.tracks[track_num].place_word('enigma', sec, pos)
-sec, pos = p.tracks[track_num].place_word('snapchat', sec, pos)
-sec, pos = p.tracks[track_num].place_word('fearnot', sec, pos)
-sec, pos = p.tracks[track_num].place_word('nosweat', sec, pos)
+sec, pos = p.tracks[track_num].place_word('digimon', 2, 0)
+sec, pos = p.tracks[track_num].place_word('sedition', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('artful', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('attache', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('felthat', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('deform', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('eking', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('madison', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('invited', sec, pos)
 
 
 if False:
-    p.get_valid_words_for_track(track_num, length=10, strict=True)
+    p.get_valid_words_for_track(track_num, length=11, strict=True)
     p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=7)
-    j = p.get_valid_words_for_track(track_num, sector=0, min_length=6)
+    p.get_valid_words_for_track(track_num, sector=3, position=6, min_length=8)
 
+_ = p.draw_puzzle(show=True, solution=True)
+p.validate_grid()
+
+#%% Track 0
+# Set up the direction
+track_num, _dir = 0, '+'
+p.tracks[track_num] = Track(track_num, _dir)
+
+sec, pos = p.tracks[track_num].place_word('bowlines', 3, 6)
+sec, pos = p.tracks[track_num].place_word('parenthesis', 4, 6)
+sec, pos = p.tracks[track_num].place_word('artful', sec, pos)
+sec, pos = p.tracks[track_num].place_word('attache', sec, pos)
+sec, pos = p.tracks[track_num].place_word('felthat', sec, pos)
+sec, pos = p.tracks[track_num].place_word('deform', sec, pos)
+sec, pos = p.tracks[track_num].place_word('eking', sec, pos)
+sec, pos = p.tracks[track_num].place_word('madison', sec, pos)
+sec, pos = p.tracks[track_num].place_word('invited', sec, pos)
+
+
+if False:
+    p.get_valid_words_for_track(track_num, length=11, strict=True)
+    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=7)
+    p.get_valid_words_for_track(track_num, sector=3, position=6, min_length=8)
+
+_ = p.draw_puzzle(show=True, solution=True)
 p.validate_grid()
 
 

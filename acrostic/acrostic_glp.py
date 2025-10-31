@@ -382,18 +382,22 @@ if __name__ == "__main__":
     
 #%% For running within an IDE
 if False:
+#%%
     quote = '''
-Honeydew? Jesus, why does cantaloupe think every time 
-it gets invited to a party it can bring along its dumb 
-friend honeydew? You don’t get a plus one, cantaloupe.
+People love to say, “Give a man a fish, and he’ll eat for a
+ day. Teach a man to fish, and he’ll eat for a lifetime.” 
+ What they don’t say is, “And it would be nice if you gave 
+ him a fishing rod.” That’s the part of the analogy that’s missing.
     '''.strip().replace('\n', ' ').replace('  ', ' ')
-    source = 'Bojack Horseman'
+    
+    source = 'Trevor Noah, Born a Crime'
     wordlist = r'spreadthewordlist.dict'
     
     print("Quote length: ", len(alpha_only(quote)))
     print("Source length: ", len(alpha_only(source)))
     print("Words per entry: ", len(alpha_only(quote))/len(alpha_only(source)))
     
+#%%
     minscore = 50
     candidates_per_letter = None
     
