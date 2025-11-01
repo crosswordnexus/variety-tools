@@ -16,6 +16,9 @@
     <!-- JSCrossword -->
     <script src="jscrossword_combined.js"></script>
 
+    <!-- Load LZ string decompression -->
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+
     <!-- PDF stuff -->
     <script src="pdf/jspdf-3_0_1.min.js"></script>
     <script src="pdf/grapheme-splitter.min.js"></script>
@@ -80,79 +83,101 @@
     <script src="script.js"></script>
 
     <script type="text/javascript">
-    /** Stuff to run once the document is ready **/
-    document.addEventListener('DOMContentLoaded', function() {
+      /** Stuff to run once the document is ready **/
+      document.addEventListener('DOMContentLoaded', function() {
 
-      // check that fetch is enabled
-      if(typeof window.fetch !== "function") {
-        alert('Please upgrade to a modern browser');
-      }
+        // check that fetch is enabled
+        if (typeof window.fetch !== "function") {
+          alert('Please upgrade to a modern browser');
+        }
 
-      // Grab puzzle from query string if available
-      var url = new URL(window.location.href);
-      var puzzle = url.searchParams.get("puzzle");
-      if (!puzzle) puzzle = url.searchParams.get("file");
+        // Grab puzzle from query string if available
+        const url = new URL(window.location.href);
+        let puzzle = url.searchParams.get("puzzle") || url.searchParams.get("file");
 
-      //puzzle = 'flowerpower.vpuz';
+        // Get the "open" overlay and puzzle container
+        const openHolder = document.getElementById('cw-open-holder');
+        const puzzleContainer = document.getElementById('puzzle-container');
 
-      // Get the "open" overlay and puzzle container
-      const openHolder = document.getElementById('cw-open-holder');
-      const puzzleContainer = document.getElementById('puzzle-container');
+        /**
+         * Try to load a puzzle from a compressed LZ hash fragment (#...).
+         * If it succeeds, we skip the file chooser and display it directly.
+         */
+        function tryLoadFromHash() {
+          const hash = window.location.hash.slice(1);
+          if (!hash) return false;
 
-      // If there's no puzzle we allow the user to choose one
-      if (!puzzle) {
-        // Show the openHolder
-        openHolder.style.display = "flex";
-        const file_input = document.getElementById('open-vpuz-input');
-        file_input.addEventListener('change', function(evt) {
-          var files = evt.target.files.length ? evt.target.files : null;
-          if (files) {
-            var file = files[0];
-            var reader = new FileReader();
+          try {
+            // Attempt to decompress (using lz-string’s URI-safe method)
+            const jsonText = LZString.decompressFromEncodedURIComponent(hash);
+            if (!jsonText) return false;
 
-            reader.onload = function(e) {
-                try {
-                    // Parse the file content as JSON
-                    var json = JSON.parse(e.target.result);
-                    openHolder.style.display = "none";
-                    puzzleContainer.style.display = "flex";
-                    loadPuzzle(json);
-
-                } catch (err) {
-                    console.error('Error parsing JSON:', err);
-                }
-            };
-
-            reader.onerror = function() {
-                console.error('Error reading file:', reader.error);
-            };
-
-            // Read the file as text
-            reader.readAsText(file);
-          }
-        });
-      } else {
-        // otherwise we load the puzzle and hide the overlay
-        openHolder.style.display = "none";
-        puzzleContainer.style.display = "flex";
-        // Fetch the puzzle and process
-        fetch(puzzle)
-          .then(function (response) {
-            if (response.status === 200 || response.status === 0) {
-              return Promise.resolve(response.json())
-            } else {
-              return Promise.reject(new Error(response.statusText))
-            }
-          })
-          .then(function success(data) {
+            const data = JSON.parse(jsonText);
+            openHolder.style.display = "none";
+            puzzleContainer.style.display = "flex";
             loadPuzzle(data);
+            return true;
+          } catch (e) {
+            console.error("Failed to decode LZ-hash puzzle:", e);
+            return false;
+          }
+        }
+
+        // Try hash first — if it loads, we’re done
+        if (tryLoadFromHash()) return;
+
+        // Otherwise fall back to ?puzzle= or ?file=
+        if (!puzzle) {
+          // Show the openHolder and allow manual file upload
+          openHolder.style.display = "flex";
+          const file_input = document.getElementById('open-vpuz-input');
+          file_input.addEventListener('change', function(evt) {
+            const files = evt.target.files.length ? evt.target.files : null;
+            if (files) {
+              const file = files[0];
+              const reader = new FileReader();
+
+              reader.onload = function(e) {
+                try {
+                  const json = JSON.parse(e.target.result);
+                  openHolder.style.display = "none";
+                  puzzleContainer.style.display = "flex";
+                  loadPuzzle(json);
+                } catch (err) {
+                  console.error('Error parsing JSON:', err);
+                }
+              };
+
+              reader.onerror = function() {
+                console.error('Error reading file:', reader.error);
+              };
+
+              reader.readAsText(file);
+            }
           });
-      }
+        } else {
+          // Otherwise fetch the puzzle from a remote URL
+          openHolder.style.display = "none";
+          puzzleContainer.style.display = "flex";
+          fetch(puzzle)
+            .then(function(response) {
+              if (response.status === 200 || response.status === 0) {
+                return Promise.resolve(response.json());
+              } else {
+                return Promise.reject(new Error(response.statusText));
+              }
+            })
+            .then(function success(data) {
+              loadPuzzle(data);
+            })
+            .catch(function(err) {
+              console.error('Error fetching puzzle:', err);
+            });
+        }
 
-      //loadPuzzle(puzzle);
+      }); // end document ready
+      </script>
 
-    }); // end document ready
-    </script>
 
 </body>
 </html>
