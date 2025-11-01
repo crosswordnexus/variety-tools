@@ -572,50 +572,23 @@ p.validate_grid()
 
 #%% Track 0
 # Set up the direction
-track_num, _dir = 0, '+'
+track_num, _dir = 0, '-'
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('digimon', 2, 0)
-sec, pos = p.tracks[track_num].place_word('sedition', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('artful', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('attache', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('felthat', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('deform', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('eking', sec, pos)
+sec, pos = p.tracks[track_num].place_word('fahrenheit', 6, 1)
+#sec, pos = p.tracks[track_num].place_word('edith', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('femtech', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('affairs', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('authentic', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('renewals', sec, pos)
+#sec, pos = p.tracks[track_num].place_word('planetoid', sec, pos)
 #sec, pos = p.tracks[track_num].place_word('madison', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('invited', sec, pos)
 
 
 if False:
-    p.get_valid_words_for_track(track_num, length=11, strict=True)
-    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=7)
+    p.get_valid_words_for_track(track_num, length=10, strict=True)
+    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=8)
     p.get_valid_words_for_track(track_num, sector=3, position=6, min_length=8)
 
 _ = p.draw_puzzle(show=True, solution=True)
 p.validate_grid()
-
-#%% Track 0
-# Set up the direction
-track_num, _dir = 0, '+'
-p.tracks[track_num] = Track(track_num, _dir)
-
-sec, pos = p.tracks[track_num].place_word('bowlines', 3, 6)
-sec, pos = p.tracks[track_num].place_word('parenthesis', 4, 6)
-sec, pos = p.tracks[track_num].place_word('artful', sec, pos)
-sec, pos = p.tracks[track_num].place_word('attache', sec, pos)
-sec, pos = p.tracks[track_num].place_word('felthat', sec, pos)
-sec, pos = p.tracks[track_num].place_word('deform', sec, pos)
-sec, pos = p.tracks[track_num].place_word('eking', sec, pos)
-sec, pos = p.tracks[track_num].place_word('madison', sec, pos)
-sec, pos = p.tracks[track_num].place_word('invited', sec, pos)
-
-
-if False:
-    p.get_valid_words_for_track(track_num, length=11, strict=True)
-    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=7)
-    p.get_valid_words_for_track(track_num, sector=3, position=6, min_length=8)
-
-_ = p.draw_puzzle(show=True, solution=True)
-p.validate_grid()
-
-
