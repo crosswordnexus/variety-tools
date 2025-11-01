@@ -89,6 +89,7 @@
     function showSpinner() {
       document.getElementById("spinner-overlay").style.display = "flex";
     }
+
     function hideSpinner() {
       document.getElementById("spinner-overlay").style.display = "none";
     }
@@ -123,13 +124,35 @@
     /** Load puzzle data with spinner **/
     function loadPuzzleWithSpinner(data) {
       showSpinner();
+
+      // Hide puzzle content until image fully loaded
+      const container = document.getElementById("container");
+      container.classList.remove("visible");
+
+      // Build puzzle
       loadPuzzle(data);
+
       const img = document.getElementById("puzzle-image");
-      if (!img) return hideSpinner();
-      if (img.complete) hideSpinner();
-      else {
-        img.addEventListener("load", hideSpinner, { once: true });
-        img.addEventListener("error", hideSpinner, { once: true });
+      if (!img) {
+        hideSpinner();
+        container.classList.add("visible");
+        return;
+      }
+
+      function finishLoading() {
+        hideSpinner();
+        container.classList.add("visible");
+      }
+
+      if (img.complete) {
+        finishLoading();
+      } else {
+        img.addEventListener("load", finishLoading, {
+          once: true
+        });
+        img.addEventListener("error", finishLoading, {
+          once: true
+        });
       }
     }
 
@@ -225,4 +248,5 @@
     });
   </script>
 </body>
+
 </html>

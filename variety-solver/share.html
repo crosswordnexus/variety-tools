@@ -57,13 +57,17 @@
     .hidden {
       display: none !important;
     }
+
+    main {
+      padding-bottom: 8rem;
+    }
   </style>
 </head>
 
 <body>
   <header>
-    <h1>vPuz File Creator</h1>
-    <p>Fill out the fields below to create a vPuz JSON puzzle.
+    <h1>Shareable Variety Puzzle Creator</h1>
+    <p>Fill out the fields below to create a shareable variety puzzle page.
       The image and at least one clue list are required.</p>
   </header>
 
@@ -89,9 +93,11 @@
 
       <label>
         <input type="checkbox" id="uploadToImgBB" />
-        Upload to imgbb (for shorter links)
+        Upload to imgbb
       </label>
-      <small>Your upload to imgbb will be anonymous, if you choose to go that route.</small>
+      <small>If you upload the puzzle image to imgbb, the resulting
+        URL will be shorter, but the puzzle will take longer to load.
+        Your upload will be anonymous.</small>
 
       <h2>Clues</h2>
       <div id="clueGroups"></div>
