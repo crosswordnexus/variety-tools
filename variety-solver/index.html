@@ -4,180 +4,200 @@
 * (c) 2024, Crossword Nexus
 * MIT License https://mit-license.org/
 -->
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crossword Nexus Variety Solver</title>
-    <link href="styles.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crossword Nexus Variety Solver</title>
+  <link href="styles.css" rel="stylesheet">
 
-    <!-- Load lscache -->
-    <script src="lscache.min.js"></script>
+  <!-- Load lscache -->
+  <script src="lscache.min.js"></script>
 
-    <!-- JSCrossword -->
-    <script src="jscrossword_combined.js"></script>
+  <!-- JSCrossword -->
+  <script src="jscrossword_combined.js"></script>
 
-    <!-- Load LZ string decompression -->
-    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <!-- Load LZ string decompression -->
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 
-    <!-- PDF stuff -->
-    <script src="pdf/jspdf-3_0_1.min.js"></script>
-    <script src="pdf/grapheme-splitter.min.js"></script>
-    <script src="pdf/twemoji.min.js"></script>
-    <script src="pdf/xw_pdf.js"></script>
+  <!-- PDF stuff -->
+  <script src="pdf/jspdf-3_0_1.min.js"></script>
+  <script src="pdf/grapheme-splitter.min.js"></script>
+  <script src="pdf/twemoji.min.js"></script>
+  <script src="pdf/xw_pdf.js"></script>
 
 </head>
+
 <body>
-    <!-- Overlay for opening puzzles -->
-    <div class="cw-open-holder" id="cw-open-holder">
-      <div class="cw-overflow"></div>
-      <div class="cw-open-puzzle">
-        <div class="cw-open-puzzle-instructions">
-          Click the button to choose a file to open.
-        </div>
-        <button type="button" class="cw-button info-button" id="open-vpuz-button">
-          Open vPuz file
-        </button>
+  <!-- Overlay for opening puzzles -->
+  <div class="cw-open-holder" id="cw-open-holder">
+    <div class="cw-overflow"></div>
+    <div class="cw-open-puzzle">
+      <div class="cw-open-puzzle-instructions">
+        Click the button to choose a file to open.
       </div>
-      <input type="file" class="cw-open-vpuz" id="open-vpuz-input" accept=".vpuz">
+      <button type="button" class="cw-button info-button" id="open-vpuz-button">
+        Open vPuz file
+      </button>
     </div>
-    <!-- end overlay -->
-    <div id="puzzle-container">
-      <div id="container">
-          <div id="puzzle-image-container">
-            <div class="puzzle-image-wrapper">
-              <img id="puzzle-image" alt="Puzzle Image">
-              <canvas id="canvas"></canvas>
-              <div class="button-container" id="button-container">
-                  <button class="info-button" id="infoButton">Puzzle Info</button>
-                  <button class="info-button" id="printButton">Print</button>
-              </div>
-            </div>
+    <input type="file" class="cw-open-vpuz" id="open-vpuz-input" accept=".vpuz">
+  </div>
+  <!-- end overlay -->
+  <div id="puzzle-container">
+    <div id="container">
+      <div id="puzzle-image-container">
+        <div class="puzzle-image-wrapper">
+          <img id="puzzle-image" alt="Puzzle Image">
+          <canvas id="canvas"></canvas>
+          <div class="button-container" id="button-container">
+            <button class="info-button" id="infoButton">Puzzle Info</button>
+            <button class="info-button" id="printButton">Print</button>
           </div>
-          <div id="clue-panels">
-              <div id="clues-0" class="clue-panel">
-                  <h2 id="clues-0-title"></h2>
-                  <ul class="clue-list" id="clue-list-0">
-                  </ul>
-              </div>
-              <div id="clues-1" class="clue-panel">
-                  <h2 id="clues-1-title"></h2>
-                  <ul class="clue-list" id="clue-list-1">
-                  </ul>
-              </div>
-          </div>
+        </div>
       </div>
-
-      <div class="modal" id="infoModal">
-          <div class="modal-content">
-              <div class="modal-header">
-                  <h2 class="modal-title" id="modal-title"></h2>
-                  <span class="modal-close" id="closeModal">&times;</span>
-              </div>
-              <div class="modal-body" id="modal-body">
-              </div>
-          </div>
+      <div id="clue-panels">
+        <div id="clues-0" class="clue-panel">
+          <h2 id="clues-0-title"></h2>
+          <ul class="clue-list" id="clue-list-0">
+          </ul>
+        </div>
+        <div id="clues-1" class="clue-panel">
+          <h2 id="clues-1-title"></h2>
+          <ul class="clue-list" id="clue-list-1">
+          </ul>
+        </div>
       </div>
-    </div> <!-- end puzzle-container div -->
+    </div>
 
-    <!-- Load the main JavaScript -->
-    <script src="script.js"></script>
+    <div class="modal" id="infoModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modal-title"></h2>
+          <span class="modal-close" id="closeModal">&times;</span>
+        </div>
+        <div class="modal-body" id="modal-body">
+        </div>
+      </div>
+    </div>
+  </div> <!-- end puzzle-container div -->
 
-    <script type="text/javascript">
-      /** Stuff to run once the document is ready **/
-      document.addEventListener('DOMContentLoaded', function() {
+  <!-- Load the main JavaScript -->
+  <script src="script.js"></script>
 
-        // check that fetch is enabled
-        if (typeof window.fetch !== "function") {
-          alert('Please upgrade to a modern browser');
-        }
+  <script type="text/javascript">
+    /** Stuff to run once the document is ready **/
+    document.addEventListener('DOMContentLoaded', function() {
 
-        // Grab puzzle from query string if available
-        const url = new URL(window.location.href);
-        let puzzle = url.searchParams.get("puzzle") || url.searchParams.get("file");
+      // check that fetch is enabled
+      if (typeof window.fetch !== "function") {
+        alert('Please upgrade to a modern browser');
+      }
 
-        // Get the "open" overlay and puzzle container
-        const openHolder = document.getElementById('cw-open-holder');
-        const puzzleContainer = document.getElementById('puzzle-container');
+      // Grab puzzle from query string if available
+      const url = new URL(window.location.href);
+      let puzzle = url.searchParams.get("puzzle") || url.searchParams.get("file");
 
-        /**
-         * Try to load a puzzle from a compressed LZ hash fragment (#...).
-         * If it succeeds, we skip the file chooser and display it directly.
-         */
-        function tryLoadFromHash() {
-          const hash = window.location.hash.slice(1);
-          if (!hash) return false;
+      // Get the "open" overlay and puzzle container
+      const openHolder = document.getElementById('cw-open-holder');
+      const puzzleContainer = document.getElementById('puzzle-container');
 
-          try {
-            // Attempt to decompress (using lz-string’s URI-safe method)
-            const jsonText = LZString.decompressFromEncodedURIComponent(hash);
-            if (!jsonText) return false;
+      /**
+       * Try to load a puzzle from a compressed LZ hash fragment (#...).
+       * If it succeeds, we skip the file chooser and display it directly.
+       */
+      function tryLoadFromHash() {
+        const hash = window.location.hash.slice(1);
+        if (!hash) return false;
 
-            const data = JSON.parse(jsonText);
-            openHolder.style.display = "none";
-            puzzleContainer.style.display = "flex";
-            loadPuzzle(data);
-            return true;
-          } catch (e) {
-            console.error("Failed to decode LZ-hash puzzle:", e);
-            return false;
-          }
-        }
+        try {
+          // Attempt to decompress (using lz-string’s URI-safe method)
+          const jsonText = LZString.decompressFromEncodedURIComponent(hash);
+          if (!jsonText) return false;
 
-        // Try hash first — if it loads, we’re done
-        if (tryLoadFromHash()) return;
-
-        // Otherwise fall back to ?puzzle= or ?file=
-        if (!puzzle) {
-          // Show the openHolder and allow manual file upload
-          openHolder.style.display = "flex";
-          const file_input = document.getElementById('open-vpuz-input');
-          file_input.addEventListener('change', function(evt) {
-            const files = evt.target.files.length ? evt.target.files : null;
-            if (files) {
-              const file = files[0];
-              const reader = new FileReader();
-
-              reader.onload = function(e) {
-                try {
-                  const json = JSON.parse(e.target.result);
-                  openHolder.style.display = "none";
-                  puzzleContainer.style.display = "flex";
-                  loadPuzzle(json);
-                } catch (err) {
-                  console.error('Error parsing JSON:', err);
-                }
-              };
-
-              reader.onerror = function() {
-                console.error('Error reading file:', reader.error);
-              };
-
-              reader.readAsText(file);
-            }
-          });
-        } else {
-          // Otherwise fetch the puzzle from a remote URL
+          const data = JSON.parse(jsonText);
           openHolder.style.display = "none";
           puzzleContainer.style.display = "flex";
-          fetch(puzzle)
-            .then(function(response) {
-              if (response.status === 200 || response.status === 0) {
-                return Promise.resolve(response.json());
-              } else {
-                return Promise.reject(new Error(response.statusText));
-              }
-            })
-            .then(function success(data) {
-              loadPuzzle(data);
-            })
-            .catch(function(err) {
-              console.error('Error fetching puzzle:', err);
-            });
+          loadPuzzle(data);
+          return true;
+        } catch (e) {
+          console.error("Failed to decode LZ-hash puzzle:", e);
+          return false;
         }
+      }
 
-      }); // end document ready
-      </script>
+      // Try hash first — if it loads, we’re done
+      if (tryLoadFromHash()) return;
+
+      // Otherwise fall back to ?puzzle= or ?file=
+      if (!puzzle) {
+        // Show the openHolder and allow manual file upload
+        openHolder.style.display = "flex";
+        const file_input = document.getElementById('open-vpuz-input');
+        file_input.addEventListener('change', function(evt) {
+          const files = evt.target.files.length ? evt.target.files : null;
+          if (files) {
+            const file = files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+              try {
+                const json = JSON.parse(e.target.result);
+                openHolder.style.display = "none";
+                puzzleContainer.style.display = "flex";
+                loadPuzzle(json);
+              } catch (err) {
+                console.error('Error parsing JSON:', err);
+              }
+            };
+
+            reader.onerror = function() {
+              console.error('Error reading file:', reader.error);
+            };
+
+            reader.readAsText(file);
+          }
+        });
+      } else {
+        // Otherwise fetch the puzzle from a remote URL
+        openHolder.style.display = "none";
+        puzzleContainer.style.display = "flex";
+        fetch(puzzle)
+          .then(function(response) {
+            if (response.status === 200 || response.status === 0) {
+              return Promise.resolve(response.json());
+            } else {
+              return Promise.reject(new Error(response.statusText));
+            }
+          })
+          .then(async function success(data) {
+            // Normalize puzzle-image if it's hosted externally
+            const imgSrc = data["puzzle-image"];
+            if (imgSrc && /^https?:\/\//i.test(imgSrc)) {
+              try {
+                const response = await fetch(imgSrc);
+                const blob = await response.blob();
+                const reader = new FileReader();
+                data["puzzle-image"] = await new Promise((resolve, reject) => {
+                  reader.onloadend = () => resolve(reader.result); // base64 data URI
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+                });
+                console.log("Fetched & re-encoded image.");
+              } catch (err) {
+                console.warn("Failed to re-encode hosted image:", err);
+              }
+            }
+            loadPuzzle(data);
+          })
+        .catch(function(err) {
+          console.error('Error fetching puzzle:', err);
+        });
+      }
+
+    }); // end document ready
+  </script>
 
 
 </body>
+
 </html>
