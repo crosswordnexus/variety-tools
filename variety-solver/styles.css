@@ -2,60 +2,66 @@
 * (c) 2024, Crossword Nexus
 * MIT License https://mit-license.org/
 **/
-
 /** Generic CSS for display **/
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-    font-size: 1.4em;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  font-size: 1.4em;
 }
 
 #puzzle-container {
-    display: none;
-    align-items: flex-start;
-    height: 100%;
-    width: 100%;
+  display: none;
+  align-items: flex-start;
+  height: 100%;
+  width: 100%;
 }
 
 #container {
-    display: flex;
-    align-items: flex-start;
-    height: 100%;
-    width: 100%;
+  display: flex;
+  align-items: flex-start;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+}
+
+#container.visible {
+  opacity: 1;
 }
 
 #puzzle-image-container {
-    position: relative;
-    display: inline-block;
-    flex: 1; /* Allow it to take up available space */
+  position: relative;
+  display: inline-block;
+  flex: 1;
+  /* Allow it to take up available space */
 }
 
 .puzzle-image-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
 }
 
 #puzzle-image {
-    display: block;
-    max-width: 100%;
-    max-height: calc(100vh - 120px);
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 120px);
 }
 
 #canvas {
-    display: block;
-    position: absolute;
+  display: block;
+  position: absolute;
 }
 
 /** Metadata display **/
 .info {
-    margin: 10px;
-    font-size: 18px;
-    text-align: center;
+  margin: 10px;
+  font-size: 18px;
+  text-align: center;
 }
 
 /** Clues CSS **/
@@ -67,51 +73,53 @@ h2.clues-title {
 }
 
 #clue-panels {
-    display: flex;
-    flex-direction: column;
-    width: 30%;
-    min-width: 250px;
-    height: 100%; /* Take up the full height of the container */
-    margin-left: 20px;
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  min-width: 250px;
+  height: 100%;
+  /* Take up the full height of the container */
+  margin-left: 20px;
 }
 
 .clue-panel {
-    /*flex: 1; /* Each panel will take up an equal portion of the height */
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    overflow: hidden;
-    border: 1px solid #ccc;
-    padding: 5px;
-    background: #f9f9f9;
-    box-sizing: border-box;
+  /*flex: 1; /* Each panel will take up an equal portion of the height */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  padding: 5px;
+  background: #f9f9f9;
+  box-sizing: border-box;
 }
 
 /* no bullets on clue lists */
 .clue-list {
-    margin-top: 0;
-    margin-bottom: 0;
-    padding: 0;
-    overflow-y: auto;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0;
+  overflow-y: auto;
 }
 
 /* Space between clues */
 .clue-item {
-    margin-bottom: 5px;
-    cursor: pointer;
-    display: flex;
-    list-style: none;
+  margin-bottom: 5px;
+  cursor: pointer;
+  display: flex;
+  list-style: none;
 }
 
 .clue-item:hover {
-    background-color: lightgray; /* Change background on hover */
+  background-color: lightgray;
+  /* Change background on hover */
 }
 
 /* Clue note text box */
 .input-box {
-    display: none;
-    margin-top: 5px;
-    font-weight: bold;
+  display: none;
+  margin-top: 5px;
+  font-weight: bold;
 }
 
 /* Bold the clue numbers */
@@ -123,9 +131,9 @@ h2.clues-title {
 
 /* Placeholder for clue text */
 .clue-text {
-    flex: 1 1 auto;
-    word-wrap: break-word;
-    margin-right: 0.2rem;
+  flex: 1 1 auto;
+  word-wrap: break-word;
+  margin-right: 0.2rem;
 }
 
 /* Clue explanations */
@@ -138,123 +146,173 @@ h2.clues-title {
 
 /** CSS for the overlay when the canvas is clicked **/
 #overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
 }
 
 #circle {
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: rgba(155, 155, 155, 0.8); /* the last element is the transparency */
-    border-radius: 50%;
-    pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: rgba(155, 155, 155, 0.8);
+  /* the last element is the transparency */
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 /** Info button and modal box **/
 .button-container {
-    margin-top: 20px;
-    height: 200px;
+  margin-top: 20px;
+  height: 200px;
 }
+
 .info-button {
-    padding: 10px 20px;
-    margin-top: 10px;
-    font-size: 16px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  padding: 10px 20px;
+  margin-top: 10px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
+
 .info-button:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
+
 .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    font-size: 18px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
 }
+
 .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 5px;
-    max-width: 500px;
-    width: 90%;
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 90%;
 }
+
 .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 5px;
 }
+
 .modal-title {
-    font-size: 20px;
-    margin: 0;
+  font-size: 20px;
+  margin: 0;
 }
+
 .modal-close {
-    font-size: 24px;
-    cursor: pointer;
+  font-size: 24px;
+  cursor: pointer;
 }
 
 /**
 * Open puzzle overlay
 **/
-
 div.cw-open-holder {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 4;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 4;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
 }
 
 div.cw-overflow {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    background: white;
-    z-index: -1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: white;
+  z-index: -1;
 }
 
 .cw-open-puzzle {
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin: 20px;
-    text-align: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 20px;
+  text-align: center;
 }
 
 /* we don't show the file input button */
 .cw-open-holder input {
-    visibility: hidden;
-    position: absolute;
+  visibility: hidden;
+  position: absolute;
 }
 
 /* drag-and-drop style */
 div.has-advanced-upload {
-    outline: 2px dashed gray;
-    outline-offset: -10px;
+  outline: 2px dashed gray;
+  outline-offset: -10px;
+}
+
+/** Spinner **/
+#spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  border: 10px solid #f3f3f3;
+  border-top: 10px solid #3498db;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/** Dragover **/
+#cw-open-holder.dragover {
+  outline: 4px dashed #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+#cw-open-holder.dragover .cw-open-puzzle-instructions {
+  color: #4CAF50;
 }
