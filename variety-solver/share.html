@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
 
   <!-- Image compression -->
+  <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 
   <style>
@@ -129,17 +130,37 @@
       });
     }
 
-    async function uploadToImgbb(file) {
+    async function uploadToImgbb(file, useCompressorJS = true) {
       const apiKey = "a360bbf432382bc636147693dd06d804"; // from imgbb.com
 
-      // --- Compress before uploading ---
-      const options = {
-        maxWidthOrHeight: 750,
-        maxSizeMB: 0.1, // 100 KB target
-        useWebWorker: true,
-        initialQuality: 0.9,
-      };
-      const compressed = await imageCompression(file, options);
+      let compressed;
+
+      if (useCompressorJS) {
+        // --- Use Compressor.js ---
+        compressed = await new Promise((resolve, reject) => {
+          new Compressor(file, {
+            maxWidth: 750,
+            maxHeight: 750,
+            convertSize: 100000, // ~100 KB target threshold
+            quality: 0.9,
+            success(result) {
+              resolve(result);
+            },
+            error(err) {
+              reject(err);
+            }
+          });
+        });
+      } else {
+        // --- Use browser-image-compression ---
+        const options = {
+          maxWidthOrHeight: 750,
+          maxSizeMB: 0.1,
+          useWebWorker: true,
+          initialQuality: 0.9,
+        };
+        compressed = await imageCompression(file, options);
+      }
 
       const formData = new FormData();
       formData.append("image", compressed);
@@ -151,8 +172,9 @@
 
       const json = await response.json();
       if (!json.success) throw new Error("imgbb upload failed");
-      return json.data.url; // e.g., https://i.ibb.co/abc123.png
+      return json.data.url; // e.g. https://i.ibb.co/abc123.png
     }
+
 
     // ----- Clue group UI -----
     const clueGroupsDiv = document.getElementById("clueGroups");
