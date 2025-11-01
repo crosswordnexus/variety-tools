@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create vPuz File</title>
+
+  <!-- Simple.css: lightweight, auto-dark, semantic defaults -->
+  <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
+
+  <!-- Compressor.js for optional image compression -->
+  <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+
+  <style>
+    /* Force vertical layout for normal fields */
+    form label {
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    form label input,
+    form label textarea,
+    form label select {
+      display: block;
+      width: 100%;
+      margin-top: 0.3rem;
+    }
+
+    /* Exception: keep checkboxes inline with their label text */
+    form label:has(input[type="checkbox"]) {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: auto;
+      margin-bottom: 1rem;
+    }
+
+    form label:has(input[type="checkbox"]) input[type="checkbox"] {
+      width: auto;
+      display: inline-block;
+      margin-top: 0;
+    }
+
+    .clue-group {
+      border: 1px solid var(--accent);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+    }
+
+    .clue-list input {
+      width: 48%;
+      margin: 0.25rem 1% 0.25rem 0;
+      display: inline-block;
+    }
+
+    pre#output {
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>vPuz File Creator</h1>
+    <p>
+      Fill out the fields below to create a vPuz JSON puzzle. The image and at least one clue list are required.
+    </p>
+  </header>
+
+  <main>
+    <form id="vpuzForm">
+      <h2>Metadata</h2>
+
+      <label>
+        Title
+        <input type="text" id="title" />
+      </label>
+
+      <label>
+        Author
+        <input type="text" id="author" />
+      </label>
+
+      <label>
+        Copyright
+        <input type="text" id="copyright" value="©" />
+      </label>
+
+      <label>
+        Notes
+        <textarea id="notes" rows="4"></textarea>
+      </label>
+
+      <label for="solution">Solution</label>
+      <textarea id="solution" rows="3" placeholder="Enter the solution string here..."></textarea>
+      <small>
+        <em>
+          Enter the letters that make up your solution here. If a solver enters these letters into the grid in any arrangement, the puzzle will be marked as correctly solved.
+        </em>
+      </small>
+
+      <h2>Puzzle Image</h2>
+      <label>
+        <input type="file" id="puzzleImage" accept="image/*" />
+      </label>
+
+      <label>
+        <input type="checkbox" id="compressImage" />
+        Compress image
+      </label>
+      <small>
+        (Required — will be stored as base64 in the JSON. Enabling compression limits the image to 750×750 px and about 100&nbsp;KB, which will make the shareable LZ-string URL shorter.)
+      </small>
+
+      <h2>Clues</h2>
+      <div id="clueGroups"></div>
+      <button type="button" id="addClueGroup">+ Add Clue Group</button>
+
+      <button type="button" id="generateBtn">Generate vPuz JSON</button>
+    </form>
+
+    <pre id="output"></pre>
+  </main>
+
+  <script>
+    // --- Helpers ---
+    function readImageAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = e => reject(e);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function compressImageFile(file) {
+      return new Promise((resolve, reject) => {
+        new Compressor(file, {
+          maxWidth: 750,
+          maxHeight: 750,
+          convertSize: 100000, // target ~100 KB
+          success(result) {
+            resolve(result);
+          },
+          error(err) {
+            console.error("Compression failed:", err);
+            reject(err);
+          },
+        });
+      });
+    }
+
+    // --- Clue group UI logic ---
+    const clueGroupsDiv = document.getElementById("clueGroups");
+    document.getElementById("addClueGroup").addEventListener("click", () => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "clue-group";
+
+      const groupLabel = document.createElement("input");
+      groupLabel.placeholder = "Clue group name (e.g., Clockwise)";
+      groupLabel.className = "group-name";
+      wrapper.appendChild(groupLabel);
+
+      const clueList = document.createElement("div");
+      clueList.className = "clue-list";
+      wrapper.appendChild(clueList);
+
+      const addClueBtn = document.createElement("button");
+      addClueBtn.type = "button";
+      addClueBtn.textContent = "+ Add Clue";
+      addClueBtn.addEventListener("click", () => {
+        const numInput = document.createElement("input");
+        numInput.placeholder = "Number";
+        const textInput = document.createElement("input");
+        textInput.placeholder = "Clue text";
+        clueList.appendChild(numInput);
+        clueList.appendChild(textInput);
+      });
+      wrapper.appendChild(addClueBtn);
+
+      clueGroupsDiv.appendChild(wrapper);
+    });
+
+    // --- Generate JSON ---
+    document.getElementById("generateBtn").addEventListener("click", async () => {
+      const title = document.getElementById("title").value.trim();
+      const author = document.getElementById("author").value.trim();
+      const copyright = document.getElementById("copyright").value.trim();
+      const notes = document.getElementById("notes").value.trim();
+      const solution = document.getElementById("solution").value.trim();
+
+      const imageFile = document.getElementById("puzzleImage").files[0];
+      const compress = document.getElementById("compressImage").checked;
+      if (!imageFile) {
+        alert("Please select a puzzle image.");
+        return;
+      }
+
+      // collect clues
+      const cluesObj = {};
+      const groups = document.querySelectorAll(".clue-group");
+      groups.forEach((g) => {
+        const name = g.querySelector(".group-name").value.trim();
+        if (!name) return;
+        const clues = [];
+        const inputs = g.querySelectorAll(".clue-list input");
+        for (let i = 0; i < inputs.length; i += 2) {
+          const num = inputs[i].value.trim();
+          const clue = inputs[i + 1]?.value.trim() || "";
+          if (num && clue) clues.push([num, clue]);
+        }
+        if (clues.length > 0) cluesObj[name] = clues;
+      });
+
+      if (Object.keys(cluesObj).length === 0) {
+        alert("Please add at least one clue list with clues.");
+        return;
+      }
+
+      try {
+        const finalFile = compress ? await compressImageFile(imageFile) : imageFile;
+        const imgDataURL = await readImageAsDataURL(finalFile);
+
+        const vpuz = {
+          author,
+          title,
+          copyright,
+          notes,
+          "solution-string": solution,
+          clues: cluesObj,
+          "puzzle-image": imgDataURL,
+        };
+
+        const output = document.getElementById("output");
+        output.style.display = "block";
+        output.textContent = JSON.stringify(vpuz, null, 2);
+
+        const blob = new Blob([JSON.stringify(vpuz, null, 2)], {
+          type: "application/json",
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = (title || "puzzle") + ".vpuz";
+        link.click();
+      } catch (err) {
+        console.error(err);
+        alert("Error reading image or generating JSON.");
+      }
+    });
+  </script>
+</body>
+
+</html>
