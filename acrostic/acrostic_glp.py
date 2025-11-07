@@ -31,15 +31,20 @@ import argparse
 import sys
 import math
 import itertools
-import wordninja
-from nltk.stem import PorterStemmer
-
 from pathlib import Path
+
+# Not strictly needed
+try:
+    import wordninja
+    from nltk.stem import PorterStemmer
+except:
+    pass
+
 
 # Global constants / defaults
 MIN_SCORE = 50
 
-LEN_DISTANCE = 2         # allowed deviation from mean word length
+LEN_DISTANCE = 3         # allowed deviation from mean word length
 MIN_WORD_LENGTH = 4
 DEFAULT_MAX_CANDIDATES_PER_LETTER = None
 
@@ -51,10 +56,14 @@ if not WORDLIST.exists():
 # Utility helpers
 # ----------------------------
 
-stemmer = PorterStemmer()
-
 # Helper function for dupe checking
 def are_there_dupes(arr):
+    # If the modules aren't loaded, just return None
+    try:
+        stemmer = PorterStemmer()
+        wordninja
+    except:
+        return None
     arr = set(arr)
     # Simple check first
     suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less', 'er']
@@ -379,38 +388,4 @@ def main():
 if __name__ == "__main__":
     sys.exit(main())
 
-    
-#%% For running within an IDE
-if False:
-#%%
-    quote = '''
-People love to say, “Give a man a fish, and he’ll eat for a
- day. Teach a man to fish, and he’ll eat for a lifetime.” 
- What they don’t say is, “And it would be nice if you gave 
- him a fishing rod.” That’s the part of the analogy that’s missing.
-    '''.strip().replace('\n', ' ').replace('  ', ' ')
-    
-    source = 'Trevor Noah, Born a Crime'
-    wordlist = r'spreadthewordlist.dict'
-    
-    print("Quote length: ", len(alpha_only(quote)))
-    print("Source length: ", len(alpha_only(source)))
-    print("Words per entry: ", len(alpha_only(quote))/len(alpha_only(source)))
-    
-#%%
-    minscore = 50
-    candidates_per_letter = None
-    
-    excluded = ['chethuntley', 'eyetoeye', 'hewentthere', 'mmddyyyy', 
-        'hoitytoity', 'sevenofnine']
-    included = []
-    
-    results = create_acrostic2(quote, source, 
-                     excluded_words=excluded, included_words=included, 
-                     wordlist=wordlist, min_score=minscore,
-                     max_candidates_per_letter=candidates_per_letter)
-    for r in results:
-        print(r.upper())
-        
-    are_there_dupes(results)
     
