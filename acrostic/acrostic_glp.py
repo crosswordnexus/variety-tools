@@ -44,7 +44,7 @@ except:
 # Global constants / defaults
 MIN_SCORE = 50
 
-LEN_DISTANCE = 3         # allowed deviation from mean word length
+LEN_DISTANCE = 2         # allowed deviation from mean word length
 MIN_WORD_LENGTH = 4
 DEFAULT_MAX_CANDIDATES_PER_LETTER = None
 
