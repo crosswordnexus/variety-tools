@@ -212,6 +212,15 @@ $('#datatables-table tbody').on('click', 'tr', function() {
 
     // Grab the data from the clicked row
     const data = table.row(this).data();
+
+    // Record for undo
+    UNDO_STACK.push({
+        twoTone: data[0] || null,
+        odd: data[1] || null,
+        even: data[2] || null
+    });
+    document.getElementById('undo-button').disabled = false;
+
     // add relevant data to relevant arrays
     if (data[0]) allWords.push(data[0]);
     if (data[1]) oddWords.push(data[1]);
