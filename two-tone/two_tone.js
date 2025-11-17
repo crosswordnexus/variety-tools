@@ -201,6 +201,9 @@ function handleClick(newData=[]) {
     // Change the button back to "active"
     buttonActive(BEGIN_BUTTON);
   }, 0);
+
+  saveState();
+
 } // end handleClick()
 
 /** Define what happens when we click on a row in the table **/
@@ -230,6 +233,9 @@ $('#datatables-table tbody').on('click', 'tr', function() {
     document.getElementById('two-tone').value = allWords.join('\n');
     document.getElementById('odd-squares').value = oddWords.join('\n');
     document.getElementById('even-squares').value = evenWords.join('\n');
+
+    // SAVE to localStorage
+    saveState();
 
     // Click the button
     handleClick(newData=data);

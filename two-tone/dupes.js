@@ -48,7 +48,7 @@ function inferSpaces(s, maxword = 15) {
 
 function checkForDupes(_) {
   // Grab the words from the text boxes
-  const boxNames = ['rows'].concat(COLORS);
+  const boxNames = ['two-tone', 'odd-squares', 'even-squares'];
   const words = {};
   const bloomWords = new Set();
   boxNames.forEach(box => {
@@ -62,10 +62,6 @@ function checkForDupes(_) {
         w3.forEach(w4 => {
           if (!words[w4]) words[w4] = new Set();
           words[w4].add(w2);
-          // Save lemmatized words from "colors" for later dupe checking
-          if (COLORS.indexOf(box) !== -1 && w4.length >= 4) {
-            bloomWords.add(w4);
-          }
         });
       });
     });
@@ -100,4 +96,4 @@ function checkForDupes(_) {
 }
 
 // Dupe button functionality
-//document.getElementById('checkdupes-button').addEventListener('click', checkForDupes);
+document.getElementById('checkdupes-button').addEventListener('click', checkForDupes);

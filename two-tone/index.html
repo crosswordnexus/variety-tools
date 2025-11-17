@@ -36,7 +36,7 @@ MIT License - https://opensource.org/license/MIT
         </div>
         <div class="textareas">
           <button class="button-primary" type="submit" id="begin-button" value="Begin">Begin</button>
-          <button class="button-secondary" id="undo-button" disabled>Undo</button>
+          <button class="button-primary" id="undo-button" disabled>Undo</button>
         </div>
 
         <div id="datatables-table-div">
@@ -57,17 +57,18 @@ MIT License - https://opensource.org/license/MIT
           <p>Click a row to insert into the puzzle
         </div>
 
-        <!--
         <div class="textareas">
-          <button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>
+          <!--<button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>-->
+          <button class="button-primary" id="restore-button" style="display:none;">Restore previous state</button>
         </div>
-        -->
 
     </div>
     <!-- JS code for displaying -->
     <script src="two_tone_display.js"></script>
     <!-- JS code for filling -->
     <script src="two_tone.js"></script>
+    <!-- JS code for dupe checking -->
+    <script src="dupes.js"></script>
 
     <script type="text/javascript">
       /** Helper function to convert an onject with array values to sets **/
@@ -121,6 +122,38 @@ MIT License - https://opensource.org/license/MIT
       });
       var dataSet = [];
       table.clear().rows.add(dataSet).draw();
+
+      // Check if we have saved state
+      const saved = loadState();
+      const restoreButton = document.getElementById('restore-button');
+
+      if (saved) {
+          restoreButton.style.display = "inline-block";
+      }
+
+      restoreButton.addEventListener('click', function () {
+        const saved = loadState();
+        if (!saved) return;
+
+        // Repopulate textareas
+        document.getElementById('two-tone').value = saved.twoTone;
+        document.getElementById('odd-squares').value = saved.odd;
+        document.getElementById('even-squares').value = saved.even;
+
+        // Restore UNDO stack
+        UNDO_STACK = saved.undo || [];
+
+        // Enable Undo if stack is nonempty
+        document.getElementById('undo-button').disabled = UNDO_STACK.length === 0;
+
+        // Recompute suggestions
+        handleClick([]);
+
+        // Hide restore button
+        restoreButton.style.display = "none";
+    });
+
+
 
     </script>
 </body>

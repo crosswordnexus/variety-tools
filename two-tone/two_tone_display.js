@@ -57,3 +57,29 @@ UNDO_BUTTON.addEventListener('click', function() {
     if (UNDO_STACK.length === 0)
         UNDO_BUTTON.disabled = true;
 });
+
+const STORAGE_KEY = "twoToneState_v1";
+
+function saveState() {
+    const state = {
+        twoTone: document.getElementById('two-tone').value,
+        odd: document.getElementById('odd-squares').value,
+        even: document.getElementById('even-squares').value,
+        undo: UNDO_STACK
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadState() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (!data) return null;
+    try {
+        return JSON.parse(data);
+    } catch {
+        return null;
+    }
+}
+
+function clearState() {
+    localStorage.removeItem(STORAGE_KEY);
+}
