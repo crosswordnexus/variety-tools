@@ -12,6 +12,7 @@ import os
 from collections import defaultdict
 import json
 import zipfile
+from pathlib import Path
 
 # The smallest length for words in the puzzle
 MIN_WORD_LENGTH = 4
@@ -19,10 +20,11 @@ MIN_WORD_LENGTH = 4
 MIN_OVERLAP = 1
 # Minimum score of word list entries
 MIN_SCORE = 50
+
 # The word list to use
-WORDLIST_DIR = r'C:\Users\boisv\Documents\word_lists'
-word_list = 'spreadthewordlist.dict'
-WORDLIST = os.path.join(WORDLIST_DIR, word_list)
+base = Path(__file__).parent        # directory containing this file
+target = base / '..' / 'word_lists' / 'spreadthewordlist.dict'
+WORDLIST = target.resolve()  
 
 #%% Helper functions
 
