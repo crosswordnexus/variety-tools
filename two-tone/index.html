@@ -58,7 +58,7 @@ MIT License - https://opensource.org/license/MIT
         </div>
 
         <div class="textareas">
-          <!--<button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>-->
+          <button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>
           <button class="button-primary" id="restore-button" style="display:none;">Restore previous state</button>
         </div>
 
@@ -109,7 +109,7 @@ MIT License - https://opensource.org/license/MIT
           window.BEGIN_KEYS = new Set(Object.keys(window.BEGIN_END_DICT));
 
           // get the wordninja data
-          //window.WORDNINJA = data['WORDNINJA'];
+          window.WORDNINJA = data['WORDNINJA'];
 
           // Show the button once words have been loaded
           buttonActive(beginButton);

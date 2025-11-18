@@ -50,33 +50,15 @@ function checkForDupes(_) {
   // Grab the words from the text boxes
   const boxNames = ['two-tone', 'odd-squares', 'even-squares'];
   const words = {};
-  const bloomWords = new Set();
   boxNames.forEach(box => {
-    let wordsArr = document.getElementById(`${box}-text`).value.split('\n');
+    let wordsArr = document.getElementById(box).value.split('\n');
     wordsArr.forEach(w => {
       if (!w) return;
-      let w1 = w.split('/');
-      w1.forEach(w2 => {
-        // infer spaces and lemmatize
-        let w3 = lemmatize(inferSpaces(w2.toLowerCase()))
-        w3.forEach(w4 => {
-          if (!words[w4]) words[w4] = new Set();
-          words[w4].add(w2);
-        });
-      });
-    });
-  });
-
-  // Loop through bloom words and see if a row word contains it
-  let rowWords = document.getElementById('rows-text').value.split('\n');
-  bloomWords.forEach(bw => {
-    rowWords.forEach(rw => {
-      if (!rw) return;
-      let w1 = rw.split('/');
-      w1.forEach(w2 => {
-        if (w2.toLowerCase().includes(bw)) {
-          words[bw].add(w2);
-        }
+      // infer spaces and lemmatize
+      let w3 = lemmatize(inferSpaces(w.toLowerCase()))
+      w3.forEach(w4 => {
+        if (!words[w4]) words[w4] = [];
+        words[w4].push(w);
       });
     });
   });
@@ -86,7 +68,7 @@ function checkForDupes(_) {
   // Prepare text for an alert
   var alertText = '';
   Object.keys(words).forEach(k => {
-    if (words[k].size > 1 && k.length > 3) {
+    if (words[k].size > 1 && k.length >= 3) {
       let dupeDisplay = [...words[k]].join(', ');
       alertText += `${k} => ${dupeDisplay}\n`;
     }
@@ -96,4 +78,4 @@ function checkForDupes(_) {
 }
 
 // Dupe button functionality
-document.getElementById('checkdupes-button').addEventListener('click', checkForDupes);
+//document.getElementById('checkdupes-button').addEventListener('click', checkForDupes);
