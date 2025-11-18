@@ -78,4 +78,4 @@ function checkForDupes(_) {
 }
 
 // Dupe button functionality
-//document.getElementById('checkdupes-button').addEventListener('click', checkForDupes);
+document.getElementById('checkdupes-button').addEventListener('click', checkForDupes);
