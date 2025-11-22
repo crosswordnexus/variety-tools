@@ -201,6 +201,9 @@ function handleClick(newData=[]) {
     // Change the button back to "active"
     buttonActive(BEGIN_BUTTON);
   }, 0);
+
+  saveState();
+
 } // end handleClick()
 
 /** Define what happens when we click on a row in the table **/
@@ -212,6 +215,15 @@ $('#datatables-table tbody').on('click', 'tr', function() {
 
     // Grab the data from the clicked row
     const data = table.row(this).data();
+
+    // Record for undo
+    UNDO_STACK.push({
+        twoTone: data[0] || null,
+        odd: data[1] || null,
+        even: data[2] || null
+    });
+    document.getElementById('undo-button').disabled = false;
+
     // add relevant data to relevant arrays
     if (data[0]) allWords.push(data[0]);
     if (data[1]) oddWords.push(data[1]);
@@ -221,6 +233,9 @@ $('#datatables-table tbody').on('click', 'tr', function() {
     document.getElementById('two-tone').value = allWords.join('\n');
     document.getElementById('odd-squares').value = oddWords.join('\n');
     document.getElementById('even-squares').value = evenWords.join('\n');
+
+    // SAVE to localStorage
+    saveState();
 
     // Click the button
     handleClick(newData=data);

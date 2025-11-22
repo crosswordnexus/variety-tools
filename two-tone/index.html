@@ -25,27 +25,25 @@ MIT License - https://opensource.org/license/MIT
 </head>
 
 <body>
-  <!-- modal box placeholder -->
-  <div class="cw-modal" id="cw-modal"></div>
-  <div class="container">
-    <div class="textareas">
-      <div>
-        <h3>Two-Tone <span id="two-tone-length"></span></h3>
-        <textarea id="two-tone"></textarea>
-      </div>
-      <div>
-        <h3>Gray</h3>
-        <textarea id="odd-squares"></textarea>
-      </div>
-      <div>
-        <h3>White</h3>
-        <textarea id="even-squares"></textarea>
-      </div>
-    </div>
-    <div class="textareas">
-      <button class="button-primary" type="submit" id="begin-button" value="Begin">Begin</button>
-      <button class="button-primary" type="submit" id="wordlist-button" value="Upload wordlist">Upload wordlist</button>
-    </div>
+    <div class="container">
+        <div class="textareas">
+            <div>
+                <h3>Two-Tone <span id="two-tone-length"></span></h3>
+                <textarea id="two-tone"></textarea>
+            </div>
+            <div>
+                <h3>Gray</h3>
+                <textarea id="odd-squares"></textarea>
+            </div>
+            <div>
+                <h3>White</h3>
+                <textarea id="even-squares"></textarea>
+            </div>
+        </div>
+        <div class="textareas">
+          <button class="button-primary" type="submit" id="begin-button" value="Begin">Begin</button>
+          <button class="button-primary" id="undo-button" disabled>Undo</button>
+        </div>
 
     <div id="datatables-table-div">
       <table id="datatables-table" class="display">
@@ -65,17 +63,18 @@ MIT License - https://opensource.org/license/MIT
       <p>Click a row to insert into the puzzle
     </div>
 
-    <!--
         <div class="textareas">
           <button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>
+          <button class="button-primary" id="restore-button" style="display:none;">Restore previous state</button>
         </div>
-        -->
 
-  </div>
-  <!-- JS code for displaying -->
-  <script src="two_tone_display.js"></script>
-  <!-- JS code for filling -->
-  <script src="two_tone.js"></script>
+    </div>
+    <!-- JS code for displaying -->
+    <script src="two_tone_display.js"></script>
+    <!-- JS code for filling -->
+    <script src="two_tone.js"></script>
+    <!-- JS code for dupe checking -->
+    <script src="dupes.js"></script>
 
   <script type="text/javascript">
     /** Helper function to convert an onject with array values to sets **/
@@ -116,7 +115,7 @@ MIT License - https://opensource.org/license/MIT
           window.BEGIN_KEYS = new Set(Object.keys(window.BEGIN_END_DICT));
 
           // get the wordninja data
-          //window.WORDNINJA = data['WORDNINJA'];
+          window.WORDNINJA = data['WORDNINJA'];
 
           // Show the button once words have been loaded
           buttonActive(beginButton);
@@ -124,12 +123,45 @@ MIT License - https://opensource.org/license/MIT
         });
     });
 
-    var table = $('#datatables-table').DataTable({
-      "order": [] // Disable initial sorting
+      var table = $('#datatables-table').DataTable({
+        "order": []  // Disable initial sorting
+      });
+      var dataSet = [];
+      table.clear().rows.add(dataSet).draw();
+
+      // Check if we have saved state
+      const saved = loadState();
+      const restoreButton = document.getElementById('restore-button');
+
+      if (saved) {
+          restoreButton.style.display = "inline-block";
+      }
+
+      restoreButton.addEventListener('click', function () {
+        const saved = loadState();
+        if (!saved) return;
+
+        // Repopulate textareas
+        document.getElementById('two-tone').value = saved.twoTone;
+        document.getElementById('odd-squares').value = saved.odd;
+        document.getElementById('even-squares').value = saved.even;
+
+        // Restore UNDO stack
+        UNDO_STACK = saved.undo || [];
+
+        // Enable Undo if stack is nonempty
+        document.getElementById('undo-button').disabled = UNDO_STACK.length === 0;
+
+        // Recompute suggestions
+        handleClick([]);
+
+        // Hide restore button
+        restoreButton.style.display = "none";
     });
-    var dataSet = [];
-    table.clear().rows.add(dataSet).draw();
-  </script>
+
+
+
+    </script>
 </body>
 
 </html>
