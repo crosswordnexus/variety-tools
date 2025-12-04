@@ -95,8 +95,10 @@
     }
 
     /** Show puzzle / hide overlay **/
+    let isOpenHolderVisible = false;
     function showPuzzle() {
       document.getElementById("cw-open-holder").style.display = "none";
+      isOpenHolderVisible = false;
       document.getElementById("puzzle-container").style.display = "flex";
     }
 
@@ -173,6 +175,17 @@
       reader.readAsText(file);
     }
 
+    /** Try to load a dropped .vpuz file **/
+    function tryLoadDroppedVpuzFile(files) {
+      if (!files?.length) return;
+      const file = files[0];
+      if (!file.name.toLowerCase().endsWith(".vpuz")) {
+        alert("Please drop a .vpuz file.");
+        return;
+      }
+      loadJsonFile(file);
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       if (typeof window.fetch !== "function") {
         alert("Please upgrade to a modern browser");
@@ -182,6 +195,22 @@
       const fileInput = document.getElementById("open-vpuz-input");
       const url = new URL(window.location.href);
       const puzzleParam = url.searchParams.get("puzzle") || url.searchParams.get("file");
+
+      const handleGlobalDragover = (event) => {
+        if (!isOpenHolderVisible) return;
+        event.preventDefault();
+      };
+
+      const handleGlobalDrop = (event) => {
+        if (!isOpenHolderVisible) return;
+        event.preventDefault();
+        event.stopPropagation();
+        openHolder.classList.remove("dragover");
+        tryLoadDroppedVpuzFile(event.dataTransfer?.files);
+      };
+
+      window.addEventListener("dragover", handleGlobalDragover);
+      window.addEventListener("drop", handleGlobalDrop);
 
       /** Try to load compressed puzzle from hash **/
       function tryLoadFromHash() {
@@ -206,13 +235,14 @@
       // 2️⃣ Local upload
       if (!puzzleParam) {
         openHolder.style.display = "flex";
+        isOpenHolderVisible = true;
 
         fileInput.addEventListener("change", (e) => {
           if (e.target.files?.length) loadJsonFile(e.target.files[0]);
         });
 
         // Drag & drop support
-        ["dragover", "dragleave", "drop"].forEach((event) => {
+        ["dragover", "dragleave"].forEach((event) => {
           openHolder.addEventListener(event, (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -221,16 +251,6 @@
           });
         });
 
-        openHolder.addEventListener("drop", (e) => {
-          const files = e.dataTransfer.files;
-          if (!files.length) return;
-          const file = files[0];
-          if (!file.name.endsWith(".vpuz")) {
-            alert("Please drop a .vpuz file.");
-            return;
-          }
-          loadJsonFile(file);
-        });
       }
 
       // 3️⃣ Remote fetch (?puzzle= or ?file=)

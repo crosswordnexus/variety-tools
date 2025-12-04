@@ -4,20 +4,26 @@
 (c) 2024, Crossword Nexus.
 MIT License - https://opensource.org/license/MIT
 -->
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two-Tone Construction</title>
-    <link rel="stylesheet" href="tt.css">
-    <!-- Load JSZip -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Load DataTables -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-    <!-- Load compromise for dupe checking -->
-    <script src="https://unpkg.com/compromise"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two-Tone Construction</title>
+  <link rel="stylesheet" href="tt.css">
+  <!-- Load JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  </script>
+  <!-- Load DataTables -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+  <!-- Load compromise for dupe checking -->
+  <script src="https://unpkg.com/compromise"></script>
+
+  <!-- Word list management -->
+  <script src="../word_lists/wordlist.js"></script>
 </head>
+
 <body>
     <div class="container">
         <div class="textareas">
@@ -39,23 +45,23 @@ MIT License - https://opensource.org/license/MIT
           <button class="button-primary" id="undo-button" disabled>Undo</button>
         </div>
 
-        <div id="datatables-table-div">
-          <table id="datatables-table" class="display">
-              <thead>
-                  <tr>
-                      <th>Two-Tone</th>
-                      <th>Gray</th>
-                      <th>White</th>
-                      <th>Next Gray</th>
-                      <th>Next White</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <!-- Rows will be populated by JavaScript -->
-              </tbody>
-          </table>
-          <p>Click a row to insert into the puzzle
-        </div>
+    <div id="datatables-table-div">
+      <table id="datatables-table" class="display">
+        <thead>
+          <tr>
+            <th>Two-Tone</th>
+            <th>Gray</th>
+            <th>White</th>
+            <th>Next Gray</th>
+            <th>Next White</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be populated by JavaScript -->
+        </tbody>
+      </table>
+      <p>Click a row to insert into the puzzle
+    </div>
 
         <div class="textareas">
           <button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>
@@ -70,32 +76,32 @@ MIT License - https://opensource.org/license/MIT
     <!-- JS code for dupe checking -->
     <script src="dupes.js"></script>
 
-    <script type="text/javascript">
-      /** Helper function to convert an onject with array values to sets **/
-      function convertArraysToSets(obj) {
-          return Object.fromEntries(
-              Object.entries(obj).map(([key, value]) => [key, new Set(value)])
-          );
-      }
+  <script type="text/javascript">
+    /** Helper function to convert an onject with array values to sets **/
+    function convertArraysToSets(obj) {
+      return Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => [key, new Set(value)])
+      );
+    }
 
-      /** Stuff to run once the document is ready **/
-      document.addEventListener('DOMContentLoaded', function() {
+    /** Stuff to run once the document is ready **/
+    document.addEventListener('DOMContentLoaded', function() {
 
-        // Change button to "Loading"
-        const beginButton = document.getElementById('begin-button');
-        buttonLoading(beginButton);
+      // Change button to "Loading"
+      const beginButton = document.getElementById('begin-button');
+      buttonLoading(beginButton);
 
-        // Fetch the word list and process
-        fetch("two_tone_data.json.zip")
-        .then(function (response) {
+      // Fetch the word list and process
+      fetch("two_tone_data.json.zip")
+        .then(function(response) {
           if (response.status === 200 || response.status === 0) {
             return Promise.resolve(response.arrayBuffer())
           } else {
             return Promise.reject(new Error(response.statusText))
           }
-          })
+        })
         .then(JSZip.loadAsync)
-        .then(function (zip) {
+        .then(function(zip) {
           return zip.file("two_tone_data.json").async("string");
         })
         .then(function success(data) {
@@ -115,7 +121,7 @@ MIT License - https://opensource.org/license/MIT
           buttonActive(beginButton);
 
         });
-      });
+    });
 
       var table = $('#datatables-table').DataTable({
         "order": []  // Disable initial sorting
@@ -157,4 +163,5 @@ MIT License - https://opensource.org/license/MIT
 
     </script>
 </body>
+
 </html>

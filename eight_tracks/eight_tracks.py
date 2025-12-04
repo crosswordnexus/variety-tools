@@ -262,8 +262,12 @@ class Puzzle:
             numbering[(sec, pos)] = i+1
         return numbering
     
-    def draw_puzzle(self, show=False, solution=False, pdf=False, figsize=10):
-        """Draws the Eight Tracks puzzle grid with shading, a blank center, and inner letter separators."""
+    def draw_puzzle(self, show=False, solution=False, pdf=False, 
+                    figsize=10, dpi_ratio=None):
+        """
+        Draws the Eight Tracks puzzle grid with shading, a blank center, 
+        and inner letter separators.
+        """
        
         plt.tight_layout()
         fig, ax = plt.subplots(figsize=(figsize, figsize))
@@ -349,7 +353,10 @@ class Puzzle:
        
         # Create base64 and save
         buf = io.BytesIO()
-        dpi = int(900/figsize) if pdf else int(300/figsize)
+        if dpi_ratio:
+            dpi = int(dpi_ratio/figsize)
+        else:
+            dpi = int(900/figsize) if pdf else int(300/figsize)
         fig.savefig(buf, dpi=dpi, format='png')
         buf.seek(0)
        
@@ -572,23 +579,23 @@ p.validate_grid()
 
 #%% Track 0
 # Set up the direction
-track_num, _dir = 0, '-'
+track_num, _dir = 0, '+'
 p.tracks[track_num] = Track(track_num, _dir)
 
-sec, pos = p.tracks[track_num].place_word('fahrenheit', 6, 1)
-#sec, pos = p.tracks[track_num].place_word('edith', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('femtech', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('affairs', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('authentic', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('renewals', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('planetoid', sec, pos)
-#sec, pos = p.tracks[track_num].place_word('madison', sec, pos)
+sec, pos = p.tracks[track_num].place_word('videotapes', 3, 2)
+sec, pos = p.tracks[track_num].place_word('newline', sec, pos)
+sec, pos = p.tracks[track_num].place_word('theerastour', sec, pos)
+sec, pos = p.tracks[track_num].place_word('factfree', sec, pos)
+sec, pos = p.tracks[track_num].place_word('hatfield', sec, pos)
+sec, pos = p.tracks[track_num].place_word('hangtime', sec, pos)
+sec, pos = p.tracks[track_num].place_word('koipond', sec, pos)
+sec, pos = p.tracks[track_num].place_word('simon', sec, pos)
 
 
 if False:
-    p.get_valid_words_for_track(track_num, length=10, strict=True)
-    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=8)
-    p.get_valid_words_for_track(track_num, sector=3, position=6, min_length=8)
+    p.get_valid_words_for_track(track_num, min_length=10, strict=True)
+    p.get_valid_words_for_track(track_num, sector=sec, position=pos, min_length=5, strict=False)
+    p.get_valid_words_for_track(track_num, sector=0, position=2, min_length=5)
 
 _ = p.draw_puzzle(show=True, solution=True)
 p.validate_grid()
