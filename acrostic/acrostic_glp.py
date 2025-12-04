@@ -44,7 +44,7 @@ except:
 # Global constants / defaults
 MIN_SCORE = 50
 
-LEN_DISTANCE = 2         # allowed deviation from mean word length
+LEN_DISTANCE = 3         # allowed deviation from mean word length
 MIN_WORD_LENGTH = 4
 DEFAULT_MAX_CANDIDATES_PER_LETTER = None
 
@@ -258,11 +258,11 @@ def create_acrostic_glpk(quote, source,
     max_len = mean_len + LEN_DISTANCE
     min_len = mean_len - LEN_DISTANCE
     excl = {w.lower().strip() for w in excluded_words}
-    
+
     # Precompute quote letter distribution
     total_q = sum(qctr.values())
     quote_freq = {ch: qctr[ch] / total_q for ch in qctr}
-    
+
     # Collect candidates grouped by starting letter
     candidates = defaultdict(list)
     with open(wordlist) as f:
@@ -277,7 +277,7 @@ def create_acrostic_glpk(quote, source,
                 continue
             fit = letter_fit_score(w, quote_freq)
             candidates[w[0]].append((w, fit))
-            
+
     words = prune_candidates(candidates, max_candidates_per_letter)
 
     # --- Build GLPK problem ---
@@ -387,5 +387,3 @@ def main():
 #%%
 if __name__ == "__main__":
     sys.exit(main())
-
-    
