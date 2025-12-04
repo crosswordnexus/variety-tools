@@ -262,8 +262,12 @@ class Puzzle:
             numbering[(sec, pos)] = i+1
         return numbering
     
-    def draw_puzzle(self, show=False, solution=False, pdf=False, figsize=10):
-        """Draws the Eight Tracks puzzle grid with shading, a blank center, and inner letter separators."""
+    def draw_puzzle(self, show=False, solution=False, pdf=False, 
+                    figsize=10, dpi_ratio=None):
+        """
+        Draws the Eight Tracks puzzle grid with shading, a blank center, 
+        and inner letter separators.
+        """
        
         plt.tight_layout()
         fig, ax = plt.subplots(figsize=(figsize, figsize))
@@ -349,7 +353,10 @@ class Puzzle:
        
         # Create base64 and save
         buf = io.BytesIO()
-        dpi = int(900/figsize) if pdf else int(300/figsize)
+        if dpi_ratio:
+            dpi = int(dpi_ratio/figsize)
+        else:
+            dpi = int(900/figsize) if pdf else int(300/figsize)
         fig.savefig(buf, dpi=dpi, format='png')
         buf.seek(0)
        
