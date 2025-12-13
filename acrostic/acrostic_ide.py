@@ -6,29 +6,34 @@ Created on Sun Nov 16 09:19:00 2025
 @author: alexboisvert
 """
 from acrostic_glp import alpha_only, create_acrostic2, are_there_dupes
+from pathlib import Path
 
-source = '''Norman W. Brooks'''
+source = '''Emily Dickinson'''
 
-quote = '''Christmas is forever, not for just one day, for loving, sharing, giving, are not to put away like bells and lights and tinsel, in some box upon a shelf. The good you do for others is good you do yourself.'''
+quote = '''If I read a book [and] it makes my whole body so cold no fire can ever warm me, I know that is poetry. If I feel physically as if the top of my head were taken off, I know that is poetry. These are the only ways I know it. Is there any other way?'''
 
 print(f"Quote length: {len(alpha_only(quote))}")
 print(f"Source length: {len(alpha_only(source))}")
 
 print(f"Average entry length: {len(alpha_only(quote))/len(alpha_only(source)):2f}")
 
-excluded = []
-included = []
-wordlist, minscore = 'spreadthewordlist.dict', 50
+#%%
+excluded = ['newyorkherald']
+included = ['maybeyesmaybeno', 'chiefofstaff', 'lookatitthisway']
+wordlist = Path('../word_lists/spreadthewordlist.dict')
+minscore = 50
 
 soln_array = create_acrostic2(
     quote, source,
     excluded_words=excluded,
     included_words=included,
     wordlist=wordlist,
-    min_score=minscore
+    min_score=minscore,
+    len_distance=2
 )
 
 for x in soln_array:
     print(x.upper())
     
+#%%
 are_there_dupes(soln_array)

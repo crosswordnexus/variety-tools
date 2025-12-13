@@ -130,7 +130,8 @@ def alpha_only(s):
 
 def create_acrostic2(quote, source, excluded_words=None, included_words=None,
                      wordlist=WORDLIST, min_score=MIN_SCORE,
-                     max_candidates_per_letter=DEFAULT_MAX_CANDIDATES_PER_LETTER):
+                     max_candidates_per_letter=DEFAULT_MAX_CANDIDATES_PER_LETTER,
+                     len_distance=LEN_DISTANCE):
     """
     Find a valid set of words forming an acrostic solution.
 
@@ -190,7 +191,8 @@ def create_acrostic2(quote, source, excluded_words=None, included_words=None,
         excluded_words=excluded_words,
         wordlist=wordlist,
         min_score=min_score,
-        max_candidates_per_letter=max_candidates_per_letter
+        max_candidates_per_letter=max_candidates_per_letter,
+        len_distance=len_distance
     )
 
     # Merge included words into the solution
@@ -214,7 +216,8 @@ def create_acrostic_glpk(quote, source,
                          excluded_words=None,
                          wordlist=WORDLIST,
                          min_score=MIN_SCORE,
-                         max_candidates_per_letter=DEFAULT_MAX_CANDIDATES_PER_LETTER):
+                         max_candidates_per_letter=DEFAULT_MAX_CANDIDATES_PER_LETTER,
+                         len_distance=LEN_DISTANCE):
     """
     Solve the acrostic fill problem as a binary ILP using GLPK.
 
@@ -255,8 +258,8 @@ def create_acrostic_glpk(quote, source,
 
     # Read and filter candidate words
     mean_len = len(quote_alpha) / len(source_alpha)
-    max_len = mean_len + LEN_DISTANCE
-    min_len = mean_len - LEN_DISTANCE
+    max_len = mean_len + len_distance
+    min_len = mean_len - len_distance
     excl = {w.lower().strip() for w in excluded_words}
 
     # Precompute quote letter distribution
