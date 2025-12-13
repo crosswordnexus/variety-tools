@@ -18,6 +18,12 @@ import json
 
 import random
 
+# PNG compression is optional but highly recommended
+try:
+    import oxipng # pip install pyoxipng
+except:
+    oxipng = None
+
 stemmer = PorterStemmer()
 
 #%% helper functions
@@ -263,7 +269,7 @@ class Puzzle:
         return numbering
     
     def draw_puzzle(self, show=False, solution=False, pdf=False, 
-                    figsize=10, dpi_ratio=None):
+                    figsize=10, dpi_ratio=None, save=False):
         """
         Draws the Eight Tracks puzzle grid with shading, a blank center, 
         and inner letter separators.
@@ -358,9 +364,24 @@ class Puzzle:
         else:
             dpi = int(900/figsize) if pdf else int(300/figsize)
         fig.savefig(buf, dpi=dpi, format='png')
-        buf.seek(0)
+        
+        png_bytes = buf.getvalue()
+        
+        # optional compression
+        if oxipng:
+            # Optimize PNG bytes in memory
+            png_bytes = oxipng.optimize_from_memory(
+                png_bytes,
+                level=4,           # 1–6; 4 is a good balance
+            )
+        
+        # optional saving
+        if save:
+            with open("eight_tracks.png", "wb") as f:
+                f.write(png_bytes)
+        #END if save  
        
-        image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        image_base64 = base64.b64encode(png_bytes).decode('utf-8')
        
         # Don't show in an IDE
         plt.close(fig)
