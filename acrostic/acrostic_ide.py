@@ -5,7 +5,7 @@ Created on Sun Nov 16 09:19:00 2025
 
 @author: alexboisvert
 """
-from acrostic_glp import alpha_only, create_acrostic2, are_there_dupes
+from acrostic_glp import alpha_only, create_acrostic2, are_there_dupes, get_seed_words
 from pathlib import Path
 
 source = '''Emily Dickinson'''
@@ -16,6 +16,9 @@ print(f"Quote length: {len(alpha_only(quote))}")
 print(f"Source length: {len(alpha_only(source))}")
 
 print(f"Average entry length: {len(alpha_only(quote))/len(alpha_only(source)):2f}")
+
+#%% Look for seed words
+seed_words = get_seed_words(quote, source)
 
 #%%
 excluded = ['newyorkherald']

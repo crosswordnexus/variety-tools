@@ -32,6 +32,7 @@ import sys
 import math
 import itertools
 from pathlib import Path
+import math
 
 # Not strictly needed
 try:
@@ -48,13 +49,58 @@ LEN_DISTANCE = 3         # allowed deviation from mean word length
 MIN_WORD_LENGTH = 4
 DEFAULT_MAX_CANDIDATES_PER_LETTER = None
 
-WORDLIST = Path(__file__).parent.parent / 'word_lists' / 'spreadthewordlist.dict'
+WORDLIST_DIR = Path(__file__).parent.parent / 'word_lists'
+WORDLIST = WORDLIST_DIR / 'spreadthewordlist.dict'
 if not WORDLIST.exists():
     WORDLIST = 'spreadthewordlist.dict'
 
 # ----------------------------
 # Utility helpers
 # ----------------------------
+
+def get_seed_words(quote, source):
+    """
+    Go through seed lists and find potential ones for this acrostic
+    We list single ones as well as maybe pairs and triples that could fit
+    """
+    # Seed lists from the word_lists directory
+    seed_lists = (
+        WORDLIST_DIR / 'ada_nicolle_seed_list.txt', 
+        WORDLIST_DIR / 'brian_thomas_seed_list.txt',
+        WORDLIST_DIR / 'ricky_cruz_seed_list.txt'
+    )
+    # Normalize the inputs
+    quote, source = list(map(alpha_only, [quote, source]))
+    # Set up our counters
+    quote_ctr, source_ctr = Counter(quote), Counter(source)
+    qs_ctr = quote_ctr - source_ctr
+    # Min length and max length of entries
+    min_length = math.ceil(len(quote)/len(source))
+    max_length = min_length + 2
+    # Loop through the lists
+    seed_words_set = set()
+    for wl in seed_lists:
+        with open(wl, 'r') as fid:
+            for line in fid:
+                word, _ = line.split(';')
+                word = alpha_only(word)
+                word1_ctr = Counter(word[1:])
+                # Conditions for an acceptable entry
+                if word[0] in source \
+                  and not word1_ctr - qs_ctr \
+                  and len(word) >= min_length and len(word) <= max_length \
+                  and len(qs_ctr - word1_ctr) < len(qs_ctr):
+                    seed_words_set.add(word)
+    #END for wl
+    # Add these to a list
+    seed_words = sorted(seed_words_set)
+    # Now add pairs and triples to this list
+    for k in (2, 3):
+        for words in itertools.combinations(seed_words_set, k):
+            if not Counter(''.join(words)) - quote_ctr:
+                seed_words.append(words)
+                
+    return seed_words
 
 # Helper function for dupe checking
 def are_there_dupes(arr):
@@ -72,7 +118,9 @@ def are_there_dupes(arr):
             return True
     c = Counter()
     for word in arr:
-        word_arr = wordninja.split(word)
+        # Split the "word" with wordninja
+        # We take a set so as not to count dupes in a single word
+        word_arr = list(set(wordninja.split(word)))
         word_stem_arr = [stemmer.stem(x) for x in word_arr]
         c.update(Counter(word_stem_arr))
     if max(c.values()) == 1:
