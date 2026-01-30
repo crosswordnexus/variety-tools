@@ -8,9 +8,12 @@ Created on Sun Nov 16 09:19:00 2025
 from acrostic_glp import alpha_only, create_acrostic2, are_there_dupes, get_seed_words
 from pathlib import Path
 
-source = '''Emily Dickinson'''
+source = '''megan amram'''
 
-quote = '''If I read a book [and] it makes my whole body so cold no fire can ever warm me, I know that is poetry. If I feel physically as if the top of my head were taken off, I know that is poetry. These are the only ways I know it. Is there any other way?'''
+quote = '''
+when singers at concerts hold out the mic for the audience to sing
+it's like what am i, your maid
+'''.strip().replace('\n', ' ').replace('  ', ' ')
 
 print(f"Quote length: {len(alpha_only(quote))}")
 print(f"Source length: {len(alpha_only(source))}")
@@ -22,7 +25,7 @@ seed_words = get_seed_words(quote, source)
 
 #%%
 excluded = ['newyorkherald']
-included = ['maybeyesmaybeno', 'chiefofstaff', 'lookatitthisway']
+included = []
 wordlist = Path('../word_lists/spreadthewordlist.dict')
 minscore = 50
 
