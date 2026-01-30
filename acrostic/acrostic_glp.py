@@ -18,7 +18,7 @@ It solves this as a binary integer linear program using GLPK:
     - Rows are letter usage constraints (quote letters) + first-letter constraints (source letters).
 
 Typical use:
-    python acrostic_glpk.py -q "Quote text here" -s "Author Name"
+    python acrostic_glp.py -q "Quote text here" -s "Author Name"
 
 Word list format:
     Each line: word;score
