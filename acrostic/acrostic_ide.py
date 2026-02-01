@@ -35,11 +35,13 @@ soln_array = create_acrostic2(
     included_words=included,
     wordlist=wordlist,
     min_score=minscore,
-    len_distance=2
+    len_distance=1
 )
+
+print(soln_array)
 
 for x in soln_array:
     print(x.upper())
-    
+
 #%%
 are_there_dupes(soln_array)
