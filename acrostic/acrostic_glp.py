@@ -221,9 +221,12 @@ def create_acrostic2(quote, source, excluded_words=None, included_words=None,
     s2 = alpha_only(quote)
     if not is_substring(s1, s2):
         raise AssertionError('Source is not contained in quote')
+        
+    # Normalize included and excluded words
+    included_words = [alpha_only(x) for x in included_words if x]
+    excluded_words = [alpha_only(x) for x in excluded_words if x]
 
     # If there are included words, "reserve" their letters and initials
-    included_words = [x for x in included_words if x]
     if included_words:
         included_alpha = alpha_only(''.join(included_words))
         quote2 = remove_string(included_alpha, quote)
