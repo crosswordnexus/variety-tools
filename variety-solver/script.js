@@ -16,25 +16,34 @@ function loadPuzzle(data) {
   const fontSize = 20; // font size -- should we make this configurable?
   const saveTime = 10000; // how long to keep the localStorage
 
+  function resizeAndRedraw() {
+    // Adjust the canvas size in the DOM to match the image
+    canvas.style.width = img.clientWidth + 'px';
+    canvas.style.height = img.clientHeight + 'px';
+
+    // Clear and redraw letters
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    letters.forEach(letter => {
+      if (data['multiple-letters']) {
+        drawLetter(letter.x, letter.y, letter.letter, false, "left");
+      }
+      else {
+        drawLetter(letter.x, letter.y, letter.letter, false);
+      }
+    });
+  }
+
   /** Define what to do when the image loads **/
   img.onload = function() {
     // Set canvas dimensions to match the image dimensions
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
 
-    // Adjust the canvas size in the DOM to match the image
-    canvas.style.width = img.width + 'px';
-    canvas.style.height = img.height + 'px';
+    // Redraw when the window is resized
+    window.addEventListener('resize', resizeAndRedraw);
 
-    // If there are letters, render them
-    letters.forEach(letter => {
-      if (data['multiple-letters']) {
-        drawLetter(letter.x, letter.y, letter.letter, push = false, align="left");
-      }
-      else {
-        drawLetter(letter.x, letter.y, letter.letter, push = false);
-      }
-    });
+    // Initial draw
+    resizeAndRedraw();
   }
 
   /** Replace the HTML with data from the file **/
@@ -126,8 +135,10 @@ function loadPuzzle(data) {
   // Event listener for canvas clicks
   document.getElementById('canvas').addEventListener('click', function(event) {
     const rect = canvas.getBoundingClientRect(); // Get canvas bounding rectangle
-    clickX = event.clientX - rect.left; // Calculate click's X coordinate relative to the canvas
-    clickY = event.clientY - rect.top; // Calculate click's Y coordinate relative to the canvas
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    clickX = (event.clientX - rect.left) * scaleX; // Calculate click's X coordinate relative to the canvas
+    clickY = (event.clientY - rect.top) * scaleY; // Calculate click's Y coordinate relative to the canvas
 
     // Calculate circle's position relative to the overlay
     const circleX = event.clientX - circleDiameter / 2;
