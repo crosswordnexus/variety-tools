@@ -83,10 +83,9 @@ h2.clues-title {
 }
 
 .clue-panel {
-  /*flex: 1; /* Each panel will take up an equal portion of the height */
+  flex: 1; /* Each panel will take up an equal portion of the height */
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   overflow: hidden;
   border: 1px solid #ccc;
   padding: 5px;
