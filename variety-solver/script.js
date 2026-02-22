@@ -13,28 +13,37 @@ function loadPuzzle(data) {
   const ctx = canvas.getContext('2d'); // Get the 2D drawing context for the canvas
 
   // Default variables
-  const fontSize = 20; // font size -- should we make this configurable?
+  let fontSize = 30; // font size -- should we make this configurable?
   const saveTime = 10000; // how long to keep the localStorage
+
+  function resizeAndRedraw() {
+    // Adjust the canvas size in the DOM to match the image
+    canvas.style.width = img.clientWidth + 'px';
+    canvas.style.height = img.clientHeight + 'px';
+
+    // Clear and redraw letters
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    letters.forEach(letter => {
+      if (data['multiple-letters']) {
+        drawLetter(letter.x, letter.y, letter.letter, false, "left");
+      }
+      else {
+        drawLetter(letter.x, letter.y, letter.letter, false);
+      }
+    });
+  }
 
   /** Define what to do when the image loads **/
   img.onload = function() {
     // Set canvas dimensions to match the image dimensions
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
 
-    // Adjust the canvas size in the DOM to match the image
-    canvas.style.width = img.width + 'px';
-    canvas.style.height = img.height + 'px';
+    // Redraw when the window is resized
+    window.addEventListener('resize', resizeAndRedraw);
 
-    // If there are letters, render them
-    letters.forEach(letter => {
-      if (data['multiple-letters']) {
-        drawLetter(letter.x, letter.y, letter.letter, push = false, align="left");
-      }
-      else {
-        drawLetter(letter.x, letter.y, letter.letter, push = false);
-      }
-    });
+    // Initial draw
+    resizeAndRedraw();
   }
 
   /** Replace the HTML with data from the file **/
@@ -115,19 +124,21 @@ function loadPuzzle(data) {
   overlay.appendChild(circle);
   document.body.appendChild(overlay); // Append overlay to the body
 
-  // Explicit dimensions for the circle
-  const circleDiameter = fontSize * 1.5;
-  circle.style.width = circleDiameter + 'px';
-  circle.style.height = circleDiameter + 'px';
-
   let clickX, clickY; // Variables to store click coordinates
   //letters = lscache.get(data.letters_save) || []; // Array to store letters and their positions
 
   // Event listener for canvas clicks
   document.getElementById('canvas').addEventListener('click', function(event) {
     const rect = canvas.getBoundingClientRect(); // Get canvas bounding rectangle
-    clickX = event.clientX - rect.left; // Calculate click's X coordinate relative to the canvas
-    clickY = event.clientY - rect.top; // Calculate click's Y coordinate relative to the canvas
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    clickX = (event.clientX - rect.left) * scaleX; // Calculate click's X coordinate relative to the canvas
+    clickY = (event.clientY - rect.top) * scaleY; // Calculate click's Y coordinate relative to the canvas
+
+    // Explicit dimensions for the circle
+    const circleDiameter = fontSize * 1.5 * (rect.width / canvas.width);
+    circle.style.width = circleDiameter + 'px';
+    circle.style.height = circleDiameter + 'px';
 
     // Calculate circle's position relative to the overlay
     const circleX = event.clientX - circleDiameter / 2;
@@ -297,6 +308,16 @@ function loadPuzzle(data) {
       }
     });
 
+  });
+
+  // Font size control (slider)
+  const fontSlider = document.getElementById('font-slider');
+  // Set initial slider value
+  fontSlider.value = fontSize;
+
+  fontSlider.addEventListener('input', function(event) {
+    fontSize = parseInt(event.target.value);
+    resizeAndRedraw();
   });
 
   // Show the modal when the info button is clicked

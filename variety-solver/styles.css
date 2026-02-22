@@ -83,10 +83,9 @@ h2.clues-title {
 }
 
 .clue-panel {
-  /*flex: 1; /* Each panel will take up an equal portion of the height */
+  flex: 1; /* Each panel will take up an equal portion of the height */
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   overflow: hidden;
   border: 1px solid #ccc;
   padding: 5px;
@@ -171,7 +170,11 @@ h2.clues-title {
 /** Info button and modal box **/
 .button-container {
   margin-top: 20px;
-  height: 200px;
+  min-height: 40px; /* Adjusted for better layout */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
 }
 
 .info-button {
@@ -315,4 +318,9 @@ div.has-advanced-upload {
 
 #cw-open-holder.dragover .cw-open-puzzle-instructions {
   color: #4CAF50;
+}
+
+#font-slider {
+  width: 100px; /* Adjust as needed */
+  margin-top: 10px;
 }
