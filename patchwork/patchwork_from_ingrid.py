@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2026 Alex Boisvert
+Copyright (c) 2026 Crossword Nexus.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@ SOFTWARE.
 
 Patchwork Converter
 Converts an Ingrid-style .ipuz file into a "Patchwork" crossword format.
-It identifies "patches" (areas bounded by bars) and generates corresponding 
+It identifies "patches" (areas bounded by bars) and generates corresponding
 clues for each row and each patch.
 """
 
@@ -34,21 +34,21 @@ import os
 
 def get_patches(puzzle, dimensions):
     """
-    Identifies contiguous 'patches' in the grid. A patch is defined as a set of 
-    cells connected horizontally or vertically where no 'barred' style exists 
+    Identifies contiguous 'patches' in the grid. A patch is defined as a set of
+    cells connected horizontally or vertically where no 'barred' style exists
     between them.
-    
+
     Args:
         puzzle (list): The 'puzzle' grid from the ipuz data.
         dimensions (dict): Dict containing 'width' and 'height'.
-        
+
     Returns:
         list: A list of patches, where each patch is a list of (row, col) tuples,
               sorted in row-major order.
     """
     height = dimensions['height']
     width = dimensions['width']
-    
+
     def are_connected(r1, c1, r2, c2):
         """Checks if two adjacent cells are NOT separated by a bar."""
         if r1 == r2: # Same row, check horizontal connection (Right bar)
@@ -65,7 +65,7 @@ def get_patches(puzzle, dimensions):
 
     visited = set()
     patches = []
-    
+
     # Traverse the grid to find all contiguous patches using Breadth-First Search (BFS)
     for r in range(height):
         for c in range(width):
@@ -73,11 +73,11 @@ def get_patches(puzzle, dimensions):
                 new_patch = []
                 queue = collections.deque([(r, c)])
                 visited.add((r, c))
-                
+
                 while queue:
                     curr_r, curr_c = queue.popleft()
                     new_patch.append((curr_r, curr_c))
-                    
+
                     # Check all 4 neighbors
                     for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
                         nr, nc = curr_r + dr, curr_c + dc
@@ -85,11 +85,11 @@ def get_patches(puzzle, dimensions):
                             if (nr, nc) not in visited and are_connected(curr_r, curr_c, nr, nc):
                                 visited.add((nr, nc))
                                 queue.append((nr, nc))
-                
+
                 # Sort cells within the patch for consistent clue ordering (top-to-bottom, left-to-right)
                 new_patch.sort()
                 patches.append(new_patch)
-    
+
     # Sort the final list of patches based on their first cell's position
     patches.sort(key=lambda p: p[0])
     return patches
@@ -97,7 +97,7 @@ def get_patches(puzzle, dimensions):
 def convert_ipuz(input_filename, output_filename, is_hard=False):
     """
     Core logic to convert an Ingrid ipuz file to Patchwork format.
-    
+
     Args:
         input_filename (str): Path to the source .ipuz file.
         output_filename (str): Path where the result will be saved.
@@ -106,13 +106,13 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
     # Load the input data
     with open(input_filename, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    
+
     dimensions = data['dimensions']
     height = dimensions['height']
     width = dimensions['width']
     puzzle = data['puzzle']
     solution = data['solution']
-    
+
     # --- 1. Generate "Rows" Clues ---
     # Every row gets one clue containing the letters of that row.
     rows_clues = []
@@ -127,11 +127,11 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
             "number": label,
             "cells": cells
         })
-        
+
     # --- 2. Identify Patches and Generate "Patches" Clues ---
     patches = get_patches(puzzle, dimensions)
     patches_clues_data = []
-    
+
     # Initialize the new grid based on the original
     new_puzzle = []
     for r in range(height):
@@ -143,14 +143,14 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
                 cell_data = raw_cell.copy()
             else:
                 cell_data = {"cell": raw_cell}
-            
+
             # Convention: First column shows the Row Label (A, B, C...)
             if c == 0:
                 cell_data["cell"] = chr(ord('A') + r) if r < 26 else str(r)
             else:
                 # Other cells are typically empty in the 'puzzle' view
                 cell_data["cell"] = "_"
-            
+
             new_row.append(cell_data)
         new_puzzle.append(new_row)
 
@@ -161,7 +161,7 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
         patch_solution = "".join(solution[r][c] for r, c in patch_cells)
         # Convert to 1-indexed [col, row] for clue 'cells'
         cells = [[c + 1, r + 1] for r, c in patch_cells]
-        
+
         clue_obj = {
             "clue": patch_solution,
             "number": patch_num if not is_hard else "•",
@@ -169,7 +169,7 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
             "answer": patch_solution # Keep track for sorting
         }
         patches_clues_data.append(clue_obj)
-        
+
         # Add marks to the grid ONLY if not in "hard" mode
         if not is_hard:
             first_r, first_c = patch_cells[0]
@@ -227,11 +227,11 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
             "Patches": patches_clues
         }
     }
-    
+
     # Add special metadata for hard mode
     if is_hard:
         output_data["fakecluegroups"] = ["Patches"]
-    
+
     # Save the output file
     with open(output_filename, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
@@ -251,7 +251,7 @@ def main():
     else:
         base, ext = os.path.splitext(args.infile)
         output_filename = f"{base}_out{ext}"
-    
+
     convert_ipuz(args.infile, output_filename, is_hard=args.hard)
 
 if __name__ == "__main__":
