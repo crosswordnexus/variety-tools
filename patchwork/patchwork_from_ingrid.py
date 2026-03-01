@@ -94,24 +94,17 @@ def get_patches(puzzle, dimensions):
     patches.sort(key=lambda p: p[0])
     return patches
 
-def main():
-    """Main execution block: handles CLI arguments, processing, and file I/O."""
-    parser = argparse.ArgumentParser(description='Convert Ingrid .ipuz to Patchwork format.')
-    parser.add_argument('infile', help='Input .ipuz file')
-    parser.add_argument('-o', '--outfile', help='Output .ipuz file (optional)')
-    parser.add_argument('--hard', action='store_true', help='Generate a harder version (alphabetical clues, no grid numbers for patches)')
-    args = parser.parse_args()
-
-    input_filename = args.infile
-    # Determine output filename if not provided
-    if args.outfile:
-        output_filename = args.outfile
-    else:
-        base, ext = os.path.splitext(input_filename)
-        output_filename = f"{base}_out{ext}"
+def convert_ipuz(input_filename, output_filename, is_hard=False):
+    """
+    Core logic to convert an Ingrid ipuz file to Patchwork format.
     
+    Args:
+        input_filename (str): Path to the source .ipuz file.
+        output_filename (str): Path where the result will be saved.
+        is_hard (bool): If True, clues are sorted alphabetically and grid numbers are removed.
+    """
     # Load the input data
-    with open(input_filename, 'r') as f:
+    with open(input_filename, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
     dimensions = data['dimensions']
@@ -171,14 +164,14 @@ def main():
         
         clue_obj = {
             "clue": patch_solution,
-            "number": patch_num if not args.hard else "•",
+            "number": patch_num if not is_hard else "•",
             "cells": cells,
             "answer": patch_solution # Keep track for sorting
         }
         patches_clues_data.append(clue_obj)
         
         # Add marks to the grid ONLY if not in "hard" mode
-        if not args.hard:
+        if not is_hard:
             first_r, first_c = patch_cells[0]
             if "style" not in new_puzzle[first_r][first_c]:
                 new_puzzle[first_r][first_c]["style"] = {}
@@ -188,7 +181,7 @@ def main():
 
     # If "hard" mode is enabled, sort ONLY the clue text/answers
     # but keep the 'cells' and 'number' linked to their original grid positions
-    if args.hard:
+    if is_hard:
         # Get all answers/clues and sort them alphabetically
         sorted_clue_texts = sorted([c["clue"] for c in patches_clues_data])
         # Re-assign the sorted text back to the spatial clue objects
@@ -223,13 +216,30 @@ def main():
     }
     
     # Add special metadata for hard mode
-    if args.hard:
-        output_data["fakecluegroups"] = "true"
+    if is_hard:
+        output_data["fakecluegroups"] = ["Patches"]
     
     # Save the output file
-    with open(output_filename, 'w') as f:
-        json.dump(output_data, f, indent=2)
+    with open(output_filename, 'w', encoding='utf-8') as f:
+        json.dump(output_data, f, indent=2, ensure_ascii=False)
     print(f"Successfully created {output_filename}")
+
+def main():
+    """Main entry point for command-line execution."""
+    parser = argparse.ArgumentParser(description='Convert Ingrid .ipuz to Patchwork format.')
+    parser.add_argument('infile', help='Input .ipuz file')
+    parser.add_argument('-o', '--outfile', help='Output .ipuz file (optional)')
+    parser.add_argument('--hard', action='store_true', help='Generate a harder version (alphabetical clues, no grid numbers for patches)')
+    args = parser.parse_args()
+
+    # Determine output filename if not provided
+    if args.outfile:
+        output_filename = args.outfile
+    else:
+        base, ext = os.path.splitext(args.infile)
+        output_filename = f"{base}_out{ext}"
+    
+    convert_ipuz(args.infile, output_filename, is_hard=args.hard)
 
 if __name__ == "__main__":
     main()
