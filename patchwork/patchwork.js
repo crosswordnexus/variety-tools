@@ -1,8 +1,19 @@
-let originalData = null;
-let patches = [];
-let puzzleHash = null;
-let debounceTimer = null;
+/**
+ * Patchwork Converter - Web Version
+ * 
+ * This script handles the conversion of Ingrid-style .ipuz files into "Patchwork" puzzles.
+ * It identifies contiguous "patches" separated by bars, allows users to input clues,
+ * and generates a new .ipuz file with the modified structure.
+ */
 
+let originalData = null; // Stores the original JSON data from the uploaded .ipuz
+let patches = [];      // Array of patches, where each patch is an array of [row, col] coordinates
+let puzzleHash = null;   // SHA-256 hash of the solution to identify unique puzzles for caching
+let debounceTimer = null; // Timer used to limit the frequency of localStorage writes
+
+/**
+ * Handle file upload and parse the JSON content.
+ */
 document.getElementById('file-input').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -19,6 +30,10 @@ document.getElementById('file-input').addEventListener('change', function(e) {
     reader.readAsText(file);
 });
 
+/**
+ * Generates a SHA-256 hash of the solution grid.
+ * This acts as a unique ID for the puzzle so we can cache clues specifically for this grid.
+ */
 async function getPuzzleHash(solution) {
     const msgUint8 = new TextEncoder().encode(JSON.stringify(solution));
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -26,29 +41,34 @@ async function getPuzzleHash(solution) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * Main orchestration function called after a file is uploaded.
+ */
 async function processPuzzle() {
     const dimensions = originalData.dimensions;
     const puzzle = originalData.puzzle;
     const solution = originalData.solution;
 
+    // Generate unique ID for this puzzle and check for cached clues
     puzzleHash = await getPuzzleHash(solution);
     const cachedClues = JSON.parse(localStorage.getItem('patchwork-clues-' + puzzleHash) || '{}');
 
-    // Ported from Python: Identify patches
+    // Run the BFS algorithm to find all patches bounded by bars
     patches = getPatches(puzzle, dimensions);
 
-    // Generate UI for Rows
+    // Build the UI for Row clues
     const rowsContainer = document.getElementById('rows-container');
     rowsContainer.innerHTML = '<h3>Rows</h3>';
     for (let r = 0; r < dimensions.height; r++) {
         const rowSolution = solution[r].join("");
         const label = r < 26 ? String.fromCharCode(65 + r) : (r + 1).toString();
         const id = `row-${r}`;
+        // Use cached clue if available, otherwise default to the solution string
         const val = cachedClues[id] !== undefined ? cachedClues[id] : rowSolution;
         addRowInput(rowsContainer, `Row ${label}`, rowSolution, id, val);
     }
 
-    // Generate UI for Patches
+    // Build the UI for Patch clues
     const patchesContainer = document.getElementById('patches-container');
     patchesContainer.innerHTML = '<h3>Patches</h3>';
     patches.forEach((patch, i) => {
@@ -58,10 +78,11 @@ async function processPuzzle() {
         addRowInput(patchesContainer, `Patch ${i + 1}`, patchSolution, id, val);
     });
 
+    // Reveal the editor interface
     document.getElementById('editor').classList.remove('hidden');
     document.getElementById('download-btn').style.display = 'block';
 
-    // Add event listeners to save on change with debounce
+    // Monitor all input fields for changes to trigger the auto-save (debounced)
     document.querySelectorAll('.clue-row input').forEach(input => {
         input.addEventListener('input', () => {
             clearTimeout(debounceTimer);
@@ -70,6 +91,9 @@ async function processPuzzle() {
     });
 }
 
+/**
+ * Saves all current input values to localStorage.
+ */
 function saveCluesToCache() {
     if (!puzzleHash) return;
     const clues = {};
@@ -79,6 +103,9 @@ function saveCluesToCache() {
     localStorage.setItem('patchwork-clues-' + puzzleHash, JSON.stringify(clues));
 }
 
+/**
+ * Programmatically creates a clue input row to avoid HTML injection/quoting issues.
+ */
 function addRowInput(container, label, answer, id, value) {
     const div = document.createElement('div');
     div.className = 'clue-row';
@@ -103,15 +130,19 @@ function addRowInput(container, label, answer, id, value) {
     container.appendChild(div);
 }
 
+/**
+ * Helper: Checks if two adjacent cells are connected (i.e., NO bar between them).
+ * Bars are stored in the 'style' object of a cell as 'R' (Right) or 'B' (Bottom).
+ */
 function areConnected(r1, c1, r2, c2, puzzle) {
-    if (r1 === r2) { // Same row, check horizontal connection (Right bar)
+    if (r1 === r2) { // Horizontal check
         const cMin = Math.min(c1, c2);
         const cell = puzzle[r1][cMin];
         const style = (cell && typeof cell === 'object') ? (cell.style || {}) : {};
         const barred = style.barred || '';
         return !barred.includes('R');
     }
-    if (c1 === c2) { // Same column, check vertical connection (Bottom bar)
+    if (c1 === c2) { // Vertical check
         const rMin = Math.min(r1, r2);
         const cell = puzzle[rMin][c1];
         const style = (cell && typeof cell === 'object') ? (cell.style || {}) : {};
@@ -121,6 +152,10 @@ function areConnected(r1, c1, r2, c2, puzzle) {
     return false;
 }
 
+/**
+ * BFS algorithm to identify all contiguous patches in the grid.
+ * A "patch" is a group of cells connected horizontally or vertically without bars.
+ */
 function getPatches(puzzle, dimensions) {
     const height = dimensions.height;
     const width = dimensions.width;
@@ -139,6 +174,7 @@ function getPatches(puzzle, dimensions) {
                     const [currR, currC] = queue.shift();
                     newPatch.push([currR, currC]);
 
+                    // Check neighbors (Up, Down, Left, Right)
                     const neighbors = [[0, 1], [0, -1], [1, 0], [-1, 0]];
                     for (const [dr, dc] of neighbors) {
                         const nr = currR + dr;
@@ -152,19 +188,22 @@ function getPatches(puzzle, dimensions) {
                         }
                     }
                 }
-                // Sort cells: row-major order
+                // Sort cells within patch to row-major order for consistency
                 newPatch.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
                 foundPatches.push(newPatch);
             }
         }
     }
-    // Sort patches by their first cell
+    // Sort the list of patches based on the position of their first cell
     foundPatches.sort((a, b) => a[0][0] - b[0][0] || a[0][1] - b[0][1]);
     return foundPatches;
 }
 
+/**
+ * Final generation step: Construct the new IPUZ object and trigger download.
+ */
 document.getElementById('download-btn').addEventListener('click', function() {
-    // Force immediate save of any pending debounced changes before downloading
+    // Ensure the latest changes are saved before generating the file
     clearTimeout(debounceTimer);
     saveCluesToCache();
 
@@ -174,14 +213,14 @@ document.getElementById('download-btn').addEventListener('click', function() {
     const width = dimensions.width;
     const solution = originalData.solution;
 
-    // 1. Generate Rows Clues
+    // 1. Prepare "Rows" clues (one for every row)
     const rowsClues = [];
     for (let r = 0; r < height; r++) {
         const clueText = document.getElementById(`row-${r}`).value;
         const label = r < 26 ? String.fromCharCode(65 + r) : (r + 1).toString();
         const cells = [];
         for (let c = 0; c < width; c++) {
-            cells.push([c + 1, r + 1]);
+            cells.push([c + 1, r + 1]); // IPUZ coordinates are [col+1, row+1]
         }
         rowsClues.push({
             clue: clueText,
@@ -190,7 +229,7 @@ document.getElementById('download-btn').addEventListener('click', function() {
         });
     }
 
-    // 2. Identify Patches and Generate Patches Clues
+    // 2. Prepare the new "puzzle" grid and "Patches" clues
     const patchesCluesData = [];
     const newPuzzle = [];
     for (let r = 0; r < height; r++) {
@@ -199,6 +238,7 @@ document.getElementById('download-btn').addEventListener('click', function() {
             const rawCell = originalData.puzzle[r][c];
             let cellData = typeof rawCell === 'object' ? { ...rawCell } : { cell: rawCell };
             
+            // Grid Convention: Row labels go in the first column, underscores elsewhere
             if (c === 0) {
                 cellData.cell = r < 26 ? String.fromCharCode(65 + r) : (r + 1).toString();
             } else {
@@ -206,6 +246,7 @@ document.getElementById('download-btn').addEventListener('click', function() {
             }
             newRow.push(cellData);
         }
+        // Strip existing marks from the original Ingrid puzzle
         newRow.forEach(cell => { if (cell.style && cell.style.mark) delete cell.style.mark; });
         newPuzzle.push(newRow);
     }
@@ -218,11 +259,12 @@ document.getElementById('download-btn').addEventListener('click', function() {
 
         patchesCluesData.push({
             clue: clueText,
-            number: isHard ? "•" : patchNum,
+            number: isHard ? "•" : patchNum, // Hard mode uses bullets instead of numbers
             cells: cells,
-            answer: patchSolution // for sorting in hard mode
+            answer: patchSolution // Temp field for alphabetical sorting
         });
 
+        // Add small numbers (marks) to the grid corner in Easy mode
         if (!isHard) {
             const [firstR, firstC] = patchCells[0];
             if (!newPuzzle[firstR][firstC].style) newPuzzle[firstR][firstC].style = {};
@@ -231,17 +273,18 @@ document.getElementById('download-btn').addEventListener('click', function() {
         }
     });
 
+    // Handle alphabetical sorting for Hard Mode
     if (isHard) {
-        // Sort clues by answer alphabetically
         const sortedClues = patchesCluesData.slice().sort((a, b) => a.answer.localeCompare(b.answer));
-        // Re-assign clue text back to the spatial clue objects
         for (let i = 0; i < patchesCluesData.length; i++) {
             patchesCluesData[i].clue = sortedClues[i].clue;
         }
     }
 
+    // Clean up clue objects (remove the answer property used for sorting)
     const patchesClues = patchesCluesData.map(({ answer, ...rest }) => rest);
 
+    // Set notes based on difficulty
     let notes = "Each row in a Patchwork puzzle has two answers, to be entered in the grid in order. " +
                 "Answers will also be entered in the irregularly shaped patchwork pieces marked by " +
                 "heavy lines in the grid, always left to right, row by row within each piece.";
@@ -251,6 +294,7 @@ document.getElementById('download-btn').addEventListener('click', function() {
                  "order by answer.";
     }
 
+    // Assemble the final object following the IPUZ specification
     const outputData = {
         version: originalData.version || "http://ipuz.org/v1",
         kind: originalData.kind || ["http://ipuz.org/crossword#1"],
@@ -271,7 +315,7 @@ document.getElementById('download-btn').addEventListener('click', function() {
     };
 
     if (isHard) {
-        outputData.fakecluegroups = ["Patches"];
+        outputData.fakecluegroups = ["Patches"]; // Special flag for unnumbered clues
     }
 
     const suffix = isHard ? "_hard" : "_easy";
@@ -279,6 +323,9 @@ document.getElementById('download-btn').addEventListener('click', function() {
     downloadJSON(outputData, filename);
 });
 
+/**
+ * Triggers a browser download of the JSON data.
+ */
 function downloadJSON(data, filename) {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
