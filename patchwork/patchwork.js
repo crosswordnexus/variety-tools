@@ -203,6 +203,16 @@ function generatePuzzle(isHard) {
                 if (cellData.style && cellData.style.mark) {
                     delete cellData.style.mark;
                 }
+
+                // Add bars around the entire puzzle
+                if (!cellData.style) cellData.style = {};
+                let barred = cellData.style.barred || "";
+                if (r === 0 && !barred.includes("T")) barred += "T";
+                if (r === height - 1 && !barred.includes("B")) barred += "B";
+                if (c === 0 && !barred.includes("L")) barred += "L";
+                if (c === width - 1 && !barred.includes("R")) barred += "R";
+                if (barred) cellData.style.barred = barred;
+
                 newRow.push(cellData);
             }
             newPuzzle.push(newRow);
@@ -231,8 +241,16 @@ function generatePuzzle(isHard) {
         });
 
         if (isHard) {
-            // Correct logic: Sort the entire clue objects alphabetically by their answers
-            patchesCluesData.sort((a, b) => a.answer.localeCompare(b.answer));
+            // Decouple the clue text from the entries in hard mode.
+            // Sort a copy of the clue data based on answer to get the correct order of clue texts.
+            const sortedClueTexts = [...patchesCluesData]
+                .sort((a, b) => a.answer.localeCompare(b.answer))
+                .map(c => c.clue);
+            
+            // Re-assign these sorted clues to the objects in their original spatial order.
+            patchesCluesData.forEach((clueObj, i) => {
+                clueObj.clue = sortedClueTexts[i];
+            });
         }
 
         const patchesClues = patchesCluesData.map(({ answer, ...rest }) => rest);

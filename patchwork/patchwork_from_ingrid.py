@@ -151,6 +151,21 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
                 # Other cells are typically empty in the 'puzzle' view
                 cell_data["cell"] = "_"
 
+            # Add bars around the entire puzzle
+            if "style" not in cell_data:
+                cell_data["style"] = {}
+            barred = cell_data["style"].get("barred", "")
+            if r == 0 and "T" not in barred:
+                barred += "T"
+            if r == height - 1 and "B" not in barred:
+                barred += "B"
+            if c == 0 and "L" not in barred:
+                barred += "L"
+            if c == width - 1 and "R" not in barred:
+                barred += "R"
+            if barred:
+                cell_data["style"]["barred"] = barred
+
             new_row.append(cell_data)
         new_puzzle.append(new_row)
 
@@ -182,8 +197,10 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
     # If "hard" mode is enabled, sort ONLY the clue text/answers
     # but keep the 'cells' and 'number' linked to their original grid positions
     if is_hard:
-        # Get all answers/clues and sort them alphabetically
-        sorted_clue_texts = sorted([c["clue"] for c in patches_clues_data])
+        # Sort based on 'answer' to get the correct alphabetical order of the clues
+        sorted_clues = sorted(patches_clues_data, key=lambda c: c["answer"])
+        sorted_clue_texts = [c["clue"] for c in sorted_clues]
+        
         # Re-assign the sorted text back to the spatial clue objects
         for i in range(len(patches_clues_data)):
             patches_clues_data[i]["clue"] = sorted_clue_texts[i]
