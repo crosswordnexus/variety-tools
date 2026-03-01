@@ -63,6 +63,17 @@ for y in range(N):
         if y < N-1:
             if grid[y+1][x] != grid[y][x]:
                 bars += 'B'
+        
+        # Add bars around the entire puzzle
+        if y == 0 and 'T' not in bars:
+            bars += 'T'
+        if y == N-1 and 'B' not in bars:
+            bars += 'B'
+        if x == 0 and 'L' not in bars:
+            bars += 'L'
+        if x == len(grid[0])-1 and 'R' not in bars:
+            bars += 'R'
+
         if bars:
             cell["style"] = {"barred": bars}
         row.append(cell)

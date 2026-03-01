@@ -257,6 +257,17 @@ for y1 in range(side_length):
             bar_string += 'B'
         if x < side_length-1 and (y, x+1) not in arr2_words[arr2Num]:
             bar_string += 'R'
+        
+        # Add bars around the entire puzzle
+        if y == 0 and 'T' not in bar_string:
+            bar_string += 'T'
+        if y == side_length-1 and 'B' not in bar_string:
+            bar_string += 'B'
+        if x == 0 and 'L' not in bar_string:
+            bar_string += 'L'
+        if x == side_length-1 and 'R' not in bar_string:
+            bar_string += 'R'
+
         if bar_string:
             style['barred'] = bar_string
         cell['style'] = style
