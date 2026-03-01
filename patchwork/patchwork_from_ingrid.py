@@ -195,6 +195,19 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
         clean_clue = {k: v for k, v in c.items() if k != "answer"}
         patches_clues.append(clean_clue)
 
+    # Prepare notes and intro
+    notes = (
+        "Each row in a Patchwork puzzle has two answers, to be entered in the grid in order. "
+        "Answers will also be entered in the irregularly shaped patchwork pieces marked by "
+        "heavy lines in the grid, always left to right, row by row within each piece."
+    )
+    if is_hard:
+        notes += (
+            "\n\nClues for the patches are given, but it is up to you to determine which "
+            "clue goes with which patch. Clues for the patches are given in alphabetical "
+            "order by answer."
+        )
+
     # --- 3. Assemble Final iPuz ---
     output_data = {
         "version": data.get("version", "http://ipuz.org/v1"),
@@ -202,8 +215,8 @@ def convert_ipuz(input_filename, output_filename, is_hard=False):
         "title": data.get("title", ""),
         "copyright": data.get("copyright", ""),
         "author": data.get("author", ""),
-        "notes": data.get("notes", ""),
-        "intro": data.get("intro", ""),
+        "notes": notes,
+        "intro": notes,
         "dimensions": dimensions,
         "block": data.get("block", "#"),
         "empty": "_",
