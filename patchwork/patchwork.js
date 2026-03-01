@@ -1,5 +1,7 @@
 let originalData = null;
 let patches = [];
+let puzzleHash = null;
+let debounceTimer = null;
 
 document.getElementById('file-input').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -17,10 +19,20 @@ document.getElementById('file-input').addEventListener('change', function(e) {
     reader.readAsText(file);
 });
 
-function processPuzzle() {
+async function getPuzzleHash(solution) {
+    const msgUint8 = new TextEncoder().encode(JSON.stringify(solution));
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function processPuzzle() {
     const dimensions = originalData.dimensions;
     const puzzle = originalData.puzzle;
     const solution = originalData.solution;
+
+    puzzleHash = await getPuzzleHash(solution);
+    const cachedClues = JSON.parse(localStorage.getItem('patchwork-clues-' + puzzleHash) || '{}');
 
     // Ported from Python: Identify patches
     patches = getPatches(puzzle, dimensions);
@@ -31,7 +43,9 @@ function processPuzzle() {
     for (let r = 0; r < dimensions.height; r++) {
         const rowSolution = solution[r].join("");
         const label = r < 26 ? String.fromCharCode(65 + r) : (r + 1).toString();
-        addRowInput(rowsContainer, `Row ${label}`, rowSolution, `row-${r}`);
+        const id = `row-${r}`;
+        const val = cachedClues[id] !== undefined ? cachedClues[id] : rowSolution;
+        addRowInput(rowsContainer, `Row ${label}`, rowSolution, id, val);
     }
 
     // Generate UI for Patches
@@ -39,19 +53,38 @@ function processPuzzle() {
     patchesContainer.innerHTML = '<h3>Patches</h3>';
     patches.forEach((patch, i) => {
         const patchSolution = patch.map(([r, c]) => solution[r][c]).join("");
-        addRowInput(patchesContainer, `Patch ${i + 1}`, patchSolution, `patch-${i}`);
+        const id = `patch-${i}`;
+        const val = cachedClues[id] !== undefined ? cachedClues[id] : patchSolution;
+        addRowInput(patchesContainer, `Patch ${i + 1}`, patchSolution, id, val);
     });
 
     document.getElementById('editor').classList.remove('hidden');
     document.getElementById('download-btn').style.display = 'block';
+
+    // Add event listeners to save on change with debounce
+    document.querySelectorAll('.clue-row input').forEach(input => {
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(saveCluesToCache, 500);
+        });
+    });
 }
 
-function addRowInput(container, label, answer, id) {
+function saveCluesToCache() {
+    if (!puzzleHash) return;
+    const clues = {};
+    document.querySelectorAll('.clue-row input').forEach(input => {
+        clues[input.id] = input.value;
+    });
+    localStorage.setItem('patchwork-clues-' + puzzleHash, JSON.stringify(clues));
+}
+
+function addRowInput(container, label, answer, id, value) {
     const div = document.createElement('div');
     div.className = 'clue-row';
     div.innerHTML = `
         <label for="${id}">${label}</label>
-        <input type="text" id="${id}" placeholder="Enter clue here..." value="${answer}">
+        <input type="text" id="${id}" placeholder="Enter clue here..." value="${value}">
         <span class="answer">(${answer})</span>
     `;
     container.appendChild(div);
@@ -118,6 +151,10 @@ function getPatches(puzzle, dimensions) {
 }
 
 document.getElementById('download-btn').addEventListener('click', function() {
+    // Force immediate save of any pending debounced changes before downloading
+    clearTimeout(debounceTimer);
+    saveCluesToCache();
+
     const isHard = document.querySelector('input[name="difficulty"]:checked').value === 'hard';
     const dimensions = originalData.dimensions;
     const height = dimensions.height;
@@ -224,7 +261,9 @@ document.getElementById('download-btn').addEventListener('click', function() {
         outputData.fakecluegroups = ["Patches"];
     }
 
-    downloadJSON(outputData, (originalData.title || "patchwork") + "_converted.ipuz");
+    const suffix = isHard ? "_hard" : "_easy";
+    const filename = (originalData.title || "patchwork") + suffix + ".ipuz";
+    downloadJSON(outputData, filename);
 });
 
 function downloadJSON(data, filename) {

@@ -4,21 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patchwork Converter</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 2em auto; padding: 0 1em; line-height: 1.6; }
-        .section { margin-bottom: 2em; border: 1px solid #ccc; padding: 1em; border-radius: 4px; }
-        .clue-row { display: flex; align-items: center; margin-bottom: 0.5em; }
-        .clue-row label { width: 150px; flex-shrink: 0; font-weight: bold; }
-        .clue-row input { flex-grow: 1; padding: 4px; }
-        .clue-row .answer { width: 150px; margin-left: 1em; font-family: monospace; color: #666; }
-        h2 { margin-top: 0; }
-        #download-btn { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; }
-        #download-btn:disabled { background-color: #ccc; cursor: not-allowed; }
-        .hidden { display: none; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <h1>Patchwork Converter</h1>
+    
+    <div class="note">
+        This tool converts Ingrid-style <b>.ipuz</b> files into the "Patchwork" crossword format. 
+        Upload your file, enter your clues for the rows and patches, and download the final puzzle. 
+        Your progress is automatically saved to your browser's local storage as you type.
+    </div>
     
     <div class="section">
         <h2>1. Upload Ingrid .ipuz</h2>
@@ -40,11 +35,13 @@
 
         <div class="section">
             <h2>3. Select Difficulty</h2>
-            <label><input type="radio" name="difficulty" value="easy" checked> Easy (Numbered patches, sequential clues)</label><br>
-            <label><input type="radio" name="difficulty" value="hard"> Hard (Unnumbered patches, alphabetical clues)</label>
+            <div class="radio-group">
+                <label><input type="radio" name="difficulty" value="easy" checked> <b>Easy</b> (Numbered patches, sequential clues)</label>
+                <label><input type="radio" name="difficulty" value="hard"> <b>Hard</b> (Unnumbered patches, alphabetical clues)</label>
+            </div>
         </div>
 
-        <div class="section">
+        <div class="section" style="text-align: center;">
             <button id="download-btn">Generate and Download .ipuz</button>
         </div>
     </div>
