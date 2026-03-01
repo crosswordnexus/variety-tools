@@ -69,7 +69,7 @@ for y in range(N):
     puzzle.append(row)
 pz = json.dumps(puzzle)
 
-#%% 
+#%%
 ipuz = dict()
 ipuz['copyright'] = _copyright
 ipuz['author'] = author
