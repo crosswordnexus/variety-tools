@@ -82,11 +82,24 @@ function saveCluesToCache() {
 function addRowInput(container, label, answer, id, value) {
     const div = document.createElement('div');
     div.className = 'clue-row';
-    div.innerHTML = `
-        <label for="${id}">${label}</label>
-        <input type="text" id="${id}" placeholder="Enter clue here..." value="${value}">
-        <span class="answer">(${answer})</span>
-    `;
+    
+    const labelEl = document.createElement('label');
+    labelEl.setAttribute('for', id);
+    labelEl.textContent = label;
+    
+    const inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.id = id;
+    inputEl.placeholder = 'Enter clue here...';
+    inputEl.value = value;
+    
+    const answerEl = document.createElement('span');
+    answerEl.className = 'answer';
+    answerEl.textContent = `(${answer})`;
+    
+    div.appendChild(labelEl);
+    div.appendChild(inputEl);
+    div.appendChild(answerEl);
     container.appendChild(div);
 }
 
