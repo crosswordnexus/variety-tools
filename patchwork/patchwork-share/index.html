@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Patchwork</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; }
+    .row { margin: 12px 0; }
+    textarea { width: 100%; height: 140px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    button { padding: 10px 14px; font-size: 14px; }
+    .hint { color: #555; font-size: 13px; }
+    .hidden { display: none; }
+  </style>
+
+  <script src="jscrossword_combined.js"></script>
+
+</head>
+<body>
+  <h1>Patchwork</h1>
+
+  <div class="row">
+    <label>
+      <strong>Choose XML file:</strong>
+      <input id="file" type="file" accept=".xml" />
+    </label>
+    <div class="hint">Don't forget to include puzzle metadata (title, author, copyright) before you export from Compiler</div>
+  </div>
+
+  <div class="row">
+    <label for="rowsClues"><strong>Rows clues:</strong></label>
+    <textarea id="rowsClues" placeholder="Rows clues here. One row per line, row clues separated by slashes. No row letters before clues."></textarea>
+  </div>
+
+  <div class="row">
+    <label for="patchClues"><strong>Patches clues:</strong></label>
+    <textarea id="patchClues" placeholder="Patches clues here. One clue per line, no numbers before clues."></textarea>
+  </div>
+
+  <div class="row">
+    <strong>Difficulty:</strong>
+    <label style="margin-left:12px;">
+      <input type="radio" name="difficulty" id="diffEasy" value="easy" checked />
+      Easier
+    </label>
+    <label style="margin-left:12px;">
+      <input type="radio" name="difficulty" id="diffHard" value="hard" />
+      Regular
+    </label>
+  </div>
+
+  <div class="row">
+    <button id="run">Submit</button>
+  </div>
+
+  <div id="results" class="hidden">
+    <h3>Shareable Link:</h3>
+    <textarea id="shareLink" rows="2" readonly></textarea>
+    <button id="copyLink">Copy Link</button>
+    (We recommend <a href="https://da.gd" target="_blank">da.gd</a> for link shortening)
+
+    <h3>Embed (iframe):</h3>
+    <textarea id="embedCode" rows="3" readonly></textarea>
+    <button id="copyEmbed">Copy Embed Code</button>
+  </div>
+
+  <script type="module">
+    // CC rectangular-puzzle namespace
+    const RP_NS = "http://crossword.info/xml/rectangular-puzzle";
+
+    function keyXY(x, y) { return `${x},${y}`; }
+
+    function parseBoolAttr(el, name) {
+      const v = (el.getAttribute(name) ?? "false").toLowerCase();
+      return v === "true" || v === "1" || v === "yes";
+    }
+
+    function parseCcXml(doc) {
+      const grid = doc.getElementsByTagNameNS(RP_NS, "grid")[0];
+      if (!grid) throw new Error("Could not find <grid> in rectangular-puzzle namespace.");
+
+      const width = Number(grid.getAttribute("width"));
+      const height = Number(grid.getAttribute("height"));
+      if (!Number.isFinite(width) || !Number.isFinite(height)) {
+        throw new Error("Grid width/height missing or not numeric.");
+      }
+
+      const cellEls = grid.getElementsByTagNameNS(RP_NS, "cell");
+      const cells = new Map();
+
+      for (const c of cellEls) {
+        const x = Number(c.getAttribute("x"));
+        const y = Number(c.getAttribute("y"));
+        const ch = c.getAttribute("solution") ?? ""; // may be ""
+        const numStr = c.getAttribute("number");
+        const number = numStr != null ? Number(numStr) : null;
+
+        const leftBar = parseBoolAttr(c, "left-bar");
+        const topBar = parseBoolAttr(c, "top-bar");
+
+        cells.set(keyXY(x, y), { x, y, ch, number, leftBar, topBar });
+      }
+
+      if (cells.size !== width * height) {
+        // Still proceed, but warn loudly.
+        console.warn(`Expected ${width * height} cells but found ${cells.size}. (Blocks or missing cells?)`);
+      }
+
+      return { width, height, cells };
+    }
+
+    function blockedBetween(a, b) {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      if (Math.abs(dx) + Math.abs(dy) !== 1) throw new Error("Cells are not adjacent");
+
+      if (dx === 1)  return !!b.leftBar; // b right of a
+      if (dx === -1) return !!a.leftBar; // b left of a
+      if (dy === 1)  return !!b.topBar;  // b below a
+      if (dy === -1) return !!a.topBar;  // b above a
+
+      return false;
+    }
+
+    function findPatches(width, height, cells) {
+      const visited = new Set();
+      const patches = [];
+
+      for (let y = 1; y <= height; y++) {
+        for (let x = 1; x <= width; x++) {
+          const startKey = keyXY(x, y);
+          if (visited.has(startKey)) continue;
+          if (!cells.has(startKey)) continue;
+
+          const q = [startKey];
+          visited.add(startKey);
+          const comp = [];
+
+          while (q.length) {
+            const k = q.shift();
+            const a = cells.get(k);
+            if (!a) continue;
+            comp.push(a);
+
+            const nbrs = [
+              { x: a.x + 1, y: a.y },
+              { x: a.x - 1, y: a.y },
+              { x: a.x, y: a.y + 1 },
+              { x: a.x, y: a.y - 1 },
+            ];
+
+            for (const n of nbrs) {
+              if (n.x < 1 || n.x > width || n.y < 1 || n.y > height) continue;
+              const nk = keyXY(n.x, n.y);
+              if (visited.has(nk)) continue;
+
+              const b = cells.get(nk);
+              if (!b) continue;
+
+              if (blockedBetween(a, b)) continue;
+
+              visited.add(nk);
+              q.push(nk);
+            }
+          }
+
+          patches.push(comp);
+        }
+      }
+
+      return patches;
+    }
+
+    function patchKey(patch) {
+      const nums = patch.map(c => c.number).filter(n => Number.isFinite(n));
+      if (nums.length) return [0, Math.min(...nums)];
+      // top-left fallback
+      let tl = patch[0];
+      for (const c of patch) {
+        if (c.y < tl.y || (c.y === tl.y && c.x < tl.x)) tl = c;
+      }
+      return [1, tl.y * 100 + tl.x];
+    }
+
+    function makeWordElement(outDoc, idNum, cellsListSorted) {
+      const w = outDoc.createElement("word"); // intentionally no namespace
+      w.setAttribute("id", String(idNum));
+
+      for (const c of cellsListSorted) {
+        const ce = outDoc.createElement("cells"); // intentionally no namespace
+        ce.setAttribute("x", String(c.x));
+        ce.setAttribute("y", String(c.y));
+        w.appendChild(ce);
+      }
+
+      return w;
+    }
+
+    function parseClueLines(text) {
+      return text
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        // optional: strip a leading label like "A)" "A." "1." "1)" "A:" etc
+        .map(s => s.replace(/^(?:[A-Za-z]|\d+)\s*[\)\.\:\-]\s+/, ""));
+    }
+
+    function alphaLabel(i) {
+      // 0 -> A, 1 -> B, ... 25 -> Z, 26 -> AA (just in case)
+      let n = i;
+      let out = "";
+      while (true) {
+        out = String.fromCharCode(65 + (n % 26)) + out;
+        n = Math.floor(n / 26) - 1;
+        if (n < 0) break;
+      }
+      return out;
+    }
+
+    function setMetadataInstructions(outDoc, text) {
+      let metadataEl = null;
+      const allEls = outDoc.getElementsByTagName("*");
+      for (const el of allEls) {
+        if (el.localName === "metadata") { metadataEl = el; break; }
+      }
+      if (!metadataEl) {
+        console.warn("Could not find <metadata>; skipping <description>.");
+        return;
+      }
+
+      // If a <description> already exists, replace its text; otherwise create it.
+      let instrEl = null;
+      for (const child of Array.from(metadataEl.childNodes)) {
+        if (child.nodeType === 1 && child.localName === "description") {
+          instrEl = child;
+          break;
+        }
+      }
+
+      if (!instrEl) {
+        instrEl = outDoc.createElement("description"); // no namespace
+        metadataEl.appendChild(instrEl);
+      } else {
+        // Clear existing contents
+        while (instrEl.firstChild) instrEl.removeChild(instrEl.firstChild);
+      }
+
+      instrEl.textContent = text;
+    }
+
+
+    function applyOuterBorderBars(outDoc, width, height) {
+      const grid = outDoc.getElementsByTagNameNS(RP_NS, "grid")[0];
+      if (!grid) {
+        console.warn("No <grid> found; skipping outer border bars.");
+        return;
+      }
+
+      const cellEls = Array.from(grid.getElementsByTagNameNS(RP_NS, "cell"));
+
+      for (const c of cellEls) {
+        const x = Number(c.getAttribute("x"));
+        const y = Number(c.getAttribute("y"));
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+
+        if (y === 1) c.setAttribute("top-bar", "true");
+        if (x === 1) c.setAttribute("left-bar", "true");
+        if (x === width) c.setAttribute("right-bar", "true");
+        if (y === height) c.setAttribute("bottom-bar", "true");
+      }
+    }
+
+
+    function applyGridNumberRules(outDoc, width, height, difficulty, patchesSorted) {
+      // All grid cells live in the rectangular-puzzle namespace
+      const grid = outDoc.getElementsByTagNameNS(RP_NS, "grid")[0];
+      if (!grid) {
+        console.warn("No <grid> found; skipping grid numbering rules.");
+        return;
+      }
+
+      const cellEls = Array.from(grid.getElementsByTagNameNS(RP_NS, "cell"));
+
+      if (difficulty === "easy") {
+        // 1) Move number="x" -> top-right-number="x"
+        for (const c of cellEls) {
+          const num = c.getAttribute("number");
+          if (num != null) {
+            c.removeAttribute("number");
+            c.setAttribute("top-right-number", num);
+          }
+        }
+
+        // 2) Add patch numbers if they don't exist
+        // We number the patches based on their "entry" cell (top-leftmost) in grid order
+        const patchEntries = patchesSorted.map(patch => {
+          let tl = patch[0];
+          for (const c of patch) {
+            if (c.y < tl.y || (c.y === tl.y && c.x < tl.x)) tl = c;
+          }
+          return tl;
+        });
+
+        // Sort the entries in grid order
+        patchEntries.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+
+        patchEntries.forEach((tl, idx) => {
+          const target = cellEls.find(el =>
+            el.getAttribute("x") === String(tl.x) &&
+            el.getAttribute("y") === String(tl.y)
+          );
+          if (target && !target.hasAttribute("top-right-number")) {
+            // Always use top-right-number to avoid conflict with row letters
+            target.setAttribute("top-right-number", String(idx + 1));
+          }
+        });
+
+      } else if (difficulty === "hard") {
+        // 3) Remove all grid numbers (both number + top-right-number if present)
+        for (const c of cellEls) {
+          c.removeAttribute("number");
+          c.removeAttribute("top-right-number");
+        }
+      }
+
+      // 4) In BOTH modes: label first cell in each row with number="A", "B", ...
+      for (let y = 1; y <= height; y++) {
+        // Find the cell with x=1, y=y
+        // (CC uses 1-based coords; attrs are strings)
+        const target = cellEls.find(el => el.getAttribute("x") === "1" && el.getAttribute("y") === String(y));
+        if (!target) {
+          console.warn(`Row label: missing cell at x=1,y=${y}`);
+          continue;
+        }
+        target.setAttribute("number", alphaLabel(y - 1)); // A for y=1, B for y=2, ...
+      }
+    }
+
+
+    function makeCluesBlock(outDoc, titleText, items, attributes = {}) {
+      // items: [{ wordId: number|string, numberLabel: string, text: string }, ...]
+      const cluesEl = outDoc.createElement("clues"); // intentionally no namespace
+      cluesEl.setAttribute("ordering", "normal");
+      for (const [key, value] of Object.entries(attributes)) {
+        cluesEl.setAttribute(key, value);
+      }
+
+      const titleEl = outDoc.createElement("title");
+      const bEl = outDoc.createElement("b");
+      bEl.textContent = titleText;
+      titleEl.appendChild(bEl);
+      cluesEl.appendChild(titleEl);
+
+      for (const it of items) {
+        const clueEl = outDoc.createElement("clue");
+        clueEl.setAttribute("word", String(it.wordId));
+        clueEl.setAttribute("number", String(it.numberLabel));
+        clueEl.textContent = it.text;
+        cluesEl.appendChild(clueEl);
+      }
+
+      return cluesEl;
+    }
+
+    function patchEntryRowMajor(patch) {
+      // patch is list of cells {x,y,ch,...}
+      const sorted = [...patch].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+      return sorted.map(c => c.ch ?? "").join("");
+    }
+
+
+    function replaceWordsPreservingDocStructure(inDoc, width, height, patchesSorted, rowsCluesText, patchCluesText, difficulty = "easy") {
+      const outDoc = inDoc.cloneNode(true);
+
+      // Apply number rules on the grid in the cloned doc
+      applyGridNumberRules(outDoc, width, height, difficulty, patchesSorted);
+
+      // Thick border around outside
+      applyOuterBorderBars(outDoc, width, height);
+
+      // Notepad
+      let intro = `
+      Each row in a Patchwork puzzle has two answers, to be entered in the grid in order.
+      Answers will also be entered in the irregularly shaped patchwork pieces marked by
+      heavy lines in the grid, always left to right, row by row within each piece.
+      `;
+
+      if (difficulty === "hard") {
+        intro += `
+        Clues for the pieces are given, but it is up to you to determine which clue goes with which piece.
+        Clues for the pieces are given in alphabetical order by answer.
+        Note: you can click on a clue in the sidebar to mark it as solved, once you enter it in the grid.
+        `;
+      }
+      setMetadataInstructions(outDoc, intro);
+
+      // Find ANY <word> element (any namespace, by local-name)
+      const all = outDoc.getElementsByTagName("*");
+      let firstWordEl = null;
+      for (const el of all) {
+        if (el.localName === "word") { firstWordEl = el; break; }
+      }
+      if (!firstWordEl) throw new Error('Could not find any <word> element in the XML.');
+
+      const parent = firstWordEl.parentNode; // expected: <crossword>
+      if (!parent) throw new Error("Found <word> but it has no parent??");
+
+      // Find <grid> within the same parent (to insert after it, if possible)
+      let gridEl = null;
+      for (const child of Array.from(parent.childNodes)) {
+        if (child.nodeType === 1 && child.localName === "grid") { gridEl = child; break; }
+      }
+
+      // Remove existing direct-child <word> elements
+      const oldWords = [];
+      for (const child of Array.from(parent.childNodes)) {
+        if (child.nodeType === 1 && child.localName === "word") oldWords.push(child);
+      }
+      for (const w of oldWords) parent.removeChild(w);
+
+      // Remove existing direct-child <clues> elements (we’ll rebuild them)
+      const oldClues = [];
+      for (const child of Array.from(parent.childNodes)) {
+        if (child.nodeType === 1 && child.localName === "clues") oldClues.push(child);
+      }
+      for (const c of oldClues) parent.removeChild(c);
+
+      // Helper to create <word>/<cells> (no namespace)
+      function makeWordElement(idNum, cellsListSorted) {
+        const w = outDoc.createElement("word");
+        w.setAttribute("id", String(idNum));
+        for (const c of cellsListSorted) {
+          const ce = outDoc.createElement("cells");
+          ce.setAttribute("x", String(c.x));
+          ce.setAttribute("y", String(c.y));
+          w.appendChild(ce);
+        }
+        return w;
+      }
+
+      // Build new words
+      const wordsFrag = outDoc.createDocumentFragment();
+
+      // Row words: id = y
+      for (let y = 1; y <= height; y++) {
+        const rowCells = [];
+        for (let x = 1; x <= width; x++) rowCells.push({ x, y });
+        wordsFrag.appendChild(makeWordElement(y, rowCells));
+      }
+
+      // Patch words: id = height + 1 + i
+      patchesSorted.forEach((patch, i) => {
+        const idNum = height + 1 + i;
+        const sorted = [...patch].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+        wordsFrag.appendChild(makeWordElement(idNum, sorted));
+      });
+
+      // Insert words right after <grid> if possible; else append
+      if (gridEl && gridEl.parentNode === parent) {
+        parent.insertBefore(wordsFrag, gridEl.nextSibling);
+      } else {
+        parent.appendChild(wordsFrag);
+      }
+
+      // ----- Build clues -----
+      const rowLines = parseClueLines(rowsCluesText);
+      let patchLines = parseClueLines(patchCluesText);
+
+      // Helper function for sorting patch clues
+      function alphanumericSortKey(s) {
+        return s
+          // remove ALL non-alphanumeric characters
+          .replace(/[^A-Za-z0-9]/g, "")
+          .toLowerCase();
+      }
+
+      // Map rows clues to word="1..height", number="A.."
+      const rowItems = [];
+      for (let i = 0; i < Math.min(height, rowLines.length); i++) {
+        rowItems.push({
+          wordId: i + 1,
+          numberLabel: alphaLabel(i), // A, B, C...
+          text: rowLines[i],
+        });
+      }
+
+      // Build patch pairs in ORIGINAL patch order (patchLines line i corresponds to patch i)
+      const patchPairs = [];
+      const m = Math.min(patchesSorted.length, patchLines.length);
+      for (let i = 0; i < m; i++) {
+        const entry = patchEntryRowMajor(patchesSorted[i]);
+        patchPairs.push({
+          wordId: height + 1 + i,     // patch word id
+          entry,              // derived entry text
+          clueText: patchLines[i],
+        });
+      }
+
+      // Convert to the final clue items; numbering is based on display order
+      let patchItems = patchPairs.map((p, idx) => ({
+        wordId: p.wordId,
+        numberLabel: (difficulty === "hard" ? "•" : String(idx + 1)),
+        text: p.clueText,
+      }));
+
+      // Harder: sort the clue TEXTS by entry, but keep the wordIds in original order (breaking the link)
+      if (difficulty === "hard") {
+        const sortedTexts = [...patchPairs]
+          .sort((a, b) => {
+            const ka = alphanumericSortKey(a.entry);
+            const kb = alphanumericSortKey(b.entry);
+            return ka.localeCompare(kb) || (a.wordId - b.wordId);
+          })
+          .map(p => p.clueText);
+
+        patchItems.forEach((it, i) => {
+          it.text = sortedTexts[i];
+        });
+      }
+
+      const cluesFrag = outDoc.createDocumentFragment();
+      cluesFrag.appendChild(makeCluesBlock(outDoc, "Rows", rowItems));
+
+      const patchCluesAttrs = {};
+      if (difficulty === "hard") {
+        patchCluesAttrs.fake = "true";
+      }
+      cluesFrag.appendChild(makeCluesBlock(outDoc, "Patches", patchItems, patchCluesAttrs));
+
+      // Insert clues after the last direct-child <word>
+      let lastWord = null;
+      for (const child of Array.from(parent.childNodes)) {
+        if (child.nodeType === 1 && child.localName === "word") lastWord = child;
+      }
+      if (lastWord && lastWord.nextSibling) parent.insertBefore(cluesFrag, lastWord.nextSibling);
+      else parent.appendChild(cluesFrag);
+
+      // Helpful warnings (non-fatal)
+      if (rowLines.length !== height) {
+        console.warn(`Rows clues: got ${rowLines.length} lines; grid height is ${height}. Using ${Math.min(height, rowLines.length)}.`);
+      }
+      if (patchLines.length !== patchesSorted.length) {
+        console.warn(`Patches clues: got ${patchLines.length} lines; patches found ${patchesSorted.length}. Using ${Math.min(patchesSorted.length, patchLines.length)}.`);
+      }
+
+      // ----- Harder mode metadata tags -----
+      if (difficulty === "hard") {
+        let metadataEl = null;
+        const allEls = outDoc.getElementsByTagName("*");
+        for (const el of allEls) {
+          if (el.localName === "metadata") { metadataEl = el; break; }
+        }
+
+        if (!metadataEl) {
+          console.warn('Harder mode: could not find <metadata> element; skipping <realwords/>.');
+        } else {
+          // Avoid duplicating if re-run against already-modified XML
+          const hasReal = Array.from(metadataEl.childNodes).some(n => n.nodeType === 1 && n.localName === "realwords");
+          if (!hasReal) metadataEl.appendChild(outDoc.createElement("realwords"));
+        }
+      }
+
+      return outDoc;
+    }
+
+    async function runOnce(file, rowsCluesText, patchCluesText, difficulty = "easy") {
+      const xmlText = await file.text();
+      const parser = new DOMParser();
+      const inDoc = parser.parseFromString(xmlText, "application/xml");
+
+      const pe = inDoc.getElementsByTagName("parsererror")[0];
+      if (pe) {
+        console.error(pe.textContent);
+        throw new Error("XML parse error (see console).");
+      }
+
+      const { width, height, cells } = parseCcXml(inDoc);
+      const patches = findPatches(width, height, cells);
+      const patchesSorted = [...patches].sort((a, b) => {
+        const ka = patchKey(a), kb = patchKey(b);
+        return (ka[0] - kb[0]) || (ka[1] - kb[1]);
+      });
+
+      console.log(`Grid: ${width}x${height}`);
+      console.log(`Patches found: ${patchesSorted.length}`);
+      console.log(`Difficulty: ${difficulty}`);
+
+      const outDoc = replaceWordsPreservingDocStructure(
+        inDoc, width, height, patchesSorted,
+        rowsCluesText, patchCluesText,
+        difficulty
+      );
+
+      const serializer = new XMLSerializer();
+      const outXml = serializer.serializeToString(outDoc);
+
+      //console.log("===== FinalPatchwork.xml (with clues) =====");
+      //console.log(outXml);
+
+      // Convert string -> Uint8Array -> JSCrossword
+      const data = new TextEncoder().encode(outXml);
+      const js = JSCrossword.fromData(data);
+
+      console.log("JSCrossword object:", js);
+
+      window.jsxw = js;
+
+      return { outXml, js };
+    }
+
+
+    document.getElementById("run").addEventListener("click", async () => {
+      try {
+        const fileInput = document.getElementById("file");
+        const f = fileInput.files?.[0];
+        if (!f) {
+          alert("Choose an XML file first.");
+          return;
+        }
+
+        const rowsCluesText = document.getElementById("rowsClues").value;
+        const patchCluesText = document.getElementById("patchClues").value;
+
+        /**
+        console.log("===== Rows clues (raw) =====");
+        console.log(rowsCluesText);
+
+        console.log("===== Patches clues (raw) =====");
+        console.log(patchCluesText);
+        **/
+
+        const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value ?? "easy";
+
+        let { outXml, js } = await runOnce(f, rowsCluesText, patchCluesText, difficulty);
+
+        /** Make the links and show them **/
+        const submitCustomization = document.getElementById("run");
+        const shareLink = document.getElementById("shareLink");
+        const embedCode = document.getElementById("embedCode");
+
+        const encoded = js.serialize();
+        // The `config` here is for notepad_name
+        const baseUrl = "https://crosswordnexus.github.io/html5-crossword-solver/?config=eyJub3RlcGFkX25hbWUiOiAiSG93IHRvIHBsYXkifQ";
+        const playUrl = `${baseUrl}#${encoded}`;
+        shareLink.value = playUrl;
+        embedCode.value = `<iframe allowfullscreen="true" height="600" width="100%" style="border:none;width: 100% !important;position: static;display: block !important;margin: 0 !important;" src="${playUrl}"></iframe>`;
+        results.classList.remove("hidden");
+
+        /** Copy links **/
+        document.getElementById("copyLink").onclick = e => copyText(shareLink, e.target);
+        document.getElementById("copyEmbed").onclick = e => copyText(embedCode, e.target);
+
+      } catch (err) {
+        console.error(err);
+        alert(String(err?.message ?? err));
+      }
+    });
+
+  </script>
+
+
+  <script src="share.js"></script>
+</body>
+</html>
