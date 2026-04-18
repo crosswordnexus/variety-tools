@@ -12,7 +12,7 @@ import json
 FILENAME = 'gridlock.ipuz'
 
 # Set your "clues" here
-WORDS = ["ALLIGATOR", "CLEARANCE", "NOCTURNAL", "RATIONALE", "TENACIOUS"]
+WORDS = ["BARITONES", "DELINEATE", "PORTRAYAL", "SOCIALITE", "TOOTHACHE"]
 
 pz = pypuz.Puzzle().fromIPuz(FILENAME)
 
