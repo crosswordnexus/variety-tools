@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Going Too Far</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="jscrossword_combined.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Going Too Far</h2>
+        
+        <details class="instructions">
+            <summary>Instructions</summary>
+            <p>Use this tool to transform a standard crossword into a "Going Too Far" variety puzzle.</p>
+            <ul>
+                <li><strong>Mode 1 (Quote-based):</strong> Upload a standard crossword file (.puz) and enter a quote in the textarea. Black squares will be converted to gray squares filled with the quote letters.</li>
+                <li><strong>Mode 2 (iPUZ-based):</strong> Upload an iPUZ file (e.g., from Ingrid). The tool will interpret circles as gray squares, remove bars, and update word/clue lists.</li>
+            </ul>
+        </details>
+
+        <div class="controls">
+            <input type="file" id="fileInput" accept=".puz,.ipuz" />
+            <textarea id="quote-input" placeholder="Enter quote here (optional)..." rows="4"></textarea>
+            <button class="button-primary" id="process-button">Process</button>
+            <button class="button-primary" id="export-button" disabled>Export as .ipuz</button>
+        </div>
+        <div id="display-area"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
