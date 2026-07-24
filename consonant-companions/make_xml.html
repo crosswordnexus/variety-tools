@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Consonant Companions JPZ Creator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 20px;
+      max-width: 900px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    input[type="text"], input[type="number"], textarea {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    textarea {
+      height: 100px;
+      font-family: monospace;
+    }
+    .grid-inputs {
+      display: flex;
+      gap: 20px;
+    }
+    .grid-col {
+      flex: 1;
+    }
+    .inline-group {
+      display: flex;
+      gap: 15px;
+    }
+    .inline-group > div {
+      flex: 1;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0052a3;
+    }
+    #error {
+      color: #d9534f;
+      font-weight: bold;
+      margin-top: 15px;
+      white-space: pre-wrap;
+    }
+    #outputArea {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Consonant Companions JPZ Creator</h2>
+
+  <div class="inline-group">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" id="title" value="Consonant Companions">
+    </div>
+    <div class="form-group">
+      <label for="creator">Creator</label>
+      <input type="text" id="creator" value="">
+    </div>
+    <div class="form-group">
+      <label for="copyright">Copyright</label>
+      <input type="text" id="copyright" value="©">
+    </div>
+  </div>
+
+  <div class="inline-group">
+    <div class="form-group">
+      <label for="height">Height (Rows)</label>
+      <input type="number" id="height" value="10">
+    </div>
+    <div class="form-group">
+      <label for="width">Width (Cols)</label>
+      <input type="number" id="width" value="10">
+    </div>
+    <div class="form-group" style="display: flex; align-items: center; margin-top: 15px;">
+      <label style="cursor: pointer;">
+        <input type="checkbox" id="hardmode"> Hard Mode
+      </label>
+    </div>
+  </div>
+
+  <div class="grid-inputs">
+    <div class="grid-col">
+      <h3>Left Grid</h3>
+      <div class="form-group">
+        <label for="leftAnswers">Answers (one per line):</label>
+        <textarea id="leftAnswers"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="leftClues">Clues (one per line):</label>
+        <textarea id="leftClues"></textarea>
+      </div>
+    </div>
+
+    <div class="grid-col">
+      <h3>Right Grid</h3>
+      <div class="form-group">
+        <label for="rightAnswers">Answers (one per line):</label>
+        <textarea id="rightAnswers"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="rightClues">Clues (one per line):</label>
+        <textarea id="rightClues"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <button id="convertBtn">Convert</button>
+  <button id="downloadBtn" style="display: none; background-color: #28a745;">Download JPZ</button>
+
+  <div id="error"></div>
+
+  <div id="outputArea" style="display:none;">
+    <h3>Generated XML:</h3>
+    <textarea id="xmlOutput" style="height: 300px;" readonly></textarea>
+  </div>
+
+<script>
+// --- Spiral Path & Bars ---
+
+// Generate ordered array of cell coordinates for an NxM spiral
+function generateSpiralPath(rows, cols) {
+  let path = []; // Stores {x, y} (1-indexed)
+
+  let top = 0, bottom = rows - 1;
+  let left = 0, right = cols - 1;
+
+  while (top <= bottom && left <= right) {
+    // Traverse Right
+    for (let col = left; col <= right; col++) path.push({ x: col + 1, y: top + 1 });
+    top++;
+    // Traverse Down
+    for (let row = top; row <= bottom; row++) path.push({ x: right + 1, y: row + 1 });
+    right--;
+    // Traverse Left
+    if (top <= bottom) {
+      for (let col = right; col >= left; col--) path.push({ x: col + 1, y: bottom + 1 });
+      bottom--;
+    }
+    // Traverse Up
+    if (left <= right) {
+      for (let row = bottom; row >= top; row--) path.push({ x: left + 1, y: row + 1 });
+      left++;
+    }
+  }
+  return path;
+}
+
+// Compute top/left inner bars between adjacent coils
+function computeSpiralBars(path) {
+  // Map coordinate "x,y" -> 1-based spiral index
+  const indexMap = {};
+  path.forEach((pos, idx) => {
+    indexMap[`${pos.x},${pos.y}`] = idx + 1;
+  });
+
+  const bars = {};
+
+  path.forEach((pos, idx) => {
+    const currentIdx = idx + 1;
+    const key = `${pos.x},${pos.y}`;
+    bars[key] = { top: false, left: false };
+
+    // Top Bar: Check cell directly above (x, y - 1)
+    if (pos.y > 1) {
+      const topIdx = indexMap[`${pos.x},${pos.y - 1}`];
+      if (topIdx && Math.abs(currentIdx - topIdx) !== 1) {
+        bars[key].top = true;
+      }
+    }
+
+    // Left Bar: Check cell directly to the left (x - 1, y)
+    if (pos.x > 1) {
+      const leftIdx = indexMap[`${pos.x - 1},${pos.y}`];
+      if (leftIdx && Math.abs(currentIdx - leftIdx) !== 1) {
+        bars[key].left = true;
+      }
+    }
+  });
+
+  return bars;
+}
+
+// Format markdown italics: *text* -> <i>text</i>
+function formatText(text) {
+  return text.replace(/\*([^*]+)\*/g, "<i>$1</i>");
+}
+
+function escapeXml(unsafe) {
+  return unsafe.replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+    }
+  });
+}
+
+function getLetterLabel(index) {
+  return String.fromCharCode(65 + index);
+}
+
+// --- Main Conversion Logic ---
+
+function convert() {
+  const errorDiv = document.getElementById('error');
+  const outputArea = document.getElementById('outputArea');
+  const downloadBtn = document.getElementById('downloadBtn');
+  errorDiv.innerText = '';
+
+  try {
+    const title = escapeXml(document.getElementById('title').value);
+    const creator = escapeXml(document.getElementById('creator').value);
+    const copyright = escapeXml(document.getElementById('copyright').value);
+    const height = parseInt(document.getElementById('height').value, 10);
+    const width = parseInt(document.getElementById('width').value, 10);
+    const hardmode = document.getElementById('hardmode').checked;
+
+    const max = height * width;
+    const xDiff = width + 1;
+    const totalWidth = width + xDiff;
+
+    // Parse Answers
+    const parseLines = str => str.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    const leftAnswers = parseLines(document.getElementById('leftAnswers').value);
+    const rightAnswers = parseLines(document.getElementById('rightAnswers').value);
+
+    const leftString = leftAnswers.join('').toUpperCase().replace(/[^A-Z]/g, '');
+    const rightString = rightAnswers.join('').toUpperCase().replace(/[^A-Z]/g, '');
+
+    // Validation
+    if (leftString.includes('Y')) throw new Error("Left grid contains 'Y'.");
+    if (rightString.includes('Y')) throw new Error("Right grid contains 'Y'.");
+    if (leftString.length !== max) throw new Error(`Left grid length (${leftString.length}) does not match grid size (${max}).`);
+    if (rightString.length !== max) throw new Error(`Right grid length (${rightString.length}) does not match grid size (${max}).`);
+
+    const vowels = new Set(['A', 'E', 'I', 'O', 'U']);
+    const leftCons = leftString.split('').filter(c => !vowels.has(c)).join('');
+    const rightCons = rightString.split('').filter(c => !vowels.has(c)).join('');
+
+    if (leftCons !== rightCons) {
+      throw new Error(`Left and right consonants do not match:\nLeft:  ${leftCons}\nRight: ${rightCons}`);
+    }
+
+    // Parse Clues
+    const leftClues = parseLines(document.getElementById('leftClues').value);
+    const rightClues = parseLines(document.getElementById('rightClues').value);
+
+    if (leftClues.length !== leftAnswers.length) {
+      throw new Error("Number of left clues does not match number of left answers.");
+    }
+    if (rightClues.length !== rightAnswers.length) {
+      throw new Error("Number of right clues does not match number of right answers.");
+    }
+
+    // Dynamic Spiral setup
+    const path = generateSpiralPath(height, width);
+    const bars = computeSpiralBars(path);
+
+    // Map answer starting positions for Left Grid
+    let squareNumbers = {};
+    let startingLeft = [];
+    let startn = 1;
+    for (let i = 0; i < leftAnswers.length; i++) {
+      startingLeft.push(startn);
+      squareNumbers[startn] = getLetterLabel(i);
+      startn += leftAnswers[i].replace(/[^A-Z]/gi, '').length;
+    }
+
+    // Instructions
+    let instructions = "The answers in this puzzle begin in the upper left and spiral their way to the center. Consonants are to be entered in the shaded squares, vowels in the white squares. The same consonants will be used in the same order in both grids. The letter Y is not used in any answer. ";
+    if (hardmode) {
+      instructions += "All clues are combined into one list, so it is up to you to figure out which answers go in which grid and where.";
+    } else {
+      instructions += "Clues are given in order for the left grid, but you will need to figure out the order for the right grid.";
+    }
+
+    // Start JPZ Construction
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<crossword-compiler-applet xmlns="http://crossword.info/xml/crossword-compiler">\n`;
+    xml += `<applet-settings width="720" height="600" cursor-color="#00FF00" selected-cells-color="#80FF80">\n`;
+    xml += `<completion friendly-submit="false" only-if-correct="true">Congratulations! The puzzle is solved correctly</completion>\n`;
+    xml += `<actions graphical-buttons="false" wide-buttons="false" buttons-layout="left"><reveal-word label="Reveal Word"></reveal-word><reveal-letter label="Reveal"></reveal-letter><check label="Check"></check><solution label="Solution"></solution><pencil label="Pencil"></pencil></actions>\n`;
+    xml += `</applet-settings>\n`;
+    xml += `<rectangular-puzzle xmlns="http://crossword.info/xml/rectangular-puzzle" alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ">\n`;
+    xml += `<metadata>\n`;
+    xml += `    <title>${title}</title>\n`;
+    xml += `    <creator>${creator}</creator>\n`;
+    xml += `    <copyright>${copyright}</copyright>\n`;
+    xml += `    <description>${escapeXml(instructions)}</description>\n`;
+    if (hardmode) xml += `    <fakeclues/>\n`;
+    xml += `    <realwords/>\n    <autofill/>\n`;
+    xml += `</metadata>\n`;
+    xml += `<crossword>\n`;
+    xml += `    <grid width="${totalWidth}" height="${height}">\n`;
+    xml += `	<grid-look hide-lines="true" cell-size-in-pixels="40"/>\n`;
+
+    // 1. Render Left Grid
+    let consonantNumber = 0;
+    for (let n = 1; n <= max; n++) {
+      const char = leftString[n - 1];
+      const pos = path[n - 1];
+      const wallKey = `${pos.x},${pos.y}`;
+
+      let cellAttrs = `x="${pos.x}" y="${pos.y}" solution="${char}" `;
+      if (!hardmode && squareNumbers[n]) {
+        cellAttrs += `top-right-number="${squareNumbers[n]}" `;
+      }
+      if (bars[wallKey]?.top) cellAttrs += `top-bar="true" `;
+      if (bars[wallKey]?.left) cellAttrs += `left-bar="true" `;
+      if (!vowels.has(char)) {
+        consonantNumber++;
+        cellAttrs += `number="${consonantNumber}" background-color="#C0C0C0" `;
+      }
+      xml += `	<cell ${cellAttrs}/>\n`;
+    }
+
+    // 2. Render Void Divider
+    for (let y = 1; y <= height; y++) {
+      xml += `	<cell x="${xDiff}" y="${y}" type="void" />\n`;
+    }
+
+    // 3. Render Right Grid
+    consonantNumber = 0;
+    for (let n = 1; n <= max; n++) {
+      const char = rightString[n - 1];
+      const pos = path[n - 1];
+      const rx = pos.x + xDiff;
+      const wallKey = `${pos.x},${pos.y}`;
+
+      let cellAttrs = `x="${rx}" y="${pos.y}" solution="${char}" `;
+      if (bars[wallKey]?.top) cellAttrs += `top-bar="true" `;
+      if (bars[wallKey]?.left) cellAttrs += `left-bar="true" `;
+      if (!vowels.has(char)) {
+        consonantNumber++;
+        cellAttrs += `number="${consonantNumber}" background-color="#C0C0C0" `;
+      }
+      xml += `	<cell ${cellAttrs}/>\n`;
+    }
+    xml += `    </grid>\n`;
+
+    // Render Words
+    if (hardmode) {
+      xml += `\n    <word id="0">\n`;
+      for (let n = 1; n <= max; n++) {
+        xml += `	<cells x="${path[n-1].x}" y="${path[n-1].y}"/>\n`;
+      }
+      xml += `    </word>\n`;
+    } else {
+      for (let i = 0; i < leftAnswers.length; i++) {
+        const len = leftAnswers[i].replace(/[^A-Z]/gi, '').length;
+        const id = getLetterLabel(i);
+        xml += `\n    <word id="${id}">\n`;
+        for (let j = 0; j < len; j++) {
+          const n = startingLeft[i] + j;
+          xml += `	<cells x="${path[n-1].x}" y="${path[n-1].y}"/>\n`;
+        }
+        xml += `    </word>\n`;
+      }
+    }
+
+    // Right Grid Word (ID #1)
+    xml += `\n    <word id="1">\n`;
+    for (let n = 1; n <= max; n++) {
+      xml += `	<cells x="${path[n-1].x + xDiff}" y="${path[n-1].y}"/>\n`;
+    }
+    xml += `    </word>\n`;
+
+    // Render Clues
+    const clueCompare = (a, b) => {
+      const cleanA = a.toUpperCase().replace(/[^A-Z]/g, '');
+      const cleanB = b.toUpperCase().replace(/[^A-Z]/g, '');
+      return cleanA.localeCompare(cleanB);
+    };
+
+    if (hardmode) {
+      xml += `\n	<clues ordering="normal">\n	    <title><b>CLUES</b></title>\n`;
+      let allClues = [...leftClues, ...rightClues].sort(clueCompare);
+      allClues.forEach((clue, i) => {
+        xml += `	    <clue word="${i}" number="•">${escapeXml(formatText(clue))}</clue>\n`;
+      });
+      xml += `	</clues>\n`;
+    } else {
+      xml += `\n	<clues ordering="normal">\n	    <title><b>LEFT GRID</b></title>\n`;
+      leftClues.forEach((clue, i) => {
+        const id = getLetterLabel(i);
+        xml += `	    <clue word="${id}" number="${id}">${escapeXml(formatText(clue))}</clue>\n`;
+      });
+      xml += `	</clues>\n	<clues fake="true">\n	    <title><b>RIGHT GRID</b></title>\n`;
+
+      let sortedRight = [...rightClues].sort(clueCompare);
+      sortedRight.forEach((clue, i) => {
+        xml += `	    <clue word="${i + 1}" number="•">${escapeXml(formatText(clue))}</clue>\n`;
+      });
+      xml += `	</clues>\n`;
+    }
+
+    xml += `</crossword>\n</rectangular-puzzle>\n</crossword-compiler-applet>`;
+
+    // Output result
+    document.getElementById('xmlOutput').value = xml;
+    outputArea.style.display = 'block';
+    downloadBtn.style.display = 'inline-block';
+
+  } catch (err) {
+    errorDiv.innerText = err.message;
+    outputArea.style.display = 'none';
+    downloadBtn.style.display = 'none';
+  }
+}
+
+// Download Button Trigger
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const xmlData = document.getElementById('xmlOutput').value;
+  const blob = new Blob([xmlData], { type: 'text/xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'puzzle.jpz';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('convertBtn').addEventListener('click', convert);
+</script>
+</body>
+</html>

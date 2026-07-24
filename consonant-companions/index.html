@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consonant Companion Construction</title>
+
+  <!-- Skeleton CSS for layout -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
+  <!-- Pako for decompression -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+
+  <style>
+    textarea.wordsarea {
+      height: 150px;
+    }
+    label.wordSelectorLabel {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Consonant Companions Construction</h2>
+    <p>To make a JPZ from your results, use our <a href="make_xml.html" target="_blank">JPZ creation tool</a>.
+
+    <div class="row">
+      <div class="four columns">
+        <label for="leftWords" id="leftHeader">Left Grid</label>
+        <textarea class="u-full-width wordsarea" id="leftWords">STREETVALUE</textarea>
+      </div>
+
+      <div class="four columns">
+        <label for="rightWords" id="rightHeader">Right Grid</label>
+        <textarea class="u-full-width wordsarea" id="rightWords">SATURATE</textarea>
+      </div>
+    </div> <!-- end first row -->
+
+    <div class="row" id="buttons-row">
+      <button class="button-primary" type="button" id="begin-button" onclick="processTextAreas()">Begin</button>
+      <button class="button" type="button" onclick="undoLast()">Undo</button>
+    </div>
+
+    <div class="row">
+      <div id="datatables-table-div" class="twelve columns">
+        <table id="datatables-table" class="display">
+          <thead>
+            <tr>
+              <th>Entry</th>
+              <th>Remaining Consonants</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rows will be populated by JavaScript -->
+          </tbody>
+        </table>
+        <p>Click a row to insert into the puzzle.</p>
+      </div>
+    </div> <!-- end table row -->
+  </div> <!-- end container -->
+
+  <!-- Load jQuery and DataTables -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+  <!-- Load helper JSON -->
+  <script>
+  async function loadData() {
+    // Hide relevant element
+    document.getElementById('buttons-row').style.display = 'none';
+
+    // Helper dict
+    fetch("./helper_dict.json.gz")
+      .then(response => response.arrayBuffer()) // 1. Get raw binary data
+      .then(buffer => {
+        // 2. Decompress using pako.ungzip and convert to string
+        const jsonString = pako.ungzip(buffer, { to: 'string' });
+        // 3. Parse the JSON string
+        return JSON.parse(jsonString);
+      })
+      .then(ccData => {
+        window.ccData = ccData;
+        console.log("Helper data loaded successfully");
+      })
+      .catch(err => console.error("Failed to load or decompress data:", err));
+
+    // Word lookup
+    fetch("./consonants_to_words.json.gz")
+      .then(response => response.arrayBuffer()) // 1. Get raw binary data
+      .then(buffer => {
+        // 2. Decompress using pako.ungzip and convert to string
+        const jsonString = pako.ungzip(buffer, { to: 'string' });
+        // 3. Parse the JSON string
+        return JSON.parse(jsonString);
+      })
+      .then(ctwData => {
+        window.ctwData = ctwData;
+        console.log("Consonant to word data loaded successfully");
+      })
+      .catch(err => console.error("Failed to load or decompress data:", err));
+
+    // Show the element
+    document.getElementById('buttons-row').style.display = 'block';
+  }
+  loadData();
+  </script>
+
+  <!-- Consonant Companion logic -->
+  <script src="cc.js"></script>
+
+  <!-- DataTable initialization -->
+  <script>
+    var table = $('#datatables-table').DataTable({
+      order: [[2, 'desc']]
+    });
+  </script>
+</body>
+</html>
