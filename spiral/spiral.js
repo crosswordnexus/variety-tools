@@ -3,6 +3,34 @@ function reverseString(str) {
     return str.split("").reverse().join("");
 }
 
+// Global stack of past states
+let historyStack = [];
+
+// Capture current state
+function saveState() {
+  historyStack.push({
+    inward: document.getElementById('inwardWords').value,
+    outward: document.getElementById('outwardWords').value,
+    tableData: $('#datatables-table').DataTable().rows().data().toArray()
+  });
+}
+
+function undoLast() {
+  if (historyStack.length === 0) return; // nothing to undo
+
+  const lastState = historyStack.pop();
+
+  // Restore textareas
+  document.getElementById('inwardWords').value = lastState.inward;
+  document.getElementById('outwardWords').value = lastState.outward;
+
+  // Restore table
+  const table = $('#datatables-table').DataTable();
+  table.clear().rows.add(lastState.tableData).draw();
+
+  changeHeaders();
+}
+
 function new_word_options(forward_words, backward_words) {
   // Find the words we've already used
   var used_words = new Set(forward_words.concat(backward_words));
@@ -66,6 +94,9 @@ function add_word(forward_words, backward_words, this_word) {
 
 /** Handle a click **/
 $(document).on('click', '#datatables-table tbody tr', function() {
+  // Save current state
+  saveState();
+
   // grab the words from the textareas
   var loop1 = document.getElementById('inwardWords').value.split('\n');
   var loop2 = document.getElementById('outwardWords').value.split('\n');
