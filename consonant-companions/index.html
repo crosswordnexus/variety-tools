@@ -71,44 +71,41 @@
 
   <!-- Load helper JSON -->
   <script>
-  async function loadData() {
-    // Hide relevant element
-    document.getElementById('buttons-row').style.display = 'none';
-
+  function loadData() {
     // Helper dict
-    fetch("./helper_dict.json.gz")
+    const helperPromise = fetch("./helper_dict.json.gz")
       .then(response => response.arrayBuffer()) // 1. Get raw binary data
       .then(buffer => {
         // 2. Decompress using pako.ungzip and convert to string
         const jsonString = pako.ungzip(buffer, { to: 'string' });
         // 3. Parse the JSON string
-        return JSON.parse(jsonString);
-      })
-      .then(ccData => {
-        window.ccData = ccData;
+        window.ccData = JSON.parse(jsonString);
         console.log("Helper data loaded successfully");
-      })
-      .catch(err => console.error("Failed to load or decompress data:", err));
+      });
 
     // Word lookup
-    fetch("./consonants_to_words.json.gz")
+    const wordsPromise = fetch("./consonants_to_words.json.gz")
       .then(response => response.arrayBuffer()) // 1. Get raw binary data
       .then(buffer => {
         // 2. Decompress using pako.ungzip and convert to string
         const jsonString = pako.ungzip(buffer, { to: 'string' });
         // 3. Parse the JSON string
-        return JSON.parse(jsonString);
-      })
-      .then(ctwData => {
-        window.ctwData = ctwData;
+        window.ctwData = JSON.parse(jsonString);
         console.log("Consonant to word data loaded successfully");
-      })
-      .catch(err => console.error("Failed to load or decompress data:", err));
+      });
 
-    // Show the element
-    document.getElementById('buttons-row').style.display = 'block';
+    return Promise.all([helperPromise, wordsPromise]);
   }
-  loadData();
+
+  // Hide relevant element initially
+  document.getElementById('buttons-row').style.display = 'none';
+
+  loadData()
+    .then(() => {
+      // Show the element
+      document.getElementById('buttons-row').style.display = 'block';
+    })
+    .catch(err => console.error("Failed to load or decompress data:", err));
   </script>
 
   <!-- Consonant Companion logic -->
