@@ -7,3 +7,5 @@ Brian Thomas's seed list is from https://puzzlesthatneedahome.blogspot.com/p/wor
 Ricky Cruz's seed list is from https://docs.google.com/document/d/1XVjHNL6o7Xm8fyNywrkMkL1tuWH8lEN4qyLHQpxYG5E/edit?tab=t.0 (no license -- free to use and distribute)
 
 Ada Nicolle's seed list is from https://sites.google.com/view/luckyseeds/home (no license, but you may want to check with Ada before distributing)
+
+Will Nediger's word list is from https://github.com/bewilderingly/Nediger-list. MIT License.

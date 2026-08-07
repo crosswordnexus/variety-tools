@@ -64,11 +64,12 @@ def get_seed_words(quote, source):
     We list single ones as well as maybe pairs and triples that could fit
     """
     # Seed lists from the word_lists directory
-    seed_lists = (
-        WORDLIST_DIR / 'ada_nicolle_seed_list.txt', 
-        WORDLIST_DIR / 'brian_thomas_seed_list.txt',
-        WORDLIST_DIR / 'ricky_cruz_seed_list.txt'
-    )
+    seed_lists = [
+        #WORDLIST_DIR / 'ada_nicolle_seed_list.txt',
+        #WORDLIST_DIR / 'brian_thomas_seed_list.txt',
+        #WORDLIST_DIR / 'ricky_cruz_seed_list.txt',
+        WORDLIST_DIR / 'nediger_99.txt'
+    ]
     # Normalize the inputs
     quote, source = list(map(alpha_only, [quote, source]))
     # Set up our counters
@@ -86,20 +87,27 @@ def get_seed_words(quote, source):
                 word = alpha_only(word)
                 word1_ctr = Counter(word[1:])
                 # Conditions for an acceptable entry
-                if word[0] in source \
-                  and not word1_ctr - qs_ctr \
-                  and len(word) >= min_length and len(word) <= max_length \
-                  and len(qs_ctr - word1_ctr) < len(qs_ctr):
+                if (
+                  word[0] in source
+                  and len(word) >= min_length and len(word) <= max_length
+                  and not word1_ctr - qs_ctr
+                  and len(qs_ctr - word1_ctr) < len(qs_ctr)
+                ):
                     seed_words_set.add(word)
     #END for wl
     # Add these to a list
     seed_words = sorted(seed_words_set)
     # Now add pairs and triples to this list
+    ctr = 0
+    max_count = 10_000
     for k in (2, 3):
         for words in itertools.combinations(seed_words_set, k):
             if not Counter(''.join(words)) - quote_ctr:
                 seed_words.append(words)
-                
+            ctr += 1
+            if ctr > max_count:
+                break
+
     return seed_words
 
 # Helper function for dupe checking
@@ -221,7 +229,7 @@ def create_acrostic2(quote, source, excluded_words=None, included_words=None,
     s2 = alpha_only(quote)
     if not is_substring(s1, s2):
         raise AssertionError('Source is not contained in quote')
-        
+
     # Normalize included and excluded words
     included_words = [alpha_only(x) for x in included_words if x]
     excluded_words = [alpha_only(x) for x in excluded_words if x]
