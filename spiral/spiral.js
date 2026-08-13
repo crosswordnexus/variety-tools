@@ -129,13 +129,16 @@ function processTextAreas() {
   nwo.forEach(function (nw) {
     var id = JSON.stringify(nw['words']);
     var thisEntry = nw['words'][0];
-    var length = thisEntry.length;
+    var score = thisEntry.length;
     if (nw['words'][1]) {
       thisEntry += ' / ' + nw['words'][1];
-      length = (length + nw['words'][1].length)/2.;
+      // take the min length of both for "score"
+      // we add 0.5 to prioritize this slightly
+      score = Math.min(score, nw['words'][1].length) + 0.5;
     }
     var thisLeftOver = nw['leftover'];
-    tableData.push([thisEntry, thisLeftOver, length]);
+    score += thisLeftOver.length / 10;
+    tableData.push([thisEntry, thisLeftOver, score.toFixed(1)]);
   });
   // Fill the table
   var table = $('#datatables-table').DataTable();

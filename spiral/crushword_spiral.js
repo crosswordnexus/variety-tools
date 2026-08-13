@@ -207,16 +207,20 @@ function processTextAreas() {
     // Collapse leftover for display
     var entry1 = encodeKey(nw["leftover"]);
 
-    // Compute length from chunk arrays
+    // Compute "score" from chunk arrays
     var len0 = chunkCount(nw["words"][0]);
-    var length = len0;
+    var score = len0;
     if (nw["words"][1]) {
       var len1 = chunkCount(nw["words"][1]);
-      length = (len0 + len1) / 2.0;
+      // take the min length as the score
+      // add a small bonus
+      score = Math.min(len0, len1) + 0.3;
     }
 
+    score += entry1.length / 10;
+
     // Push [segmentation string, leftover string, length]
-    tableData.push([entry0, entry1, length]);
+    tableData.push([entry0, entry1, score.toFixed(1)]);
   });
 
   // Update DataTable
