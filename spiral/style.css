@@ -194,3 +194,15 @@ table.dataTable.no-footer {
   background: transparent !important;
   border-color: transparent !important;
 }
+
+/* Prevent DataTables default styling for sorted columns from overriding dark mode backgrounds */
+table.dataTable.display tbody tr.odd > .sorting_1,
+table.dataTable.display tbody tr.even > .sorting_1,
+table.dataTable.order-column.stripe tbody tr.odd > .sorting_1,
+table.dataTable.order-column.stripe tbody tr.even > .sorting_1,
+table.dataTable tbody tr td.sorting_1,
+table.dataTable tbody tr td.sorting_2,
+table.dataTable tbody tr td.sorting_3 {
+  background-color: transparent !important;
+}
+
