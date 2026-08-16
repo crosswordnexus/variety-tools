@@ -335,7 +335,7 @@ function loadPuzzle(data) {
   }); // end info
 
   // Create PDF when the print button is clicked
-  document.getElementById('printButton').addEventListener('click', function() {
+  document.getElementById('printButton').addEventListener('click', async function() {
     const vpuzObj = data;
     // add the image to options, and launch print dialog
     options_obj = {'image': data['puzzle-image'], 'print': true};
@@ -350,7 +350,17 @@ function loadPuzzle(data) {
 
     const xw_constructor = new JSCrossword();
     const xw = xw_constructor.fromIpuz(vpuzObj);
-    jscrossword_to_pdf(xw, options=options_obj);
+    try {
+      const options = {};
+      const doc = await xw.toPDF(options_obj);
+      doc.autoPrint();
+      // open in a new tab and trigger print dialog
+      const blobUrl = doc.output("bloburl");
+      window.open(blobUrl, "_blank");
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("Failed to create PDF. See console for details.");
+    }
   });
 
 } // end loadPuzzle
