@@ -11,7 +11,9 @@ import make_hex_vpuz as mhv
 import random
 import networkx as nx
 import json
+from functools import lru_cache
 
+@lru_cache()
 def find_all_simple_paths(graph, min_len=6, max_len=15):
     """Find all simple paths within the length constraints."""
     paths = []
@@ -32,7 +34,7 @@ def find_all_simple_paths(graph, min_len=6, max_len=15):
 #%% Create G and find paths
 G = mhg.create_hex_graph()
 # Finding paths is slow
-paths = find_all_simple_paths(G, min_len=5, max_len=11)
+paths = find_all_simple_paths(G, min_len=6, max_len=13)
 
 #%% Set up the optimization problem
 # List of tuples
@@ -65,8 +67,8 @@ for t in T:
 #m += xsum(x[i] for i in range(len(P)) if path_lengths[i] == 10) == 1
 
 # Add constraints on the number of paths
-m += xsum(x) >= 40
-m += xsum(x) <= 40
+m += xsum(x) >= 35
+m += xsum(x) <= 36
 
 # (Optional) Set an objective function, e.g., minimize the number of selected paths
 #m.objective = xsum(x)
@@ -84,13 +86,10 @@ selected_paths = sorted(selected_paths, key=lambda x: (x[0][0], x[0][1]))
 
 print("Selected paths:", selected_paths)
 
-# Make a qxd file
+# Make a batch file for the Ingrid Variety Constructor
 # entries will be xx_yy
 
-qxd = '''.DICTIONARY 1 stwl_no_plurals.txt
-.USEDICTIONARY 1
-.RANDOM 1
-'''
+qxd = ""
 
 for path in selected_paths:
     mystr = ''
@@ -101,15 +100,9 @@ for path in selected_paths:
     mystr += '\n'
     qxd += mystr
 
-#print(qxd)
+print(qxd)
 
-# Write a file named hex.qxd with the `qxd` string as its contents
-# You can then fill this (on Windows, with Qxw) via
-# "C:\Program Files (x86)\Qxw\Qxw.exe" -b hex.qxd  1>output.txt 2>errors.txt
-# Note that this will run in the background -- you can monitor it in Task Manager
-# Note that you can modify the file if you want to include words
-# for instance, you can change a line to
-# 07_00 06_00 06_01 05_01 04_00 03_00 =SERENE
+# Plop this into https://crosswordnexus.github.io/ingrid-solver/
 
 #%% Paste the results of Qxw here
 qxw_out = '''
