@@ -66,7 +66,7 @@ function end(s, color = "black", fill = "transparent", stroke_width = "1") {
 
 function create_flower_power_svg(petals, word_length, petal_thickness, gravity,
                                 font_size, number_margin, canvas_size = CANVAS_SIZE,
-                                margin_size = MARGIN_SIZE, inner_numbers = true) {
+                                margin_size = MARGIN_SIZE, inner_numbers = false) {
   var _, a_x, a_y, b_x, b_y, border_end_x, border_end_y, border_left_x, border_left_y, border_outer_points, border_right_x, border_right_y, c_x, c_y, circle_limit_x, circle_limit_y, d_x, d_y, end_x, end_y, h, left_x, left_y, outer_points, path, radius, ret, right_x, right_y, x, y, z, z_inner;
 
   ret = "";
