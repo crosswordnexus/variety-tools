@@ -1,0 +1,456 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Flower Power Tools</title>
+<script type="text/javascript" src="fpg.js"></script>
+<style>
+  body {
+    font-family: sans-serif;
+    margin: 20px;
+  }
+  .global-settings {
+    background-color: #f0f4f8;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  .global-settings label {
+    font-weight: bold;
+  }
+  .tab-container {
+    display: flex;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 20px;
+  }
+  .tab-button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #666;
+  }
+  .tab-button.active {
+    border-bottom: 3px solid #007bff;
+    color: #007bff;
+  }
+  .tab-content {
+    display: none;
+  }
+  .tab-content.active {
+    display: block;
+  }
+  .slider-container {
+    margin-bottom: 15px;
+  }
+  .slider-value {
+    font-weight: bold;
+  }
+  .form-group {
+    margin-bottom: 15px;
+  }
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  .form-group input[type="text"], .form-group textarea {
+    width: 100%;
+    max-width: 600px;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  .clues-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1200px;
+  }
+  .clue-box {
+    border: 1px solid #ddd;
+    padding: 15px;
+    background: #f9f9f9;
+  }
+  .clue-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .clue-row input[type="text"] {
+    padding: 5px;
+  }
+  .clue-row .num {
+    font-weight: bold;
+    width: 25px;
+  }
+  .clue-row .clue-text {
+    flex: 2;
+  }
+  .clue-row .answer-text {
+    flex: 1;
+  }
+  button {
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+</style>
+</HEAD>
+<BODY>
+
+<h2>Flower Power Tools</h2>
+
+<!-- GLOBAL SETTINGS -->
+<div class="global-settings">
+  <div>
+       <label for="global_word_length">Word Length:</label>
+        <select id="global_word_length">
+            <option value="5" selected>5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+        </select>
+  </div>
+  <div>
+      <label for="global_petals">Petals:</label>
+        <select id="global_petals">
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18" selected>18</option>
+        </select>
+  </div>
+</div>
+
+<div class="tab-container">
+  <button class="tab-button active" onclick="openTab('grid-tab')">Grid Image</button>
+  <button class="tab-button" onclick="openTab('batch-tab')">Ingrid Batch File</button>
+  <button class="tab-button" onclick="openTab('vpuz-tab')">Create .vpuz</button>
+</div>
+
+<!-- TAB 1: GRID IMAGE -->
+<div id="grid-tab" class="tab-content active">
+  <div class="slider-container">
+    <form id="myForm">
+      <div>
+          <input type="range" class="slider" min="50" max="150" value="80" data-slider-id="1" name="petal_thickness">
+          <div class="slider-value">Petal Thickness: <span id="petal-thickness-value" class="slider-value">80</span></div>
+      </div>
+      <div>
+          <input type="range" class="slider" min="50" max="300" value="60" data-slider-id="2" name="gravity">
+          <div class="slider-value">Gravity: <span id="gravity-value" class="slider-value">140</span></div>
+      </div>
+      <div style="margin-top: 15px; display: flex; gap: 20px; align-items: center;">
+          <label for="font_size" style="font-weight: bold;">Number Font Size:</label>
+          <select id="4" name="font_size">
+              <option value="18">18</option>
+              <option value="19">19</option>
+              <option value="20" selected>20</option>
+              <option value="21">21</option>
+              <option value="22">22</option>
+              <option value="23">23</option>
+          </select>
+      </div>
+    </form>
+  </div>
+
+  <div id="svg"></div>
+  <br>
+  <button id="saveBtn">Save as PNG</button>
+  <button onclick="copyDynamic()">Copy base64 to clipboard</button>
+</div>
+
+<!-- TAB 2: BATCH FILE -->
+<div id="batch-tab" class="tab-content">
+  <div>
+      <h3>Ingrid Solver Batch Data</h3>
+      <p>You can copy this batch file data for use in <a href="https://crosswordnexus.github.io/ingrid-solver/" target="_blank">Ingrid Solver</a>.</p>
+      <textarea id="batchData" rows="15" cols="60" readonly onclick="this.select()"></textarea>
+      <br><br>
+      <button onclick="copyBatchData()">Copy batch data to clipboard</button>
+  </div>
+</div>
+
+<!-- TAB 3: CREATE .VPUZ -->
+<div id="vpuz-tab" class="tab-content">
+  <h3>Create .vpuz Puzzle File</h3>
+
+  <div class="form-group">
+    <label for="vpuz_title">Title</label>
+    <input type="text" id="vpuz_title" value="">
+  </div>
+
+  <div class="form-group">
+    <label for="vpuz_author">Author</label>
+    <input type="text" id="vpuz_author" value="">
+  </div>
+
+  <div class="form-group">
+    <label for="vpuz_copyright">Copyright</label>
+    <input type="text" id="vpuz_copyright" value="©">
+  </div>
+
+  <div class="form-group">
+    <label for="vpuz_notes">Notes</label>
+    <textarea id="vpuz_notes" rows="4">The answer to each clue in this puzzle is six letters long and should be entered in a curve starting in the correspondingly numbered space on the outside and curving in towards the center of the flower. Each numbered space is the start of two answers, one curving clockwise and the other counterclockwise.</textarea>
+  </div>
+
+  <div class="form-group">
+    <label>Puzzle Image (Select file OR paste Base64 string)</label>
+    <input type="file" id="vpuz_image_file" accept="image/*" onchange="handleImageUpload(event)">
+    <div style="margin-top: 5px; margin-bottom: 5px;">OR</div>
+    <textarea id="vpuz_image_base64" rows="4" placeholder="data:image/png;base64,... or raw base64 string"></textarea>
+  </div>
+
+  <div class="clues-grid">
+    <!-- Clockwise Clues -->
+    <div class="clue-box">
+      <h4>Clockwise</h4>
+      <div class="form-group">
+        <label for="cw_clues">Clues (one per line)</label>
+        <textarea id="cw_clues" rows="18"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="cw_answers">Answers (one per line)</label>
+        <textarea id="cw_answers" rows="18" style="text-transform: uppercase;"></textarea>
+      </div>
+    </div>
+
+    <!-- Counterclockwise Clues -->
+    <div class="clue-box">
+      <h4>Counterclockwise</h4>
+      <div class="form-group">
+        <label for="ccw_clues">Clues (one per line)</label>
+        <textarea id="ccw_clues" rows="18"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="ccw_answers">Answers (one per line)</label>
+        <textarea id="ccw_answers" rows="18" style="text-transform: uppercase;"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <br>
+  <button onclick="generateVpuz()">Download .vpuz File</button>
+</div>
+
+<script type="text/javascript">
+// Tab Controller
+function openTab(tabId) {
+  const contents = document.getElementsByClassName('tab-content');
+  for (let content of contents) {
+    content.classList.remove('active');
+  }
+  const buttons = document.getElementsByClassName('tab-button');
+  for (let button of buttons) {
+    button.classList.remove('active');
+  }
+  document.getElementById(tabId).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// Update placeholders based on global settings
+function setupClueInputs() {
+  const petals = parseInt(document.getElementById('global_petals').value);
+  document.getElementById('cw_clues').placeholder = `Enter ${petals} clockwise clues, one per line...`;
+  document.getElementById('cw_answers').placeholder = `Enter ${petals} clockwise answers, one per line...`;
+  document.getElementById('ccw_clues').placeholder = `Enter ${petals} counterclockwise clues, one per line...`;
+  document.getElementById('ccw_answers').placeholder = `Enter ${petals} counterclockwise answers, one per line...`;
+}
+
+// Image upload to base64
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('vpuz_image_base64').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Generate VPuz JSON and trigger download
+function generateVpuz() {
+  const petals = parseInt(document.getElementById('global_petals').value);
+  const title = document.getElementById('vpuz_title').value;
+  const author = document.getElementById('vpuz_author').value;
+  const copyright = document.getElementById('vpuz_copyright').value;
+  const notes = document.getElementById('vpuz_notes').value;
+
+  let puzzleImage = document.getElementById('vpuz_image_base64').value.trim();
+  if (puzzleImage && !puzzleImage.startsWith('data:')) {
+    puzzleImage = 'data:image/png;base64,' + puzzleImage;
+  }
+
+  const cwCluesLines = document.getElementById('cw_clues').value.split('\n');
+  const cwAnswersLines = document.getElementById('cw_answers').value.split('\n');
+  const ccwCluesLines = document.getElementById('ccw_clues').value.split('\n');
+  const ccwAnswersLines = document.getElementById('ccw_answers').value.split('\n');
+
+  const cwClues = [];
+  const ccwClues = [];
+  let solutionString = '';
+
+  for (let i = 1; i <= petals; i++) {
+    const cwClue = (cwCluesLines[i - 1] || '').trim();
+    const cwAns = (cwAnswersLines[i - 1] || '').trim().toUpperCase();
+    const ccwClue = (ccwCluesLines[i - 1] || '').trim();
+    const ccwAns = (ccwAnswersLines[i - 1] || '').trim().toUpperCase();
+
+    cwClues.push([i, cwClue]);
+    ccwClues.push([i, ccwClue]);
+
+    // Construct the solution string from all non-empty answers
+    solutionString += cwAns;
+    solutionString += ccwAns;
+  }
+
+  // Sort solution string (sorted letters)
+  solutionString = solutionString.split('').sort().join('');
+
+  const vpuz = {
+    "author": author,
+    "title": title,
+    "copyright": copyright,
+    "notes": notes,
+    "solution-string": solutionString,
+    "clues": {
+      "Clockwise": cwClues,
+      "Counterclockwise": ccwClues
+    },
+    "puzzle-image": puzzleImage
+  };
+
+  const jsonStr = JSON.stringify(vpuz, null, 2);
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (title ? title.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'puzzle') + '.vpuz';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Get the form
+const form = document.getElementById('myForm');
+
+// Helper to convert word length to text (e.g. 5 -> 'five')
+function numberToWords(num) {
+  const words = { 5: 'five', 6: 'six', 7: 'seven' };
+  return words[num] || num.toString();
+}
+
+// Function to process changes
+function processChange(event) {
+    const petals = parseInt(document.getElementById('global_petals').value);
+    const word_length = parseInt(document.getElementById('global_word_length').value);
+    const petal_thickness = parseInt(form.elements['petal_thickness'].value);
+    const gravity = parseInt(form.elements['gravity'].value);
+    const font_size = parseInt(form.elements['font_size'].value);
+
+    // update notes dynamically if they haven't been manually customized
+    const notesTextarea = document.getElementById('vpuz_notes');
+
+    // We can update the notes dynamically
+    notesTextarea.value = `The answer to each clue in this puzzle is ${numberToWords(word_length)} letters long and should be entered in a curve starting in the correspondingly numbered space on the outside and curving in towards the center of the flower. Each numbered space is the start of two answers, one curving clockwise and the other counterclockwise.`;
+
+    // update the displayed values
+    document.getElementById('gravity-value').innerHTML = gravity;
+    document.getElementById('petal-thickness-value').innerHTML = petal_thickness;
+
+    var number_margin = 5;
+
+    var r = create_flower_power_svg(petals, word_length, petal_thickness, gravity, font_size, number_margin);
+    document.getElementById('svg').innerHTML = r;
+
+    // update batch file data
+    document.getElementById('batchData').value = generate_flower_power_batch(petals, word_length);
+}
+
+// Event listeners for global inputs
+document.getElementById('global_petals').addEventListener('change', () => {
+  setupClueInputs();
+  processChange();
+});
+document.getElementById('global_word_length').addEventListener('change', processChange);
+
+form.addEventListener('input', processChange);
+form.addEventListener('change', processChange);
+
+// Initial setup
+setupClueInputs();
+processChange();
+
+// Save as PNG functionality
+function toPNG(save=true) {
+  const svg = document.getElementById('svgElement');
+  const svgData = new XMLSerializer().serializeToString(svg);
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const img = new Image();
+  img.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(svgData));
+
+  img.onload = function() {
+      canvas.width = svg.clientWidth;
+      canvas.height = svg.clientHeight;
+      ctx.drawImage(img, 0, 0);
+
+      const pngFile = canvas.toDataURL('image/png');
+
+      if (!save) {// copy to clipboard
+        navigator.clipboard.writeText(pngFile).then(() => {
+          alert("Base64 string copied to clipboard");
+        }).catch(err => {
+          alert("Failed to copy: " + err);
+        });
+      } else { // save the file
+        const a = document.createElement('a');
+        a.href = pngFile;
+        a.download = 'image.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+  };
+}
+
+document.getElementById('saveBtn').addEventListener('click', function() {
+  toPNG(true);
+});
+
+function copyDynamic() {
+  return toPNG(false);
+}
+
+function copyBatchData() {
+  const batchText = document.getElementById('batchData');
+  batchText.select();
+  navigator.clipboard.writeText(batchText.value).then(() => {
+    alert("Batch data copied to clipboard!");
+  }).catch(err => {
+    alert("Failed to copy: " + err);
+  });
+}
+
+</script>
+</BODY>
+</HTML>

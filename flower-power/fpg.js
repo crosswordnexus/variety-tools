@@ -158,3 +158,33 @@ function create_flower_power_svg(petals, word_length, petal_thickness, gravity,
   ret += "</svg>";
   return ret;
 }
+
+function generate_flower_power_batch(petals, word_length) {
+  var arr = [];
+
+  // Clockwise
+  for (var x = 0; x < petals; x++) {
+    var s = [];
+    for (var y = 0; y < word_length; y++) {
+      s.push("c_" + x + "_" + y);
+    }
+    arr.push(s);
+  }
+
+  // Counterclockwise
+  for (var p = 0; p < petals; p++) {
+    var s = [];
+    var x = p;
+    for (var y = 0; y < word_length; y++) {
+      s.push("c_" + x + "_" + y);
+      x = (x - 1 + petals) % petals;
+    }
+    arr.push(s);
+  }
+
+  var out = '';
+  for (var i = 0; i < arr.length; i++) {
+    out += arr[i].join(" ") + "\n";
+  }
+  return out;
+}
