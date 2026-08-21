@@ -219,14 +219,28 @@
   <div class="clues-grid">
     <!-- Clockwise Clues -->
     <div class="clue-box">
-      <h4>Clockwise Clues & Answers</h4>
-      <div id="clockwise-clues-container"></div>
+      <h4>Clockwise</h4>
+      <div class="form-group">
+        <label for="cw_clues">Clues (one per line)</label>
+        <textarea id="cw_clues" rows="18"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="cw_answers">Answers (one per line)</label>
+        <textarea id="cw_answers" rows="18" style="text-transform: uppercase;"></textarea>
+      </div>
     </div>
 
     <!-- Counterclockwise Clues -->
     <div class="clue-box">
-      <h4>Counterclockwise Clues & Answers</h4>
-      <div id="counterclockwise-clues-container"></div>
+      <h4>Counterclockwise</h4>
+      <div class="form-group">
+        <label for="ccw_clues">Clues (one per line)</label>
+        <textarea id="ccw_clues" rows="18"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="ccw_answers">Answers (one per line)</label>
+        <textarea id="ccw_answers" rows="18" style="text-transform: uppercase;"></textarea>
+      </div>
     </div>
   </div>
 
@@ -249,49 +263,13 @@ function openTab(tabId) {
   event.currentTarget.classList.add('active');
 }
 
-// Generate the clue rows dynamically based on global settings
+// Update placeholders based on global settings
 function setupClueInputs() {
   const petals = parseInt(document.getElementById('global_petals').value);
-  const cwContainer = document.getElementById('clockwise-clues-container');
-  const ccwContainer = document.getElementById('counterclockwise-clues-container');
-
-  // Store existing input values to prevent losing them when changing petals count
-  const existingValues = {};
-  for (let i = 1; i <= 30; i++) {
-    const cwClue = document.getElementById(`cw_clue_${i}`);
-    const cwAns = document.getElementById(`cw_ans_${i}`);
-    const ccwClue = document.getElementById(`ccw_clue_${i}`);
-    const ccwAns = document.getElementById(`ccw_ans_${i}`);
-    if (cwClue) existingValues[`cw_clue_${i}`] = cwClue.value;
-    if (cwAns) existingValues[`cw_ans_${i}`] = cwAns.value;
-    if (ccwClue) existingValues[`ccw_clue_${i}`] = ccwClue.value;
-    if (ccwAns) existingValues[`ccw_ans_${i}`] = ccwAns.value;
-  }
-
-  cwContainer.innerHTML = '';
-  ccwContainer.innerHTML = '';
-
-  for (let i = 1; i <= petals; i++) {
-    // Clockwise
-    const cwRow = document.createElement('div');
-    cwRow.className = 'clue-row';
-    cwRow.innerHTML = `
-      <span class="num">${i}.</span>
-      <input type="text" class="clue-text" id="cw_clue_${i}" placeholder="Clue" value="${existingValues[`cw_clue_${i}`] || ''}">
-      <input type="text" class="answer-text" id="cw_ans_${i}" placeholder="ANSWER" value="${existingValues[`cw_ans_${i}`] || ''}">
-    `;
-    cwContainer.appendChild(cwRow);
-
-    // Counterclockwise
-    const ccwRow = document.createElement('div');
-    ccwRow.className = 'clue-row';
-    ccwRow.innerHTML = `
-      <span class="num">${i}.</span>
-      <input type="text" class="clue-text" id="ccw_clue_${i}" placeholder="Clue" value="${existingValues[`ccw_clue_${i}`] || ''}">
-      <input type="text" class="answer-text" id="ccw_ans_${i}" placeholder="ANSWER" value="${existingValues[`ccw_ans_${i}`] || ''}">
-    `;
-    ccwContainer.appendChild(ccwRow);
-  }
+  document.getElementById('cw_clues').placeholder = `Enter ${petals} clockwise clues, one per line...`;
+  document.getElementById('cw_answers').placeholder = `Enter ${petals} clockwise answers, one per line...`;
+  document.getElementById('ccw_clues').placeholder = `Enter ${petals} counterclockwise clues, one per line...`;
+  document.getElementById('ccw_answers').placeholder = `Enter ${petals} counterclockwise answers, one per line...`;
 }
 
 // Image upload to base64
@@ -318,15 +296,20 @@ function generateVpuz() {
     puzzleImage = 'data:image/png;base64,' + puzzleImage;
   }
 
+  const cwCluesLines = document.getElementById('cw_clues').value.split('\n');
+  const cwAnswersLines = document.getElementById('cw_answers').value.split('\n');
+  const ccwCluesLines = document.getElementById('ccw_clues').value.split('\n');
+  const ccwAnswersLines = document.getElementById('ccw_answers').value.split('\n');
+
   const cwClues = [];
   const ccwClues = [];
   let solutionString = '';
 
   for (let i = 1; i <= petals; i++) {
-    const cwClue = document.getElementById(`cw_clue_${i}`).value.trim();
-    const cwAns = document.getElementById(`cw_ans_${i}`).value.trim().toUpperCase();
-    const ccwClue = document.getElementById(`ccw_clue_${i}`).value.trim();
-    const ccwAns = document.getElementById(`ccw_ans_${i}`).value.trim().toUpperCase();
+    const cwClue = (cwCluesLines[i - 1] || '').trim();
+    const cwAns = (cwAnswersLines[i - 1] || '').trim().toUpperCase();
+    const ccwClue = (ccwCluesLines[i - 1] || '').trim();
+    const ccwAns = (ccwAnswersLines[i - 1] || '').trim().toUpperCase();
 
     cwClues.push([i, cwClue]);
     ccwClues.push([i, ccwClue]);
