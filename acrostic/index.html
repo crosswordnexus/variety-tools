@@ -122,6 +122,14 @@
             <div class="word-list-visual" id="word-list-visual"></div>
             <pre id="output"></pre>
 
+            <!-- Dupe Checker Action & Status -->
+            <div class="dupe-checker-section" style="margin-top: 16px;">
+              <button class="btn-secondary" id="check-dupes-btn" type="button" style="display: none;">
+                <span>🔍 Check for Dupes</span>
+              </button>
+              <div id="dupe-alert-container" style="display: none; margin-top: 12px;"></div>
+            </div>
+
             <div class="export-banner">
               <span>Ready to make a JPZ?</span>
               <a href="https://jpd236.github.io/kotwords/acrostic.html" target="_blank" rel="noopener">
@@ -134,6 +142,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../dupe-checker/dist/dupe-checker.min.js"></script>
     <script src="acrostic.js"></script>
     <script src="options.js"></script>
   </body>

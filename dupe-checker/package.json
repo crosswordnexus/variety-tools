@@ -1,0 +1,20 @@
+{
+  "name": "dupe-checker",
+  "version": "1.0.0",
+  "description": "Duplicate checker for puzzle answers using wordsninja and Porter stemming, for Node and the browser",
+  "main": "index.js",
+  "bin": "./cli.js",
+  "scripts": {
+    "test": "node test.js",
+    "parse:compounds": "node parse-compounds.js",
+    "build:browser": "node build-browser.js"
+  },
+  "dependencies": {
+    "wordsninja": "^1.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  },
+  "author": "",
+  "license": "MIT"
+}

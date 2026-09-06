@@ -25,6 +25,7 @@
   const wordListVisual = document.getElementById('word-list-visual');
   const timeBadge = document.getElementById('time-badge');
   const copyBtn = document.getElementById('copy-btn');
+  const checkDupesBtn = document.getElementById('check-dupes-btn');
   const outputEl = document.getElementById('output');
 
   function alphaCount(str) {
@@ -237,6 +238,9 @@
 
     // Show results section in pending state and start live timer
     resultsCard.style.display = 'block';
+    const dupeAlertEl = document.getElementById('dupe-alert-container');
+    if (dupeAlertEl) dupeAlertEl.style.display = 'none';
+    if (checkDupesBtn) checkDupesBtn.style.display = 'none';
     wordListVisual.innerHTML = `
       <div class="solving-indicator">
         <div class="mini-spinner"></div>
@@ -294,9 +298,21 @@
         if (outputEl) {
           outputEl.textContent = result.solution.map(w => w.toUpperCase()).join('\n');
         }
+
+        // Reveal Check for Dupes button
+        if (checkDupesBtn) {
+          checkDupesBtn.style.display = 'inline-flex';
+          checkDupesBtn.disabled = false;
+          checkDupesBtn.querySelector('span').textContent = '🔍 Check for Dupes';
+        }
+        const dupeAlertEl = document.getElementById('dupe-alert-container');
+        if (dupeAlertEl) dupeAlertEl.style.display = 'none';
       } else {
         currentSolution = [];
         if (copyBtn) copyBtn.style.display = 'none';
+        if (checkDupesBtn) checkDupesBtn.style.display = 'none';
+        const dupeAlertEl = document.getElementById('dupe-alert-container');
+        if (dupeAlertEl) dupeAlertEl.style.display = 'none';
         wordListVisual.innerHTML = `
           <div style="color: var(--color-text-muted); padding: 16px; text-align: center; line-height: 1.6;">
             <strong>No solutions found.</strong><br/>
@@ -307,6 +323,9 @@
     } else {
       currentSolution = [];
       if (copyBtn) copyBtn.style.display = 'none';
+      if (checkDupesBtn) checkDupesBtn.style.display = 'none';
+      const dupeAlertEl = document.getElementById('dupe-alert-container');
+      if (dupeAlertEl) dupeAlertEl.style.display = 'none';
       timeBadge.textContent = 'Error';
       timeBadge.style.backgroundColor = 'var(--color-danger-light)';
       timeBadge.style.color = 'var(--color-danger)';
@@ -317,6 +336,64 @@
       `;
     }
   });
+
+  if (checkDupesBtn) {
+    checkDupesBtn.addEventListener('click', async () => {
+      if (!currentSolution || currentSolution.length === 0) return;
+      checkDupesBtn.disabled = true;
+      checkDupesBtn.querySelector('span').textContent = 'Checking for Dupes...';
+      await renderDupeStatus(currentSolution);
+      checkDupesBtn.disabled = false;
+      checkDupesBtn.querySelector('span').textContent = '🔍 Re-check Dupes';
+    });
+  }
+
+  async function renderDupeStatus(solution) {
+    const dupeAlert = document.getElementById('dupe-alert-container');
+    if (!dupeAlert) return;
+
+    if (typeof window.findDupes !== 'function') {
+      dupeAlert.style.display = 'none';
+      return;
+    }
+
+    try {
+      const res = await window.findDupes(solution);
+      if (res.hasDupes) {
+        const detailsHtml = res.dupes.map(d => {
+          //const typeLabel = d.type === 'suffix' ? `suffix -${d.matchedSuffix}` : 'stem';
+          return `<li><strong>${d.stem}</strong>: <em>${d.words.join(', ')}</em></li>`;
+        }).join('');
+
+        dupeAlert.innerHTML = `
+          <div class="dupe-box dupe-warning">
+            <div class="dupe-box-title">⚠️ ${res.dupes.length} Dupe${res.dupes.length === 1 ? '' : 's'} Detected</div>
+            <ul class="dupe-box-list">${detailsHtml}</ul>
+          </div>
+        `;
+        dupeAlert.style.display = 'block';
+
+        // Highlight conflicting words in visual card list
+        const dupeWordsSet = new Set();
+        res.dupes.forEach(d => d.words.forEach(w => dupeWordsSet.add(w.toUpperCase())));
+        document.querySelectorAll('.word-item').forEach(item => {
+          const text = item.querySelector('.word-text')?.textContent;
+          if (text && dupeWordsSet.has(text)) {
+            item.classList.add('word-dupe');
+          }
+        });
+      } else {
+        dupeAlert.innerHTML = `
+          <div class="dupe-box dupe-clean">
+            ✓ No dupes detected
+          </div>
+        `;
+        dupeAlert.style.display = 'block';
+      }
+    } catch (err) {
+      console.error('Error running dupe check:', err);
+    }
+  }
 
   // Start initialization
   init();
