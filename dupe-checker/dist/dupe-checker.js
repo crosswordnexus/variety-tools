@@ -133028,7 +133028,7 @@ var DupeCheckerModule = (() => {
           this.stopwords = new Set(
             (options.stopwords || []).map((s) => String(s).trim().toLowerCase())
           );
-          this.minWordLength = options.minWordLength ?? 1;
+          this.minWordLength = options.minWordLength !== void 0 ? options.minWordLength : 1;
           this.compounds = options.compounds || defaultCompounds;
           this.checkCompounds = options.checkCompounds !== false;
           this.irregulars = options.irregulars || defaultIrregulars;
@@ -133052,7 +133052,7 @@ var DupeCheckerModule = (() => {
          */
         normalizeEntry(entry) {
           if (typeof entry !== "string") {
-            entry = String(entry ?? "");
+            entry = String(entry !== void 0 && entry !== null ? entry : "");
           }
           return entry.trim().toLowerCase();
         }
@@ -133086,9 +133086,9 @@ var DupeCheckerModule = (() => {
           await this.init();
           const suffixes = options.suffixes || this.suffixes;
           const stopwords = options.stopwords ? new Set([...options.stopwords].map((s) => String(s).trim().toLowerCase())) : this.stopwords;
-          const minWordLength = options.minWordLength ?? this.minWordLength;
+          const minWordLength = options.minWordLength !== void 0 ? options.minWordLength : this.minWordLength;
           const compounds = options.compounds || this.compounds;
-          const checkCompounds = options.checkCompounds ?? this.checkCompounds;
+          const checkCompounds = options.checkCompounds !== void 0 ? options.checkCompounds : this.checkCompounds;
           const irregulars = options.irregulars || this.irregulars;
           if (!Array.isArray(arr) || arr.length === 0) {
             return {

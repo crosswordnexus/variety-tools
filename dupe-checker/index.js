@@ -39,7 +39,7 @@ class DupeChecker {
     this.stopwords = new Set(
       (options.stopwords || []).map(s => String(s).trim().toLowerCase())
     );
-    this.minWordLength = options.minWordLength ?? 1;
+    this.minWordLength = options.minWordLength !== undefined ? options.minWordLength : 1;
     this.compounds = options.compounds || defaultCompounds;
     this.checkCompounds = options.checkCompounds !== false;
     this.irregulars = options.irregulars || defaultIrregulars;
@@ -65,7 +65,7 @@ class DupeChecker {
    */
   normalizeEntry(entry) {
     if (typeof entry !== 'string') {
-      entry = String(entry ?? '');
+      entry = String((entry !== undefined && entry !== null) ? entry : '');
     }
     return entry.trim().toLowerCase();
   }
@@ -104,9 +104,9 @@ class DupeChecker {
     const stopwords = options.stopwords
       ? new Set([...options.stopwords].map(s => String(s).trim().toLowerCase()))
       : this.stopwords;
-    const minWordLength = options.minWordLength ?? this.minWordLength;
+    const minWordLength = options.minWordLength !== undefined ? options.minWordLength : this.minWordLength;
     const compounds = options.compounds || this.compounds;
-    const checkCompounds = options.checkCompounds ?? this.checkCompounds;
+    const checkCompounds = options.checkCompounds !== undefined ? options.checkCompounds : this.checkCompounds;
     const irregulars = options.irregulars || this.irregulars;
 
     if (!Array.isArray(arr) || arr.length === 0) {
