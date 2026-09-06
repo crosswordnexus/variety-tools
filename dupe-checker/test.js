@@ -77,6 +77,27 @@ async function runTests() {
   assert.strictEqual(res10, true);
   console.log('✓ Passed: DupeChecker instance works\n');
 
+  // Test 11: Irregular verb + unspaced phrase (eating, ateup with stopword "up")
+  console.log('Test 11: Irregular verb phrases (eating, ateup with stopword "up")...');
+  const res11 = await findDupes(['eating', 'ateup'], { stopwords: ['up'] });
+  assert.strictEqual(res11.hasDupes, true, 'Should detect shared root "eat" between eating and ateup');
+  assert.ok(res11.dupes.some(d => d.stem === 'eat'), 'Stem "eat" should be identified');
+  console.log('✓ Passed: eating / ateup detected via shared root "eat"\n');
+
+  // Test 12: Direct irregular verb pairs (eat / ate, went / going)
+  console.log('Test 12: Direct irregular verbs (eat, ate; went, going)...');
+  const res12A = await findDupes(['eat', 'ate']);
+  assert.strictEqual(res12A.hasDupes, true, 'Should detect eat and ate');
+  const res12B = await findDupes(['went', 'going']);
+  assert.strictEqual(res12B.hasDupes, true, 'Should detect went and going');
+  console.log('✓ Passed: direct irregular verbs detected\n');
+
+  // Test 13: Irregular plural with compound (mice, mousetrap)
+  console.log('Test 13: Irregular plural with compound (mice, mousetrap)...');
+  const res13 = await findDupes(['mice', 'mousetrap']);
+  assert.strictEqual(res13.hasDupes, true, 'Should detect shared root "mouse" between mice and mousetrap');
+  console.log('✓ Passed: mice / mousetrap detected via shared root "mouse"\n');
+
   console.log('All tests passed successfully!');
 }
 
