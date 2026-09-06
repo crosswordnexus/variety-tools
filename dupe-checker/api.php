@@ -121,25 +121,9 @@ if (file_exists(__DIR__ . '/config.php')) {
 // 2. Resolve Node binary path:
 //    a) config.php 'node_bin'
 //    b) getenv('NODE_BIN')
-//    c) NVM node binaries in ~/.nvm or /home/*/.nvm
-//    d) Standard system paths (/usr/local/bin/node, /usr/bin/node)
-//    e) Default fallback 'node'
+//    c) Standard system paths (/usr/local/bin/node, /usr/bin/node)
+//    d) Default fallback 'node'
 $nodeBin = isset($config['node_bin']) && $config['node_bin'] !== '' ? $config['node_bin'] : getenv('NODE_BIN');
-
-if (!$nodeBin) {
-    $nvmPatterns = [
-        getenv('HOME') . '/.nvm/versions/node/*/bin/node',
-        '/home/*/.nvm/versions/node/*/bin/node'
-    ];
-    foreach ($nvmPatterns as $pattern) {
-        $matches = glob($pattern);
-        if (!empty($matches)) {
-            natsort($matches);
-            $nodeBin = end($matches);
-            break;
-        }
-    }
-}
 
 if (!$nodeBin) {
     if (file_exists('/usr/local/bin/node')) {
