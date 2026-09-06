@@ -251,6 +251,7 @@
       <div class="samples">
         <span>Try examples:</span>
         <button class="chip-btn" data-sample="quick, quickly, eating, shoes">quick / quickly</button>
+        <button class="chip-btn" data-sample="eating, ateup, shoes">eating / ateup</button>
         <button class="chip-btn" data-sample="roughhouse, dreamhouse, baseball">roughhouse / dreamhouse</button>
         <button class="chip-btn" data-sample="runaway, running shoe, hotdog">runaway / running shoe</button>
         <button class="chip-btn" data-sample="callup, standup, sitdown">callup / standup (stopword test)</button>
@@ -299,7 +300,7 @@
       btn.addEventListener('click', () => {
         const sample = btn.getAttribute('data-sample');
         wordsInput.value = sample.split(',').map(s => s.trim()).join('\n');
-        if (sample.includes('standup')) {
+        if (sample.includes('standup') || sample.includes('ateup')) {
           stopwordsInput.value = 'up';
         } else {
           stopwordsInput.value = '';

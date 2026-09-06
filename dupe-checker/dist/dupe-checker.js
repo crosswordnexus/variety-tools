@@ -132790,6 +132790,208 @@ var DupeCheckerModule = (() => {
     }
   });
 
+  // irregulars.json
+  var require_irregulars = __commonJS({
+    "irregulars.json"(exports, module) {
+      module.exports = {
+        arose: "arise",
+        arisen: "arise",
+        ate: "eat",
+        eaten: "eat",
+        awoke: "awake",
+        awoken: "awake",
+        bore: "bear",
+        borne: "bear",
+        born: "bear",
+        beaten: "beat",
+        became: "become",
+        began: "begin",
+        begun: "begin",
+        bent: "bend",
+        bade: "bid",
+        bidden: "bid",
+        bound: "bind",
+        bit: "bite",
+        bitten: "bite",
+        bled: "bleed",
+        blew: "blow",
+        blown: "blow",
+        broke: "break",
+        broken: "break",
+        bred: "breed",
+        brought: "bring",
+        built: "build",
+        burnt: "burn",
+        bought: "buy",
+        caught: "catch",
+        chose: "choose",
+        chosen: "choose",
+        clung: "cling",
+        came: "come",
+        crept: "creep",
+        dealt: "deal",
+        dug: "dig",
+        dove: "dive",
+        did: "do",
+        done: "do",
+        drew: "draw",
+        drawn: "draw",
+        dreamt: "dream",
+        drank: "drink",
+        drunk: "drink",
+        drunken: "drink",
+        drove: "drive",
+        driven: "drive",
+        dwelt: "dwell",
+        fell: "fall",
+        fallen: "fall",
+        fed: "feed",
+        felt: "feel",
+        fought: "fight",
+        found: "find",
+        fled: "flee",
+        flung: "fling",
+        flew: "fly",
+        flown: "fly",
+        forbade: "forbid",
+        forbidden: "forbid",
+        forgot: "forget",
+        forgotten: "forget",
+        forgave: "forgive",
+        forgiven: "forgive",
+        froze: "freeze",
+        frozen: "freeze",
+        got: "get",
+        gotten: "get",
+        gave: "give",
+        given: "give",
+        went: "go",
+        gone: "go",
+        ground: "grind",
+        grew: "grow",
+        grown: "grow",
+        hung: "hang",
+        heard: "hear",
+        hid: "hide",
+        hidden: "hide",
+        held: "hold",
+        kept: "keep",
+        knelt: "kneel",
+        knew: "know",
+        known: "know",
+        laid: "lay",
+        led: "lead",
+        leapt: "leap",
+        learnt: "learn",
+        left: "leave",
+        lent: "lend",
+        lay: "lie",
+        lain: "lie",
+        lit: "light",
+        lost: "lose",
+        made: "make",
+        meant: "mean",
+        met: "meet",
+        paid: "pay",
+        rode: "ride",
+        ridden: "ride",
+        rang: "ring",
+        rung: "ring",
+        rose: "rise",
+        risen: "rise",
+        ran: "run",
+        said: "say",
+        saw: "see",
+        seen: "see",
+        sought: "seek",
+        sold: "sell",
+        sent: "send",
+        sewn: "sew",
+        shook: "shake",
+        shaken: "shake",
+        shone: "shine",
+        shot: "shoot",
+        shown: "show",
+        shrank: "shrink",
+        shrunk: "shrink",
+        shrunken: "shrink",
+        sang: "sing",
+        sung: "sing",
+        sank: "sink",
+        sunk: "sink",
+        sunken: "sink",
+        sat: "sit",
+        slept: "sleep",
+        slid: "slide",
+        slitten: "slit",
+        smelt: "smell",
+        spoke: "speak",
+        spoken: "speak",
+        sped: "speed",
+        spent: "spend",
+        spilt: "spill",
+        spun: "spin",
+        spat: "spit",
+        spoilt: "spoil",
+        sprang: "spring",
+        sprung: "spring",
+        stood: "stand",
+        stole: "steal",
+        stolen: "steal",
+        stuck: "stick",
+        stung: "sting",
+        stank: "stink",
+        stunk: "stink",
+        struck: "strike",
+        stricken: "strike",
+        strung: "string",
+        strove: "strive",
+        striven: "strive",
+        swore: "swear",
+        sworn: "swear",
+        swept: "sweep",
+        swam: "swim",
+        swum: "swim",
+        swung: "swing",
+        took: "take",
+        taken: "take",
+        taught: "teach",
+        tore: "tear",
+        torn: "tear",
+        told: "tell",
+        thought: "think",
+        threw: "throw",
+        thrown: "throw",
+        trod: "tread",
+        trodden: "tread",
+        understood: "understand",
+        woke: "wake",
+        woken: "wake",
+        wore: "wear",
+        worn: "wear",
+        wove: "weave",
+        woven: "weave",
+        wept: "weep",
+        won: "win",
+        wound: "wind",
+        withdrew: "withdraw",
+        withdrawn: "withdraw",
+        wrung: "wring",
+        wrote: "write",
+        written: "write",
+        mice: "mouse",
+        geese: "goose",
+        teeth: "tooth",
+        feet: "foot",
+        oxen: "ox",
+        children: "child",
+        men: "man",
+        women: "woman",
+        people: "person"
+      };
+    }
+  });
+
   // index.js
   var require_index = __commonJS({
     "index.js"(exports, module) {
@@ -132797,11 +132999,18 @@ var DupeCheckerModule = (() => {
       var WordsNinjaPack = require_wordsninja();
       var { stem } = require_stemmer();
       var DEFAULT_SUFFIXES = ["al", "ing", "ed", "ly", "d", "s", "es", "less", "er"];
+      var DEFAULT_STOPWORDS = ["a", "an", "the", "in", "on", "at", "by", "for", "with", "to", "of", "up", "down", "out", "off", "over", "under"];
       var defaultCompounds = {};
       try {
         defaultCompounds = require_compounds();
       } catch (e) {
         defaultCompounds = {};
+      }
+      var defaultIrregulars = {};
+      try {
+        defaultIrregulars = require_irregulars();
+      } catch (e) {
+        defaultIrregulars = {};
       }
       var DupeChecker = class {
         /**
@@ -132811,6 +133020,7 @@ var DupeCheckerModule = (() => {
          * @param {number} [options.minWordLength=2] - Minimum token length to check for stems
          * @param {Record<string, string[]>} [options.compounds] - Compound words map
          * @param {boolean} [options.checkCompounds=true] - Whether to decompose compound words
+         * @param {Record<string, string>} [options.irregulars] - Irregular forms map (e.g. ate -> eat)
          * @param {WordsNinjaPack} [options.wordsNinja] - Custom WordsNinja instance
          */
         constructor(options = {}) {
@@ -132821,6 +133031,7 @@ var DupeCheckerModule = (() => {
           this.minWordLength = options.minWordLength ?? 1;
           this.compounds = options.compounds || defaultCompounds;
           this.checkCompounds = options.checkCompounds !== false;
+          this.irregulars = options.irregulars || defaultIrregulars;
           this.wordsNinja = options.wordsNinja || new WordsNinjaPack();
           this._initialized = false;
         }
@@ -132878,6 +133089,7 @@ var DupeCheckerModule = (() => {
           const minWordLength = options.minWordLength ?? this.minWordLength;
           const compounds = options.compounds || this.compounds;
           const checkCompounds = options.checkCompounds ?? this.checkCompounds;
+          const irregulars = options.irregulars || this.irregulars;
           if (!Array.isArray(arr) || arr.length === 0) {
             return {
               hasDupes: false,
@@ -132920,6 +133132,23 @@ var DupeCheckerModule = (() => {
               }
             }
           }
+          if (irregulars) {
+            for (const word of cleanEntries) {
+              const alphaWord = word.replace(/[^a-z0-9]/g, "");
+              const base = irregulars[alphaWord];
+              if (base && entryAlphaSet.has(base) && !stopwords.has(base)) {
+                const pairKey = `irregular:${base}:${alphaWord}`;
+                if (!detectedPairs.has(pairKey)) {
+                  detectedPairs.add(pairKey);
+                  dupes.push({
+                    type: "irregular",
+                    stem: base,
+                    words: [entryMap.get(base) || base, entryMap.get(alphaWord) || word]
+                  });
+                }
+              }
+            }
+          }
           const stemToEntries = /* @__PURE__ */ new Map();
           for (const word of cleanEntries) {
             const rawTokens = [];
@@ -132943,7 +133172,11 @@ var DupeCheckerModule = (() => {
               if (token.length < minWordLength || stopwords.has(token)) {
                 continue;
               }
-              const s = stem(token);
+              const lemma = irregulars && irregulars[token] || token;
+              if (stopwords.has(lemma)) {
+                continue;
+              }
+              const s = stem(lemma);
               if (s.length >= minWordLength && !stopwords.has(s)) {
                 entryStems.add(s);
               }
@@ -132999,7 +133232,9 @@ var DupeCheckerModule = (() => {
         areThereDupes,
         findDupes,
         stem,
-        DEFAULT_SUFFIXES
+        DEFAULT_SUFFIXES,
+        DEFAULT_STOPWORDS,
+        defaultIrregulars
       };
     }
   });

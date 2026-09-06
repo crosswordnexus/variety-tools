@@ -17,7 +17,11 @@ It detects duplicate answer roots across entries, handling compound words and un
    - Computes Porter stems for all tokens.
    - Any stem occurring across two or more distinct entries is flagged as a duplicate.
 
-3. **Optional Stopwords & Filters**:
+3. **Irregular Forms & Lemmatization**:
+   - Resolves irregular past tense, participles, and irregular plurals to their base form via `irregulars.json` (e.g. `"ate"` $\rightarrow$ `"eat"`, `"went"` $\rightarrow$ `"go"`, `"flew"` $\rightarrow$ `"fly"`, `"mice"` $\rightarrow$ `"mouse"`).
+   - Accurately catches cross-tense duplicates like `"eating"` and `"ateup"`.
+
+4. **Optional Stopwords & Filters**:
    - Pass an optional `stopwords` list (e.g. `['up', 'down', 'the', 'and']`) to ignore common prepositions/particles.
    - Configurable minimum token length (`minWordLength`).
 
