@@ -129,6 +129,33 @@ node cli.js --file answers.txt
 
 ---
 
+## HTTP API Endpoint (`api.php`)
+
+For LAMP servers (Apache + PHP), [`api.php`](api.php) exposes an HTTP endpoint that executes the Node engine on demand without requiring any background processes or daemons.
+
+### Security Guardrails:
+1. **Zero Shell Execution**: Passes arguments as an array to `proc_open()` (bypasses `/bin/sh` completely) and streams data through `stdin`. Immune to command/shell injection.
+2. **Size Caps**: Max 64 KB request payload, max 500 words per request, max 60 characters per word.
+3. **Control Character Sanitization**: Strips null bytes and control codes.
+4. **Hard Timeout**: 3-second hard execution limit; terminates runaway processes immediately with `SIGKILL` and returns HTTP 504.
+5. **Memory Limit**: Constrains Node to 128 MB (`--max-old-space-size=128`).
+
+### Usage Examples:
+
+**POST Request (JSON body):**
+```bash
+curl -X POST https://yourserver.com/dupe-checker/api.php \
+  -H "Content-Type: application/json" \
+  -d '{"words": ["eating", "ateup"], "stopwords": ["up"]}'
+```
+
+**GET Request (Query parameters):**
+```bash
+curl "https://yourserver.com/dupe-checker/api.php?words=quick,quickly&stopwords=up"
+```
+
+---
+
 ## Credits & Acknowledgements
 
 - **Compound Words Dataset**: [`compound_words.csv`](https://github.com/SteDallOlmo/english_compound_words) by [SteDallOlmo](https://github.com/SteDallOlmo).
