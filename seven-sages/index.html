@@ -28,6 +28,13 @@
       overflow-x: auto;        /* allow horizontal scroll if lines get long */
       font-size: 1.25em;
     }
+    .button-danger,
+    .button-danger:hover,
+    .button-danger:focus {
+      background-color: #d9534f;
+      color: #fff;
+      border-color: #d9534f;
+    }
   </style>
 </head>
 <body>
@@ -62,6 +69,7 @@
               <br />
               <button id="generate" class="button-primary">Find next entry</button>
               <button id="undo" class="button" type="button">Undo</button>
+              <button id="clear-all" class="button button-danger" type="button">Clear All</button>
             </form>
 
             <div id="results-loading"></div>

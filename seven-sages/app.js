@@ -145,6 +145,58 @@ document.getElementById('undo').addEventListener('click', () => {
   }
 });
 
+// Clear All button handler
+document.getElementById('clear-all').addEventListener('click', () => {
+  if (!confirm("Are you sure you want to clear all data? This will erase the quote, entries, and all saved progress.")) {
+    return;
+  }
+
+  // Clear input fields
+  document.getElementById('quote').value = '';
+  document.getElementById('inputs').value = '';
+
+  // Clear results and table
+  document.getElementById('results-loading').textContent = '';
+  if (table) {
+    table.clear().draw();
+    table.search('').draw();
+  }
+
+  // Reset grid image to base template
+  if (gridImage && gridImage.src) {
+    document.getElementById('myImg').src = gridImage.src;
+  } else {
+    document.getElementById('myImg').removeAttribute('src');
+  }
+
+  // Reset VPuz metadata
+  document.getElementById('vpuz-title').value = '';
+  document.getElementById('vpuz-author').value = '';
+  document.getElementById('vpuz-copyright').value = '© ';
+  document.getElementById('vpuz-notes').value = "Each answer in this puzzle is seven letters long and encircles the correspondingly numbered space, reading either clockwise (+) or counterclockwise (-) as indicated. The starting point of each answer is for you to determine. When the grid is correctly filled in, the letters in the outermost ring (reading clockwise from answer 1) will spell out a quote.";
+  const vpuzContainer = document.getElementById('vpuz-clues-container');
+  if (vpuzContainer) {
+    vpuzContainer.innerHTML = '';
+  }
+  updateVPuzTab();
+
+  // Clear localStorage
+  try {
+    const keysToRemove = [
+      'seven-sages-quote',
+      'seven-sages-entries',
+      'seven-sages-vpuz-title',
+      'seven-sages-vpuz-author',
+      'seven-sages-vpuz-copyright',
+      'seven-sages-vpuz-notes',
+      'seven-sages-vpuz-clues'
+    ];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch (e) {
+    console.warn("localStorage not available:", e);
+  }
+});
+
 document.querySelector("form").addEventListener("submit", findNextEntry);
 
 // Tab switching logic
