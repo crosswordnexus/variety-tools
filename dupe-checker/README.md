@@ -56,7 +56,6 @@ npm run build:browser
 
 Outputs:
 - `dist/dupe-checker.min.js`: Production minified standalone bundle.
-- `dist/dupe-checker.js`: Unminified bundle for development/debugging.
 
 Open `index.html` in your browser to try the interactive UI.
 

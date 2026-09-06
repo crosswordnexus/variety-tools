@@ -17,20 +17,8 @@ async function build() {
     outfile: path.join(__dirname, 'dist', 'dupe-checker.min.js'),
   });
 
-  // 2. Unminified bundle for development/debugging
-  await esbuild.build({
-    entryPoints: [path.join(__dirname, 'browser.js')],
-    bundle: true,
-    minify: false,
-    sourcemap: true,
-    format: 'iife',
-    globalName: 'DupeCheckerModule',
-    outfile: path.join(__dirname, 'dist', 'dupe-checker.js'),
-  });
-
   console.log('Build complete:');
   console.log('  - dist/dupe-checker.min.js');
-  console.log('  - dist/dupe-checker.js');
 }
 
 build().catch(err => {
