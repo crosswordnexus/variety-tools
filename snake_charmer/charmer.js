@@ -1,3 +1,31 @@
+// Global stack of past states
+let historyStack = [];
+
+// Capture current state
+function saveState() {
+  historyStack.push({
+    inward: document.getElementById('inwardWords').value,
+    outward: document.getElementById('outwardWords').value,
+    tableData: $('#datatables-table').DataTable().rows().data().toArray()
+  });
+}
+
+function undoLast() {
+  if (historyStack.length === 0) return; // nothing to undo
+
+  const lastState = historyStack.pop();
+
+  // Restore textareas
+  document.getElementById('inwardWords').value = lastState.inward;
+  document.getElementById('outwardWords').value = lastState.outward;
+
+  // Restore table
+  const table = $('#datatables-table').DataTable();
+  table.clear().rows.add(lastState.tableData).draw();
+
+  changeHeaders();
+}
+
 function new_word_options(loop1, loop2) {
   // The maximum number of words to return
   MAX_RET_WORDS = 20;
@@ -93,11 +121,16 @@ function processTextAreas() {
 }
 
 $(document).on('click', '#datatables-table tbody tr', function() {
+  const table = $('#datatables-table').DataTable();
+  const data = table.row(this).data();
+  if (!data) return;
+
+  // Save current state
+  saveState();
+
   // grab the words from the textareas
   var loop1 = document.getElementById('inwardWords').value.split('\n');
   var loop2 = document.getElementById('outwardWords').value.split('\n');
-  // Grab the data
-  const data = table.row(this).data();
   var this_word = data[0].split(' / ');
 
   var fb_words = add_word(loop1, loop2, this_word);

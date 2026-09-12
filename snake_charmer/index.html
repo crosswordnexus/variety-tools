@@ -43,9 +43,12 @@
         <label for="outwardWords" id="outwardHeader">Loop 2</label>
         <textarea class="u-full-width wordsarea" id="outwardWords">IN
 EVITA</textarea>
-        <button class="button-primary" type="submit" value="Begin" onclick="processTextAreas()">Begin</button>
       </div>
-  </div> <!-- end first row -->
+    </div> <!-- end first row -->
+    <div class="row">
+      <button class="button-primary" type="button" onclick="processTextAreas()">Begin</button>
+      <button class="button" type="button" onclick="undoLast()">Undo</button>
+    </div>
   <div class="row">
     <div id="datatables-table-div">
       <table id="datatables-table" class="display">
