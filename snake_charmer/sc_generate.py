@@ -7,6 +7,7 @@ Created on Fri Jan 14 14:21:10 2022
 
 @author: Alex Boisvert
 """
+import gzip
 import itertools
 import json
 
@@ -143,7 +144,7 @@ for name, d in items.items():
             helper_dict[name][_str].append(d2)
 
 # Write out this file for JavaScript purposes
-with open('helper_dict.json', 'w') as fid:
+with gzip.open('helper_dict.json.gz', 'wt', encoding='utf-8') as fid:
     json.dump(helper_dict, fid)
 
 

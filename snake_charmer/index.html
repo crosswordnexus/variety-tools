@@ -20,12 +20,11 @@
   }
   </style>
 
-  <!-- Read in the JSON file -->
+  <!-- Read in the zipped JSON file -->
   <script type="text/javascript">
-  fetch("./helper_dict.json")
-    .then(response => {
-     return response.json();
-    })
+  fetch("./helper_dict.json.gz")
+    .then(response => response.body.pipeThrough(new DecompressionStream("gzip")))
+    .then(stream => new Response(stream).json())
     .then(spiralData => window.spiralData = spiralData);
   </script>
   <script src="charmer.js"></script>
