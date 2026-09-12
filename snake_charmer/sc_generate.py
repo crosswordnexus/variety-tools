@@ -10,6 +10,9 @@ Created on Fri Jan 14 14:21:10 2022
 import gzip
 import itertools
 import json
+import wordninja
+import re
+from pathlib import Path
 
 # The smallest length for words in the puzzle
 MIN_WORD_LENGTH = 5
@@ -17,14 +20,16 @@ MIN_WORD_LENGTH = 5
 MIN_OVERLAP = 2
 # Minimum score of word list entries
 MIN_SCORE = 50
-# The word list to use
-WORDLIST = 'spreadthewordlist.dict'
+# The word list(s) to use
+WORDLISTS = ['spreadthewordlist.dict', 'nediger_99.txt']
+WORDLIST_DIR = Path('../word_lists')
 
 # %% Helper functions
 
+def alpha_only(s):
+    return re.sub(r'[^A-Z]+', '', s.upper())
+
 # Make partitions of a string
-
-
 def multiSlice(s, cutpoints):
     """
     Helper function for allPartitions
@@ -53,24 +58,27 @@ def allPartitions(s, num=None):
             yield multiSlice(s, cutpoints)
 
 
-# %% Read in word list
+# %% Read in word list(s)
 all_words = set()
 beginnings = set()
 ends = set()
 all_word_dict = dict()
 
-with open(WORDLIST, 'r') as fid:
-    for line in fid:
-        word, score = line.upper().split(';')
-        score = int(score)
-        if score >= MIN_SCORE and len(word) >= MIN_WORD_LENGTH:
-            all_words.add(word)
-            all_word_dict[word] = score
-            # Partition the word to take the beginning and end parts
-            for n in range(MIN_OVERLAP, len(word) - MIN_OVERLAP + 1):
-                w1, w2 = word[:n], word[n:]
-                beginnings.add(w1)
-                ends.add(w2)
+for wl in WORDLISTS:
+    wordlist = WORDLIST_DIR / wl
+    with open(wordlist, 'r') as fid:
+        for line in fid:
+            word, score = line.upper().split(';')
+            word = alpha_only(word)
+            score = int(score)
+            if score >= MIN_SCORE and len(word) >= MIN_WORD_LENGTH:
+                all_words.add(word)
+                all_word_dict[word] = score
+                # Partition the word to take the beginning and end parts
+                for n in range(MIN_OVERLAP, len(word) - MIN_OVERLAP + 1):
+                    w1, w2 = word[:n], word[n:]
+                    beginnings.add(w1)
+                    ends.add(w2)
 
 # %% Create needed dictionaries
 prev_word_count = 1e6
@@ -83,9 +91,16 @@ while new_word_count < prev_word_count:
     begin_dict = dict()
     end_dict = dict()
     for word in good_words:
+        # Split with wordninja so we don't get degenerate cases
+        subwords = set(wordninja.split(word))
         for n in range(MIN_OVERLAP, len(word) - MIN_OVERLAP + 1):
             w1, w2 = word[:n], word[n:]
-            if w2 in beginnings and w1 in ends:
+            if (
+                w2 in beginnings 
+                and w1 in ends 
+                and w1 not in subwords
+                and w2 not in subwords
+            ):
                 this_word = (word, None)
                 begin_dict[w1] = begin_dict.get(w1, set()).union([this_word])
                 end_dict[w2] = end_dict.get(w2, set()).union([this_word])
@@ -105,9 +120,16 @@ print(len(good_words))
 # Now add any words that have a hidden word in them
 # but that still work with a beginning / end
 for word in all_words:
+    # split with wordninja to avoid degenerate cases
+    subwords = subwords = set(wordninja.split(word))
     for p in allPartitions(word, 3):
         w1, w_m, w2 = p
-        if w2 in beginnings and w1 in ends and w_m in all_words:
+        if (
+            w2 in beginnings 
+            and w1 in ends 
+            and w_m in all_words
+            and not set([w1, w_m, w2]) & subwords
+        ):
             this_word = (word, w_m)
             begin_dict[w1] = begin_dict.get(w1, set()).union([this_word])
             end_dict[w2] = end_dict.get(w2, set()).union([this_word])
