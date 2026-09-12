@@ -18,16 +18,45 @@
   label.wordSelectorLabel {
     margin: 0px;
   }
+  .dupe-box {
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 1.5rem;
+    line-height: 1.5;
+    margin-bottom: 15px;
+  }
+  .dupe-warning {
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+  }
+  .dupe-clean {
+    background-color: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    font-weight: 500;
+  }
+  .dupe-box-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .dupe-box-list {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .dupe-box-list li {
+    margin-bottom: 2px;
+  }
   </style>
 
-  <!-- Read in the JSON file -->
+  <!-- Read in the zipped JSON file -->
   <script type="text/javascript">
-  fetch("./helper_dict.json")
-    .then(response => {
-     return response.json();
-    })
+  fetch("./helper_dict.json.gz")
+    .then(response => response.body.pipeThrough(new DecompressionStream("gzip")))
+    .then(stream => new Response(stream).json())
     .then(spiralData => window.spiralData = spiralData);
   </script>
+  <script src="../utils/dupe-checker.min.js"></script>
   <script src="charmer.js"></script>
 </head>
 
@@ -44,9 +73,16 @@
         <label for="outwardWords" id="outwardHeader">Loop 2</label>
         <textarea class="u-full-width wordsarea" id="outwardWords">IN
 EVITA</textarea>
-        <button class="button-primary" type="submit" value="Begin" onclick="processTextAreas()">Begin</button>
       </div>
-  </div> <!-- end first row -->
+    </div> <!-- end first row -->
+    <div class="row">
+      <button class="button-primary" type="button" onclick="processTextAreas()">Begin</button>
+      <button class="button" type="button" onclick="undoLast()">Undo</button>
+      <button class="button" type="button" id="check-dupes-btn" onclick="checkDupes()">Check for Dupes</button>
+    </div>
+    <div class="row">
+      <div id="dupe-alert-container" style="display: none;"></div>
+    </div>
   <div class="row">
     <div id="datatables-table-div">
       <table id="datatables-table" class="display">

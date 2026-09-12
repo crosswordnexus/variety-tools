@@ -7,8 +7,12 @@ Created on Fri Jan 14 14:21:10 2022
 
 @author: Alex Boisvert
 """
+import gzip
 import itertools
 import json
+import wordninja
+import re
+from pathlib import Path
 
 # The smallest length for words in the puzzle
 MIN_WORD_LENGTH = 5
@@ -16,14 +20,16 @@ MIN_WORD_LENGTH = 5
 MIN_OVERLAP = 2
 # Minimum score of word list entries
 MIN_SCORE = 50
-# The word list to use
-WORDLIST = 'spreadthewordlist.dict'
+# The word list(s) to use
+WORDLISTS = ['spreadthewordlist.dict', 'nediger_99.txt']
+WORDLIST_DIR = Path('../word_lists')
 
 # %% Helper functions
 
+def alpha_only(s):
+    return re.sub(r'[^A-Z]+', '', s.upper())
+
 # Make partitions of a string
-
-
 def multiSlice(s, cutpoints):
     """
     Helper function for allPartitions
@@ -52,24 +58,27 @@ def allPartitions(s, num=None):
             yield multiSlice(s, cutpoints)
 
 
-# %% Read in word list
+# %% Read in word list(s)
 all_words = set()
 beginnings = set()
 ends = set()
 all_word_dict = dict()
 
-with open(WORDLIST, 'r') as fid:
-    for line in fid:
-        word, score = line.upper().split(';')
-        score = int(score)
-        if score >= MIN_SCORE and len(word) >= MIN_WORD_LENGTH:
-            all_words.add(word)
-            all_word_dict[word] = score
-            # Partition the word to take the beginning and end parts
-            for n in range(MIN_OVERLAP, len(word) - MIN_OVERLAP + 1):
-                w1, w2 = word[:n], word[n:]
-                beginnings.add(w1)
-                ends.add(w2)
+for wl in WORDLISTS:
+    wordlist = WORDLIST_DIR / wl
+    with open(wordlist, 'r') as fid:
+        for line in fid:
+            word, score = line.upper().split(';')
+            word = alpha_only(word)
+            score = int(score)
+            if score >= MIN_SCORE and len(word) >= MIN_WORD_LENGTH:
+                all_words.add(word)
+                all_word_dict[word] = score
+                # Partition the word to take the beginning and end parts
+                for n in range(MIN_OVERLAP, len(word) - MIN_OVERLAP + 1):
+                    w1, w2 = word[:n], word[n:]
+                    beginnings.add(w1)
+                    ends.add(w2)
 
 # %% Create needed dictionaries
 prev_word_count = 1e6
@@ -82,9 +91,16 @@ while new_word_count < prev_word_count:
     begin_dict = dict()
     end_dict = dict()
     for word in good_words:
+        # Split with wordninja so we don't get degenerate cases
+        subwords = set(wordninja.split(word))
         for n in range(MIN_OVERLAP, len(word) - MIN_OVERLAP + 1):
             w1, w2 = word[:n], word[n:]
-            if w2 in beginnings and w1 in ends:
+            if (
+                w2 in beginnings 
+                and w1 in ends 
+                and w1 not in subwords
+                and w2 not in subwords
+            ):
                 this_word = (word, None)
                 begin_dict[w1] = begin_dict.get(w1, set()).union([this_word])
                 end_dict[w2] = end_dict.get(w2, set()).union([this_word])
@@ -104,9 +120,16 @@ print(len(good_words))
 # Now add any words that have a hidden word in them
 # but that still work with a beginning / end
 for word in all_words:
+    # split with wordninja to avoid degenerate cases
+    subwords = subwords = set(wordninja.split(word))
     for p in allPartitions(word, 3):
         w1, w_m, w2 = p
-        if w2 in beginnings and w1 in ends and w_m in all_words:
+        if (
+            w2 in beginnings 
+            and w1 in ends 
+            and w_m in all_words
+            and not set([w1, w_m, w2]) & subwords
+        ):
             this_word = (word, w_m)
             begin_dict[w1] = begin_dict.get(w1, set()).union([this_word])
             end_dict[w2] = end_dict.get(w2, set()).union([this_word])
@@ -143,70 +166,6 @@ for name, d in items.items():
             helper_dict[name][_str].append(d2)
 
 # Write out this file for JavaScript purposes
-with open('helper_dict.json', 'w') as fid:
+with gzip.open('helper_dict.json.gz', 'wt', encoding='utf-8') as fid:
     json.dump(helper_dict, fid)
 
-
-# %% Functions for the main loop
-
-# Number of results to show
-RESULT_WORDS = 20
-
-def new_word_options(loop1, loop2):
-    used_words = set(loop1 + loop2)
-    this_word = loop1[-1]
-    new_len = len(''.join(loop1)) - len(''.join(loop2))
-    this_dict = helper_dict['begin']
-    if new_len < 0:
-        this_word = loop2[-1]
-        new_len = -1 * new_len
-    this_str = this_word[-1 * new_len:]
-    ret = this_dict[this_str]
-    ret2 = []
-    # remove anything that's already been used
-    for r in sorted(ret, key=lambda x: x['score'], reverse=True):
-        good_word = True
-        for w in r:
-            if w in used_words:
-                good_word = False
-        if good_word:
-            ret2.append(r)
-        if len(ret2) >= RESULT_WORDS:
-            return ret2
-    return ret2
-
-
-def add_word(loop1, loop2, this_word):
-    new_len = len(''.join(loop1)) - len(''.join(loop2))
-    w0, w1 = this_word
-    if new_len > 0:  # add "main" word to loop2
-        loop2.append(w0)
-        if w1:
-            loop1.append(w1)
-    else:
-        loop1.append(w0)
-        if w1:
-            loop2.append(w1)
-    return loop1, loop2
-
-
-def remove_last_word(forward_words, backward_words):
-    pass
-
-#%% The main loop
-
-loop1 = ['INEVITABLE']
-loop2 =  ['IN', 'EVITA']
-
-while True:
-    nwo = new_word_options(loop1, loop2)
-    for nw in nwo:
-        print(nw['words'], nw['leftover'])
-    _input = input().strip().upper().split(',')
-    if len(_input) == 1:
-        _input = [_input[0], None]
-    loop1, loop2 = add_word(loop1, loop2, _input)
-
-    print('loop1 = ' + str(loop1))
-    print('loop2 =  ' + str(loop2))
-    print(len(''.join(loop1)))

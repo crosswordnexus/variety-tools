@@ -1,3 +1,34 @@
+// Global stack of past states
+let historyStack = [];
+
+// Capture current state
+function saveState() {
+  historyStack.push({
+    inward: document.getElementById('inwardWords').value,
+    outward: document.getElementById('outwardWords').value,
+    tableData: $('#datatables-table').DataTable().rows().data().toArray()
+  });
+}
+
+function undoLast() {
+  if (historyStack.length === 0) return; // nothing to undo
+
+  const lastState = historyStack.pop();
+
+  // Restore textareas
+  document.getElementById('inwardWords').value = lastState.inward;
+  document.getElementById('outwardWords').value = lastState.outward;
+
+  // Restore table
+  const table = $('#datatables-table').DataTable();
+  table.clear().rows.add(lastState.tableData).draw();
+
+  const dupeAlert = document.getElementById('dupe-alert-container');
+  if (dupeAlert) dupeAlert.style.display = 'none';
+
+  changeHeaders();
+}
+
 function new_word_options(loop1, loop2) {
   // The maximum number of words to return
   MAX_RET_WORDS = 20;
@@ -89,15 +120,23 @@ function processTextAreas() {
   // change the headers
   changeHeaders();
 
+  var dupeAlert = document.getElementById('dupe-alert-container');
+  if (dupeAlert) dupeAlert.style.display = 'none';
+
   return false;
 }
 
 $(document).on('click', '#datatables-table tbody tr', function() {
+  const table = $('#datatables-table').DataTable();
+  const data = table.row(this).data();
+  if (!data) return;
+
+  // Save current state
+  saveState();
+
   // grab the words from the textareas
   var loop1 = document.getElementById('inwardWords').value.split('\n');
   var loop2 = document.getElementById('outwardWords').value.split('\n');
-  // Grab the data
-  const data = table.row(this).data();
   var this_word = data[0].split(' / ');
 
   var fb_words = add_word(loop1, loop2, this_word);
@@ -122,4 +161,61 @@ function changeHeaders() {
   document.getElementById('inwardHeader').innerHTML = `Loop 1 (${inwardLength})`;
   var outwardLength = loop2.join('').length;
   document.getElementById('outwardHeader').innerHTML = `Loop 2 (${outwardLength})`;
+}
+
+// Dupe checking functionality using utils/dupe-checker.min.js
+async function checkDupes() {
+  const btn = document.getElementById('check-dupes-btn');
+  const dupeAlert = document.getElementById('dupe-alert-container');
+  if (!dupeAlert) return;
+
+  if (typeof window.findDupes !== 'function') {
+    console.warn('dupe-checker.min.js is not loaded or findDupes is unavailable');
+    return;
+  }
+
+  const loop1 = document.getElementById('inwardWords').value.split('\n').map(w => w.trim()).filter(Boolean);
+  const loop2 = document.getElementById('outwardWords').value.split('\n').map(w => w.trim()).filter(Boolean);
+  const words = [...loop1, ...loop2];
+
+  if (words.length === 0) {
+    dupeAlert.style.display = 'none';
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Checking...';
+  }
+
+  try {
+    const res = await window.findDupes(words);
+    if (res.hasDupes) {
+      const detailsHtml = res.dupes.map(d => {
+        return `<li><strong>${d.stem}</strong>: <em>${d.words.join(', ')}</em></li>`;
+      }).join('');
+
+      dupeAlert.innerHTML = `
+        <div class="dupe-box dupe-warning">
+          <div class="dupe-box-title">⚠️ ${res.dupes.length} Dupe${res.dupes.length === 1 ? '' : 's'} Detected</div>
+          <ul class="dupe-box-list">${detailsHtml}</ul>
+        </div>
+      `;
+      dupeAlert.style.display = 'block';
+    } else {
+      dupeAlert.innerHTML = `
+        <div class="dupe-box dupe-clean">
+          ✓ No dupes detected
+        </div>
+      `;
+      dupeAlert.style.display = 'block';
+    }
+  } catch (err) {
+    console.error('Error running dupe check:', err);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Check for Dupes';
+    }
+  }
 }
