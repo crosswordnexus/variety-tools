@@ -41,6 +41,7 @@ Then visit `http://localhost:8000/snake_charmer/` in your browser.
 * **Selection Table**: Shows candidate words, the remaining letters (new overhang), and word lengths.
 * **Click to Append**: Clicking any row automatically appends the entry to the lagging track and updates candidate suggestions for the next step.
 * **Undo**: Reverts the last added entry, restoring the previous textarea contents and table state.
+* **Check for Dupes**: Analyzes words in both loops using the shared [`dupe-checker`](../utils/dupe-checker.min.js) utility to detect shared roots, lemmas, and overlapping stems.
 
 ---
 
