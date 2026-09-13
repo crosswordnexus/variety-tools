@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shapeshifters Puzzle Generator</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../utils/variety.css">
+  <script src="../utils/dupe-checker.min.js"></script>
+  <script src="../utils/variety.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Shapeshifters</h1>
+      <p class="subtitle">Grid construction and batch slot generator for the variety constructor</p>
+    </header>
+
+    <nav class="tabs-nav">
+      <button class="tab-button active" data-tab="batch-tab">Batch Generator</button>
+      <button class="tab-button" data-tab="ipuz-tab">Single IPUZ</button>
+      <button class="tab-button" data-tab="multi-ipuz-tab">4-Set IPUZ</button>
+    </nav>
+
+    <main>
+      <!-- TAB 1: BATCH GENERATOR -->
+      <section id="batch-tab" class="tab-content active">
+        <div class="card-grid">
+          <!-- Configuration Card -->
+          <div class="card">
+            <h2>1. Configuration</h2>
+            <div class="form-group">
+              <label for="size-input">
+                Staircase Size (<em>N</em>):
+                <span id="size-display" class="highlight-val">6</span>
+              </label>
+              <div class="slider-row">
+                <input type="range" id="size-slider" min="3" max="10" value="6" step="1">
+                <input type="number" id="size-input" min="3" max="12" value="6">
+              </div>
+              <small class="helper-text">Defines a symmetric 1-step puzzle.</small>
+            </div>
+
+            <div class="stats-box">
+              <div class="stat-item">
+                <span class="stat-label">Short Words</span>
+                <span class="stat-value" id="stat-shorts">7 words &times; 6 letters</span>
+                <span class="stat-desc">(Horizontal push)</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Long Words</span>
+                <span class="stat-value" id="stat-longs">6 words &times; 7 letters</span>
+                <span class="stat-desc">(Vertical push)</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Total Letters</span>
+                <span class="stat-value" id="stat-letters">42 letters</span>
+                <span class="stat-desc">(21 per staircase half)</span>
+              </div>
+            </div>
+
+            <div class="form-group options-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="opt-comments" checked>
+                Include section comments in batch file
+              </label>
+            </div>
+
+            <!--
+            <div class="ingrid-hint">
+              <strong>Ingrid Solver Command:</strong>
+              <code>ingrid_core -b shapeshifter_batch.txt</code>
+            </div>
+            -->
+          </div>
+
+          <!-- Visual Grid Preview Card -->
+          <div class="card">
+            <div class="card-header-tabs">
+              <h2>2. Grid Visualizer</h2>
+              <div class="view-toggle">
+                <button class="toggle-btn active" data-view="base">Base Grid</button>
+                <button class="toggle-btn" data-view="shorts">Shorts (Horizontal)</button>
+                <button class="toggle-btn" data-view="longs">Longs (Vertical)</button>
+              </div>
+            </div>
+
+            <div class="grid-container" id="grid-container">
+              <!-- Dynamically populated via script.js -->
+            </div>
+
+            <div class="grid-legend">
+              <span class="legend-item"><span class="legend-color legend-ul"></span> Upper-Left Half</span>
+              <span class="legend-item"><span class="legend-color legend-lr"></span> Lower-Right Half</span>
+              <span class="legend-item"><span class="legend-color legend-blk"></span> Dividing Block</span>
+            </div>
+            <div id="hover-cell-info" class="cell-info-display">&nbsp;</div>
+          </div>
+        </div>
+
+        <!-- Output Card -->
+        <div class="card output-card">
+          <div class="output-header">
+            <div>
+              <h2>3. Batch File Output</h2>
+              <p class="helper-text">For use in <a href="https://crosswordnexus.github.io/variety-constructor/" target="_blank">the variety constructor</a>.</p>
+            </div>
+            <div class="output-actions">
+              <button id="copy-btn" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy to Clipboard
+              </button>
+              <button id="download-btn" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download .txt
+              </button>
+            </div>
+          </div>
+          <textarea id="batch-output" readonly rows="16" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <!-- TAB 2: IPUZ CREATOR -->
+      <section id="ipuz-tab" class="tab-content">
+        <div class="card-grid">
+          <!-- Metadata Card -->
+          <div class="card">
+            <h2>1. Puzzle Metadata</h2>
+            <div class="form-group">
+              <label for="ipuz-title">Title</label>
+              <input type="text" id="ipuz-title" class="text-input" value="Shapeshifter">
+            </div>
+            <div class="form-group">
+              <label for="ipuz-author">Author</label>
+              <input type="text" id="ipuz-author" class="text-input" placeholder="Constructor Name">
+            </div>
+            <div class="form-group">
+              <label for="ipuz-copyright">Copyright</label>
+              <input type="text" id="ipuz-copyright" class="text-input" value="© 2026">
+            </div>
+            <div class="form-group">
+              <label>Staircase Size (<em>N</em>): <span id="ipuz-size-display" class="highlight-val">6</span></label>
+              <small class="helper-text">Inherited from Batch Generator (<span id="ipuz-size-summary">7 Shorts &times; 6 Longs</span>).</small>
+            </div>
+          </div>
+
+          <!-- Ingrid Solution Output Card -->
+          <div class="card">
+            <h2>2. Ingrid Solution Output</h2>
+            <p class="helper-text">Paste the solved slots from Ingrid or the variety constructor. <strong>Separate multi-word phrases with spaces</strong> and include hyphens (e.g., <code>THE BEST</code> or <code>SEE-SAW BATTLE</code>) to automatically generate tags like <code>(7, 2 words)</code> or <code>(12, 2 words, hyph.)</code>.</p>
+            <div class="form-group">
+              <textarea id="ipuz-solution-input" rows="8" spellcheck="false" placeholder="Paste Ingrid output, e.g.:
+Slot 1: WORDONE
+Slot 2: WORDTWO
+..."></textarea>
+              <div id="solution-status" class="status-indicator">Waiting for solution input...</div>
+              <div style="margin-top: 0.75rem;">
+                <button type="button" class="btn btn-secondary" id="checkdupes-button-single">Check for dupes</button>
+              </div>
+              <div id="dupe-alert-container-single" style="display: none; margin-top: 0.75rem;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clues Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h2>3. Clues</h2>
+          <p class="helper-text">Enter one clue per line. First <span id="clues-count-shorts">7</span> clues are for Shorts (<span id="clues-len-shorts">6</span> letters), followed by <span id="clues-count-longs">6</span> clues for Longs (<span id="clues-len-longs">7</span> letters). Length tags like <code>(6)</code> or <code>(7, 2 words)</code> will be automatically appended to the end of each clue.</p>
+          <div class="form-group">
+            <textarea id="ipuz-clues-input" rows="10" spellcheck="false" placeholder="Enter clues, one per line:
+Short 1 clue
+Short 2 clue
+...
+Long 1 clue
+Long 2 clue
+..."></textarea>
+            <div id="clues-status" class="status-indicator">Waiting for clues...</div>
+          </div>
+        </div>
+
+        <!-- IPUZ Export Card -->
+        <div class="card output-card">
+          <div class="output-header">
+            <div>
+              <h2>4. IPUZ File Output</h2>
+              <div class="view-toggle" style="margin-top: 0.5rem;">
+                <button class="toggle-btn active" id="btn-mode-easier" data-mode="easier">Easier Version</button>
+                <button class="toggle-btn" id="btn-mode-harder" data-mode="harder">Harder Version</button>
+              </div>
+              <p class="helper-text" id="mode-description" style="margin-top: 0.5rem;">
+                <strong>Easier:</strong> Clues in grid order. Compatible with all IPUZ solvers.
+              </p>
+            </div>
+            <div class="output-actions">
+              <button id="ipuz-download-btn" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span id="download-btn-label">Download .ipuz</span>
+              </button>
+              <button id="ipuz-copy-btn" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy .ipuz JSON
+              </button>
+            </div>
+          </div>
+          <textarea id="ipuz-json-output" readonly rows="16" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <!-- TAB 3: 4-SET IPUZ -->
+      <section id="multi-ipuz-tab" class="tab-content">
+        <!-- Metadata Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h2>1. 4-Set Metadata</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="multi-title">Title</label>
+              <input type="text" id="multi-title" class="text-input" value="Shapeshifters Set">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="multi-author">Author</label>
+              <input type="text" id="multi-author" class="text-input" placeholder="Constructor Name">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="multi-copyright">Copyright</label>
+              <input type="text" id="multi-copyright" class="text-input" value="© 2026">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Subgrid Solution Inputs Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h2>2. Subgrid Solution Outputs</h2>
+          <p class="helper-text" style="margin-bottom: 1rem;">Paste the solved words from Ingrid for each of the 4 staircase puzzles (48 words total). <strong>Separate multi-word phrases with spaces</strong> and include hyphens (e.g., <code>THE BEST</code> or <code>SEE-SAW BATTLE</code>) to automatically generate tags like <code>(7, 2 words)</code> or <code>(12, 2 words, hyph.)</code>.</p>
+
+          <div class="subgrid-inputs-grid">
+            <div class="subgrid-input-box">
+              <label for="multi-subgrid-1">
+                <strong>1. 4&times;5 Grid</strong>
+                <span class="subgrid-badge">Top-Left</span>
+              </label>
+              <span class="stat-desc">5 shorts (len 4), 4 longs (len 5) &bull; 9 words</span>
+              <textarea id="multi-subgrid-1" rows="6" spellcheck="false" placeholder="Paste N=4 output (9 words)"></textarea>
+              <div id="multi-status-1" class="status-indicator">Waiting for input...</div>
+            </div>
+
+            <div class="subgrid-input-box">
+              <label for="multi-subgrid-2">
+                <strong>2. 5&times;6 Grid</strong>
+                <span class="subgrid-badge">Top-Right</span>
+              </label>
+              <span class="stat-desc">6 shorts (len 5), 5 longs (len 6) &bull; 11 words</span>
+              <textarea id="multi-subgrid-2" rows="6" spellcheck="false" placeholder="Paste N=5 output (11 words)"></textarea>
+              <div id="multi-status-2" class="status-indicator">Waiting for input...</div>
+            </div>
+
+            <div class="subgrid-input-box">
+              <label for="multi-subgrid-3">
+                <strong>3. 6&times;7 Grid</strong>
+                <span class="subgrid-badge">Bottom-Right</span>
+              </label>
+              <span class="stat-desc">7 shorts (len 6), 6 longs (len 7) &bull; 13 words</span>
+              <textarea id="multi-subgrid-3" rows="6" spellcheck="false" placeholder="Paste N=6 output (13 words)"></textarea>
+              <div id="multi-status-3" class="status-indicator">Waiting for input...</div>
+            </div>
+
+            <div class="subgrid-input-box">
+              <label for="multi-subgrid-4">
+                <strong>4. 7&times;8 Grid</strong>
+                <span class="subgrid-badge">Bottom-Left</span>
+              </label>
+              <span class="stat-desc">8 shorts (len 7), 7 longs (len 8) &bull; 15 words</span>
+              <textarea id="multi-subgrid-4" rows="6" spellcheck="false" placeholder="Paste N=7 output (15 words)"></textarea>
+              <div id="multi-status-4" class="status-indicator">Waiting for input...</div>
+            </div>
+          </div>
+          <div id="multi-total-words-status" class="status-indicator" style="margin-top: 1rem; font-size: 0.9rem;"></div>
+          <div style="margin-top: 0.75rem;">
+            <button type="button" class="btn btn-secondary" id="checkdupes-button-multi">Check for dupes</button>
+          </div>
+          <div id="dupe-alert-container-multi" style="display: none; margin-top: 0.75rem;"></div>
+        </div>
+
+        <!-- Clues Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h2>3. All Clues (48 Total)</h2>
+          <p class="helper-text">Enter all 48 clues in order matching the subgrid slots (length 4, then 5, 6, 7, 8). Length tags like <code>(4)</code> or <code>(7, 2 words)</code> will be automatically appended to the end of each clue, and clues will be alphabetized by length group.</p>
+          <div class="form-group">
+            <textarea id="multi-clues-input" rows="12" spellcheck="false" placeholder="Enter all 48 clues, one per line:
+4-letter clue 1
+...
+5-letter clue 1
+..."></textarea>
+            <div id="multi-clues-status" class="status-indicator">Waiting for clues...</div>
+          </div>
+        </div>
+
+        <!-- IPUZ Export Card -->
+        <div class="card output-card">
+          <div class="output-header">
+            <div>
+              <h2>4. 4-Set IPUZ Output</h2>
+              <p class="helper-text" style="margin-top: 0.25rem;">
+                Clues grouped by length and alphabetized within each group, with <code>fakeclues</code> &amp; <code>realwords</code> enabled for Crossword Nexus.
+              </p>
+            </div>
+            <div class="output-actions">
+              <button id="multi-ipuz-download-btn" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download 4-Set .ipuz
+              </button>
+              <button id="multi-ipuz-copy-btn" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy .ipuz JSON
+              </button>
+            </div>
+          </div>
+          <textarea id="multi-ipuz-json-output" readonly rows="16" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+    <footer>
+      <p>Variety Puzzle Tools &bull; Shapeshifters</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="dupes.js"></script>
+</body>
+</html>
