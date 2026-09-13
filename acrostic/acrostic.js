@@ -349,49 +349,22 @@
   }
 
   async function renderDupeStatus(solution) {
-    const dupeAlert = document.getElementById('dupe-alert-container');
-    if (!dupeAlert) return;
+    // Clear any previous card dupe highlights
+    document.querySelectorAll('.word-item.word-dupe').forEach(item => {
+      item.classList.remove('word-dupe');
+    });
 
-    if (typeof window.findDupes !== 'function') {
-      dupeAlert.style.display = 'none';
-      return;
-    }
-
-    try {
-      const res = await window.findDupes(solution);
-      if (res.hasDupes) {
-        const detailsHtml = res.dupes.map(d => {
-          //const typeLabel = d.type === 'suffix' ? `suffix -${d.matchedSuffix}` : 'stem';
-          return `<li><strong>${d.stem}</strong>: <em>${d.words.join(', ')}</em></li>`;
-        }).join('');
-
-        dupeAlert.innerHTML = `
-          <div class="dupe-box dupe-warning">
-            <div class="dupe-box-title">⚠️ ${res.dupes.length} Dupe${res.dupes.length === 1 ? '' : 's'} Detected</div>
-            <ul class="dupe-box-list">${detailsHtml}</ul>
-          </div>
-        `;
-        dupeAlert.style.display = 'block';
-
-        // Highlight conflicting words in visual card list
-        const dupeWordsSet = new Set();
-        res.dupes.forEach(d => d.words.forEach(w => dupeWordsSet.add(w.toUpperCase())));
-        document.querySelectorAll('.word-item').forEach(item => {
-          const text = item.querySelector('.word-text')?.textContent;
-          if (text && dupeWordsSet.has(text)) {
-            item.classList.add('word-dupe');
-          }
-        });
-      } else {
-        dupeAlert.innerHTML = `
-          <div class="dupe-box dupe-clean">
-            ✓ No dupes detected
-          </div>
-        `;
-        dupeAlert.style.display = 'block';
-      }
-    } catch (err) {
-      console.error('Error running dupe check:', err);
+    const res = await checkAndRenderDupes(solution, '#dupe-alert-container');
+    if (res && res.hasDupes) {
+      // Highlight conflicting words in visual card list
+      const dupeWordsSet = new Set();
+      res.dupes.forEach(d => d.words.forEach(w => dupeWordsSet.add(w.toUpperCase())));
+      document.querySelectorAll('.word-item').forEach(item => {
+        const text = item.querySelector('.word-text')?.textContent;
+        if (text && dupeWordsSet.has(text)) {
+          item.classList.add('word-dupe');
+        }
+      });
     }
   }
 

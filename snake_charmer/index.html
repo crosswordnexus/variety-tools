@@ -7,9 +7,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" />
 
   <!-- Load DataTables -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+  <script src="../utils/jquery-3.6.0.min.js"></script>
+  <script src="../utils/datatables/1.11.5/jquery.dataTables.min.js"></script>
+  <link rel="stylesheet" href="../utils/datatables/1.11.5/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="../utils/variety.css">
 
   <style>
   textarea.wordsarea {
@@ -17,35 +18,6 @@
   }
   label.wordSelectorLabel {
     margin: 0px;
-  }
-  .dupe-box {
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 1.5rem;
-    line-height: 1.5;
-    margin-bottom: 15px;
-  }
-  .dupe-warning {
-    background-color: #fffbeb;
-    border: 1px solid #fde68a;
-    color: #92400e;
-  }
-  .dupe-clean {
-    background-color: #ecfdf5;
-    border: 1px solid #a7f3d0;
-    color: #065f46;
-    font-weight: 500;
-  }
-  .dupe-box-title {
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .dupe-box-list {
-    margin: 0;
-    padding-left: 20px;
-  }
-  .dupe-box-list li {
-    margin-bottom: 2px;
   }
   </style>
 
@@ -57,6 +29,7 @@
     .then(spiralData => window.spiralData = spiralData);
   </script>
   <script src="../utils/dupe-checker.min.js"></script>
+  <script src="../utils/variety.js"></script>
   <script src="charmer.js"></script>
 </head>
 
