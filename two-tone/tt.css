@@ -125,7 +125,4 @@ textarea {
   width: 700px;
 }
 
-/* Change cursor to pointer when hovering over table rows */
-table.display tbody tr {
-    cursor: pointer;
-}
+
