@@ -9,20 +9,22 @@ MIT License - https://opensource.org/license/MIT
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rows Garden Construction</title>
     <link rel="stylesheet" href="rg.css">
+    <link rel="stylesheet" href="../utils/variety.css">
     <!-- Load JSZip -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="../utils/jszip.min.js"></script>
     <!-- load memoize -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/memoizejs/0.1.1/memoize.min.js" integrity="sha512-fECFJl/cITU8oOtA57bOXkHe4ff8SEV7vasEXWayxhINykz4EQkKY4lOpvMSnVDHlJjGXOpoSf2/5q9i9PG1+A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Load lscache -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lscache/1.3.2/lscache.min.js" integrity="sha512-ved46eQuz4zEGcBm1JdsWqYsndqlY1jAtUXCrkTe+l88a7Sj0BhstPajJntxq3HwRDPa9qwaqRUVN7Jr8NwhMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Load DataTables -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="../utils/jquery-3.6.0.min.js"></script>
+    <script src="../utils/datatables/1.11.5/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="../utils/datatables/1.11.5/jquery.dataTables.min.css">
     <!-- Load JS-YAML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Load compromise for dupe checking -->
-    <script src="https://unpkg.com/compromise"></script>
+    <!-- Load dupe-checker utility & variety helpers -->
+    <script src="../utils/dupe-checker.min.js"></script>
+    <script src="../utils/variety.js"></script>
 </head>
 <body>
     <!-- modal box placeholder -->
@@ -79,6 +81,8 @@ MIT License - https://opensource.org/license/MIT
           <button class="button-primary" type="submit" id="export-button" value="Export as .rg">Export as .rg</button>
           <button class="button-primary" type="submit" id="wordlist-button" value="Upload wordlist">Upload wordlist</button>
         </div>
+
+        <div id="dupe-alert-container" style="display: none; width: 700px; margin: 15px auto;"></div>
 
     </div>
     <!-- RG code for displaying -->

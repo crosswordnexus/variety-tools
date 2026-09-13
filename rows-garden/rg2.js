@@ -602,95 +602,8 @@ function downloadStringAsFile(content, fileName, mimeType) {
 }
 
 
-/** Functions to help check for dupes **/
-
-// turn a phrase into an array of root forms using `compromise`
-function lemmatize(phrase) {
-  var doc = nlp(phrase);
-  //compute all roots
-  doc.compute('root');
-  // retrieve them from .json() response
-  var p2 = doc.json()[0].terms.map(t=>t.root || t.normal);
-  return p2;
-}
-
-// infer spaces in a string like "INFERSPACESINASTRINGLIKE"
-// ported from https://stackoverflow.com/a/11642687
-function inferSpaces(s, maxword = 15) {
-  // Find the best match for the i first characters, assuming cost has
-  // been built for the i-1 first characters.
-  // Returns a pair [match_cost, match_length].
-  function bestMatch(i) {
-    const candidates = [...Array(Math.min(maxword, i)).keys()].map(k => {
-      const c = cost[i - k - 1] || 0;
-      const word = s.slice(i - k - 1, i);
-      return [c + (WORDNINJA[word] || 9e999), k + 1];
-    });
-    return candidates.reduce((min, curr) => (curr[0] < min[0] ? curr : min));
-  }
-
-  // Build the cost array.
-  const cost = [0];
-  for (let i = 1; i <= s.length; i++) {
-    const [c, k] = bestMatch(i);
-    cost.push(c);
-  }
-
-  // Backtrack to recover the minimal-cost string.
-  const out = [];
-  let i = s.length;
-  while (i > 0) {
-    const [c, k] = bestMatch(i);
-    if (c !== cost[i]) throw new Error("Cost mismatch during backtracking");
-    out.push(s.slice(i - k, i));
-    i -= k;
-  }
-
-  return out.reverse().join(" ");
-}
-
-// helper function to recreate Python's Counter
-function counter(arr) {
-  const counts = {};
-  for (const item of arr) {
-    counts[item] = (counts[item] || 0) + 1;
-  }
-  return counts;
-}
-
-// check an array of words for dupes
-function areThereDupes(arr) {
-  let ret = [];
-  let arrSet = new Set(arr);
-  // Simple check first
-  const suffixes = ['al', 'ing', 'ed', 'ly', 'd', 's', 'es', 'less'];
-  suffixes.forEach(s => {
-    arr.forEach(word => {
-      if (word.endsWith(s) && arrSet.has(word.substr(0, word.length-s.length))) {
-        ret.push(word.substr(0, word.length-s.length));
-      }
-    });
-  });
-
-  // more sophisticated check
-  let counterArr = [];
-  arr.forEach(word => {
-    let word_stem_arr = lemmatize(inferSpaces(word));
-    counterArr.push(...word_stem_arr);
-  });
-  let c = counter(counterArr);
-  Object.keys(c).forEach(k => {
-    let v = c[k];
-    if (v > 1) {
-      ret.push(k);
-    }
-  });
-
-  return ret;
-
-}
-
-function checkForDupes(_) {
+/** Functions to help check for dupes using utils/dupe-checker.min.js & utils/variety.js **/
+async function checkForDupes(_) {
   // Grab the words from the text boxes
   const boxNames = ['rows'].concat(COLORS);
   const arr = [];
@@ -700,23 +613,13 @@ function checkForDupes(_) {
       if (!w) return;
       let w1 = w.split('/');
       w1.forEach(w2 => {
-        arr.push(w2.toLowerCase());
+        const trimmed = w2.trim();
+        if (trimmed) arr.push(trimmed);
       });
     });
   });
 
-  let dupes = areThereDupes(arr);
-
-  // Prepare text for an alert
-  var alertText = '';
-  if (dupes.length) {
-    alertText += `Dupes detected\n----\n`;
-    dupes.forEach(k => {
-      alertText += `${k}\n`;
-    });
-  }
-  if (!alertText) alertText = "No dupes found.";
-  alert(alertText);
+  await checkAndRenderDupes(arr, '#dupe-alert-container', '#checkdupes-button');
 }
 
 // Dupe button functionality

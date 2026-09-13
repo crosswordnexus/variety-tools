@@ -352,3 +352,22 @@ function downloadStringAsFile(content, fileName, mimeType) {
     // Revoke the object URL to free up memory
     URL.revokeObjectURL(a.href);
 }
+
+// Dupe checking functionality using utils/dupe-checker.min.js & utils/variety.js
+async function checkForDupes(_) {
+  const boxNames = ['jelly-roll', 'white-squares', 'gray-squares'];
+  const words = [];
+  boxNames.forEach(box => {
+    const el = document.getElementById(box);
+    if (!el) return;
+    const wordsArr = el.value.split('\n').map(w => w.trim()).filter(Boolean);
+    words.push(...wordsArr);
+  });
+
+  await checkAndRenderDupes(words, '#dupe-alert-container', '#checkdupes-button');
+}
+
+const checkDupesBtn = document.getElementById('checkdupes-button');
+if (checkDupesBtn) {
+  checkDupesBtn.addEventListener('click', checkForDupes);
+}
