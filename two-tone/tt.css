@@ -129,3 +129,35 @@ textarea {
 table.display tbody tr {
     cursor: pointer;
 }
+
+/* Dupe checker alerts */
+.dupe-box {
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+.dupe-warning {
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+}
+.dupe-clean {
+    background-color: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    font-weight: 500;
+}
+.dupe-box-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+.dupe-box-list {
+    margin: 0;
+    padding-left: 20px;
+}
+.dupe-box-list li {
+    margin-bottom: 2px;
+}

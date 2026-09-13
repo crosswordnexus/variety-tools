@@ -1,80 +1,67 @@
+/**
+ * Dupe checking functionality using utils/dupe-checker.min.js
+ */
 
-/** Functions to help check for dupes **/
+async function checkForDupes() {
+  const btn = document.getElementById('checkdupes-button');
+  const dupeAlert = document.getElementById('dupe-alert-container');
+  if (!dupeAlert) return;
 
-// turn a phrase into an array of root forms using `compromise`
-function lemmatize(phrase) {
-  var doc = nlp(phrase);
-  //compute all roots
-  doc.compute('root');
-  // retrieve them from .json() response
-  var p2 = doc.json()[0].terms.map(t=>t.root || t.normal);
-  return p2;
-}
-
-// infer spaces in a string like "INFERSPACESINASTRINGLIKE"
-// ported from https://stackoverflow.com/a/11642687
-function inferSpaces(s, maxword = 15) {
-  // Find the best match for the i first characters, assuming cost has
-  // been built for the i-1 first characters.
-  // Returns a pair [match_cost, match_length].
-  function bestMatch(i) {
-    const candidates = [...Array(Math.min(maxword, i)).keys()].map(k => {
-      const c = cost[i - k - 1] || 0;
-      const word = s.slice(i - k - 1, i);
-      return [c + (WORDNINJA[word] || 9e999), k + 1];
-    });
-    return candidates.reduce((min, curr) => (curr[0] < min[0] ? curr : min));
+  if (typeof window.findDupes !== 'function') {
+    console.warn('dupe-checker.min.js is not loaded or findDupes is unavailable');
+    return;
   }
 
-  // Build the cost array.
-  const cost = [0];
-  for (let i = 1; i <= s.length; i++) {
-    const [c, k] = bestMatch(i);
-    cost.push(c);
-  }
-
-  // Backtrack to recover the minimal-cost string.
-  const out = [];
-  let i = s.length;
-  while (i > 0) {
-    const [c, k] = bestMatch(i);
-    if (c !== cost[i]) throw new Error("Cost mismatch during backtracking");
-    out.push(s.slice(i - k, i));
-    i -= k;
-  }
-
-  return out.reverse().join(" ");
-}
-
-function checkForDupes(_) {
   // Grab the words from the text boxes
   const boxNames = ['two-tone', 'odd-squares', 'even-squares'];
-  const words = {};
+  const words = [];
   boxNames.forEach(box => {
-    let wordsArr = document.getElementById(box).value.split('\n');
-    wordsArr.forEach(w => {
-      if (!w) return;
-      // infer spaces and lemmatize
-      let w3 = lemmatize(inferSpaces(w.toLowerCase()))
-      w3.forEach(w4 => {
-        if (!words[w4]) words[w4] = [];
-        words[w4].push(w);
-      });
-    });
+    const el = document.getElementById(box);
+    if (!el) return;
+    const wordsArr = el.value.split('\n').map(w => w.trim()).filter(Boolean);
+    words.push(...wordsArr);
   });
 
-  //console.log(words);
+  if (words.length === 0) {
+    dupeAlert.style.display = 'none';
+    return;
+  }
 
-  // Prepare text for an alert
-  var alertText = '';
-  Object.keys(words).forEach(k => {
-    if (words[k].size > 1 && k.length >= 3) {
-      let dupeDisplay = [...words[k]].join(', ');
-      alertText += `${k} => ${dupeDisplay}\n`;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Checking...';
+  }
+
+  try {
+    const res = await window.findDupes(words);
+    if (res.hasDupes) {
+      const detailsHtml = res.dupes.map(d => {
+        return `<li><strong>${d.stem}</strong>: <em>${d.words.join(', ')}</em></li>`;
+      }).join('');
+
+      dupeAlert.innerHTML = `
+        <div class="dupe-box dupe-warning">
+          <div class="dupe-box-title">⚠️ ${res.dupes.length} Dupe${res.dupes.length === 1 ? '' : 's'} Detected</div>
+          <ul class="dupe-box-list">${detailsHtml}</ul>
+        </div>
+      `;
+      dupeAlert.style.display = 'block';
+    } else {
+      dupeAlert.innerHTML = `
+        <div class="dupe-box dupe-clean">
+          ✓ No dupes detected
+        </div>
+      `;
+      dupeAlert.style.display = 'block';
     }
-  });
-  if (!alertText) alertText = "No dupes found.";
-  alert(alertText);
+  } catch (err) {
+    console.error('Error running dupe check:', err);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Check for dupes';
+    }
+  }
 }
 
 // Dupe button functionality

@@ -17,8 +17,8 @@ MIT License - https://opensource.org/license/MIT
   <script src="../utils/jquery-3.6.0.min.js"></script>
   <script src="../utils/datatables/1.11.5/jquery.dataTables.min.js"></script>
   <link rel="stylesheet" href="../utils/datatables/1.11.5/jquery.dataTables.min.css">
-  <!-- Load compromise for dupe checking -->
-  <script src="https://unpkg.com/compromise"></script>
+  <!-- Load dupe-checker utility -->
+  <script src="../utils/dupe-checker.min.js"></script>
 
   <!-- Word list management -->
   <!--<script src="../word_lists/wordlist.js"></script>-->
@@ -67,6 +67,8 @@ MIT License - https://opensource.org/license/MIT
           <button class="button-primary" type="submit" id="checkdupes-button" value="Check for dupes">Check for dupes</button>
           <button class="button-primary" id="restore-button" style="display:none;">Restore previous state</button>
         </div>
+
+        <div id="dupe-alert-container" style="display: none; width: 620px;"></div>
 
     </div>
     <!-- JS code for displaying -->
