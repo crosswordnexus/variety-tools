@@ -66,10 +66,10 @@ def get_seed_words(quote, source):
     """
     # Seed lists from the word_lists directory
     seed_lists = [
-        #WORDLIST_DIR / 'ada_nicolle_seed_list.txt',
-        #WORDLIST_DIR / 'brian_thomas_seed_list.txt',
-        #WORDLIST_DIR / 'ricky_cruz_seed_list.txt',
-        WORDLIST_DIR / 'nediger_99.txt'
+        WORDLIST_DIR / 'ada_nicolle_seed_list.txt',
+        WORDLIST_DIR / 'brian_thomas_seed_list.txt',
+        WORDLIST_DIR / 'ricky_cruz_seed_list.txt',
+        WORDLIST_DIR / 'nediger_99.txt',
     ]
     # Normalize the inputs
     quote, source = list(map(alpha_only, [quote, source]))
@@ -78,7 +78,7 @@ def get_seed_words(quote, source):
     qs_ctr = quote_ctr - source_ctr
     # Min length and max length of entries
     min_length = math.ceil(len(quote)/len(source))
-    max_length = min_length + 2
+    max_length = min_length + 3
     # Loop through the lists
     seed_words_set = set()
     for wl in seed_lists:
